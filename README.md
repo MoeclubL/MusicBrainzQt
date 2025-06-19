@@ -1,99 +1,135 @@
-# MusicBrainz Qt Application
+# MusicBrainzQt
 
-这是一个使用 Qt 开发的跨平台应用程序，提供与 MusicBrainz 网页版相同的功能。用户可以搜索、查询和编辑音乐数据。
+A modern, cross-platform desktop application for browsing and searching the MusicBrainz music database. Built with Qt 6, MusicBrainzQt provides a native desktop experience for exploring music metadata.
 
-## 功能特点
+## 🎵 What is MusicBrainzQt?
 
-- **搜索功能**: 用户可以使用 MusicBrainz API 搜索专辑、艺术家和发行版
-- **查询音乐数据**: 检索音乐条目的详细信息
-- **编辑音乐条目**: 用户可以通过友好的界面编辑音乐条目信息
-- **缓存系统**: 本地缓存搜索结果以提高性能
-- **设置管理**: 保存用户偏好设置
+MusicBrainzQt is a desktop client that connects to the [MusicBrainz](https://musicbrainz.org/) database, allowing you to:
 
-## 系统要求
+- **Search** for artists, albums, recordings, and other music entities
+- **Browse** detailed information about music with comprehensive metadata
+- **Explore** relationships between different music entities
+- **View** tags, aliases, and community-contributed information
+- **Navigate** through an intuitive, modern interface
 
-- Qt 5.15 或 Qt 6.0 及以上版本
-- C++17 兼容的编译器
-- CMake 3.16 或更高版本（如果使用 CMake 构建）
-- 网络连接（用于访问 MusicBrainz API）
+## 🚀 For End Users
 
-## 项目结构
+### Quick Start
 
-```
-MusicBrainzQt/
-├── src/                    # 源代码目录
-│   ├── main.cpp           # 应用程序入口点
-│   ├── mainwindow.cpp/.h  # 主窗口实现
-│   ├── api/               # MusicBrainz API 交互
-│   │   ├── musicbrainzapi.cpp/.h
-│   │   └── networkrequest.cpp/.h
-│   ├── models/            # 数据模型类
-│   │   ├── album.cpp/.h
-│   │   ├── artist.cpp/.h
-│   │   ├── release.cpp/.h
-│   │   └── track.cpp/.h
-│   ├── ui/                # UI 组件
-│   │   ├── searchwidget.cpp/.h
-│   │   ├── editdialog.cpp/.h
-│   │   └── resultview.cpp/.h
-│   └── utils/             # 实用工具类
-│       ├── cache.cpp/.h
-│       └── settings.cpp/.h
-├── ui/                    # Qt Designer UI 文件
-│   ├── mainwindow.ui
-│   ├── searchwidget.ui
-│   ├── editdialog.ui
-│   └── resultview.ui
-├── resources/             # 资源文件
-│   ├── images.qrc
-│   └── icons/
-├── tests/                 # 测试文件
-├── build/                 # 构建输出目录
-├── CMakeLists.txt         # CMake 构建配置
-├── musicbrainz-qt.pro     # qmake 项目文件
-└── README.md
-```
+1. **Download** the latest release from the [Releases](https://github.com/your-username/MusicBrainzQt/releases) page
+2. **Install** and run MusicBrainzQt
+3. **Search** for your favorite artists or albums using the search bar
+4. **Explore** detailed information by double-clicking on any result
 
-## 构建说明
+### Features
 
-### 方法一：使用 Qt Creator
-1. 打开 Qt Creator
-2. 选择 "File" -> "Open File or Project"
-3. 选择 `musicbrainz-qt.pro` 或 `CMakeLists.txt`
-4. 配置项目（选择合适的 Qt 版本）
-5. 点击构建按钮
+- **Universal Search**: Find artists, albums, recordings, works, and more
+- **Rich Detail Views**: Comprehensive information tabs for each entity
+- **Relationship Explorer**: Discover connections between music entities  
+- **Tag Browser**: View community tags and metadata
+- **Modern UI**: Clean, responsive interface following platform conventions
+- **Fast Performance**: Efficient caching and optimized API usage
 
-### 方法二：使用 qmake（命令行）
+### System Requirements
+
+- **Windows**: Windows 10 or later
+- **macOS**: macOS 10.15 or later  
+- **Linux**: Most modern distributions
+- **Internet**: Required for MusicBrainz API access
+
+## 💻 For Developers
+
+### Building from Source
+
+#### Prerequisites
+
+- Qt 6.0+ (Core, Widgets, Network modules)
+- C++17 compatible compiler
+- CMake 3.16+ or qmake
+- Git
+
+#### Clone and Build
+
 ```bash
-# 设置 Qt 环境（根据你的安装路径调整）
-# Windows: call "C:\Qt\6.x.x\msvc2022_64\bin\qtenv2.bat"
+# Clone the repository
+git clone https://github.com/your-username/MusicBrainzQt.git
+cd MusicBrainzQt
 
-mkdir build
-cd build
-qmake ../musicbrainz-qt.pro
+# Using CMake (recommended)
+mkdir build && cd build
+cmake ..
+cmake --build .
 
-# Windows (MSVC):
-nmake
-
-# Windows (MinGW):
-mingw32-make
-
-# Linux/macOS:
+# Using qmake (alternative)
+qmake musicbrainz-qt.pro
 make
 ```
 
-### 方法三：使用 CMake
-```bash
-mkdir build
-cd build
-cmake .. -DCMAKE_BUILD_TYPE=Debug
-cmake --build .
+#### Project Structure
+
+```
+MusicBrainzQt/
+├── src/                    # Source code
+│   ├── api/               # MusicBrainz API integration  
+│   ├── models/            # Data models
+│   ├── ui/                # UI components
+│   ├── services/          # Business logic services
+│   ├── core/              # Core types and utilities
+│   └── utils/             # Helper utilities
+├── ui/                    # Qt Designer UI files
+├── resources/             # Application resources
+├── tests/                 # Unit tests
+└── docs/                  # Documentation
 ```
 
-### 便捷构建脚本
-项目提供了几个构建脚本：
+### Architecture
 
-- **Windows + MSVC**: 运行 `build.bat`
+MusicBrainzQt follows modern Qt best practices:
+
+- **Layered Architecture**: Clear separation between API, business logic, and UI
+- **Component-Based UI**: Reusable widgets with .ui file separation
+- **Signal-Slot Communication**: Qt's event system for loose coupling
+- **Smart Pointers**: Modern C++ memory management
+- **Async Operations**: Non-blocking API requests with proper error handling
+
+## 📚 Documentation
+
+- **[Development Guide](docs/DEVELOPMENT.md)** - Detailed development setup and guidelines
+- **[API Documentation](docs/API.md)** - MusicBrainz API integration details
+- **[Contributing Guide](CONTRIBUTING.md)** - How to contribute to the project
+- **[Architecture Overview](docs/ARCHITECTURE.md)** - Technical architecture documentation
+
+## 🤝 Contributing
+
+We welcome contributions from the community! Whether you're fixing bugs, adding features, or improving documentation, your help is appreciated.
+
+1. **Fork** the repository
+2. **Create** a feature branch (`git checkout -b feature/amazing-feature`)
+3. **Commit** your changes (`git commit -m 'Add amazing feature'`)
+4. **Push** to the branch (`git push origin feature/amazing-feature`)
+5. **Open** a Pull Request
+
+Please read our [Contributing Guide](CONTRIBUTING.md) for detailed guidelines.
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- **[MusicBrainz](https://musicbrainz.org/)** - For providing the comprehensive music database and API
+- **Qt Project** - For the excellent cross-platform framework
+- **Contributors** - Everyone who has contributed to making this project better
+
+## 📞 Support
+
+- **Issues**: [GitHub Issues](https://github.com/your-username/MusicBrainzQt/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/your-username/MusicBrainzQt/discussions)
+- **Email**: [project-email@example.com](mailto:project-email@example.com)
+
+---
+
+**Note**: This application is not officially affiliated with MusicBrainz. It's a community-driven project that uses the MusicBrainz API in accordance with their guidelines.
 - **Windows + MinGW**: 运行 `build-mingw.bat`  
 - **CMake**: 运行 `build-cmake.bat`
 
