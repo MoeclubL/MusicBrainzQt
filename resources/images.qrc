@@ -1,0 +1,14 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource>
+    <file>icons/app_icon.svg</file>
+    <file>icons/album.svg</file>
+    <file>icons/artist.svg</file>
+    <file>icons/recording.svg</file>
+    <file>icons/label.svg</file>
+    <file>icons/work.svg</file>
+    <file>icons/area.svg</file>
+    <file>icons/search.svg</file>
+    <file>icons/browser.svg</file>
+    <file>icons/copy.svg</file>
+</qresource>
+</RCC>
