@@ -28,26 +28,35 @@
 
 // =============================================================================
 // 构造函数和析构函数
+// MainWindow是整个应用程序的主要入口点，负责协调所有UI组件和服务
 // =============================================================================
 
+/**
+ * @brief MainWindow构造函数
+ * @param parent 父窗口组件
+ * 
+ * 初始化主窗口及其所有子组件，建立信号槽连接，设置初始状态。
+ * 这是应用程序的中央协调器，管理搜索、结果显示和详情查看等功能。
+ */
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
-    , m_searchService(new SearchService(this))
-    , m_detailManager(new EntityDetailManager(this))
+    , m_searchService(new SearchService(this))       // 搜索服务，处理所有搜索相关操作
+    , m_detailManager(new EntityDetailManager(this)) // 详情管理器，处理实体详细信息加载
 {
     ui->setupUi(this);
     
-    // 设置窗口最小尺寸
+    // 设置窗口最小尺寸，确保界面元素可见性
     setMinimumSize(800, 600);
     
-    // 设置主窗口布局
+    // 配置主窗口布局权重
+    // 搜索区域(0)保持固定高度，结果区域(1)自动拉伸填充剩余空间
     ui->verticalLayout->setStretch(0, 0);  // 搜索区域不拉伸
     ui->verticalLayout->setStretch(1, 1);  // 结果区域拉伸
     ui->mainSplitter->setStretchFactor(0, 1);
     ui->mainSplitter->setStretchFactor(1, 1);
 
-    // 初始化各个组件
+    // 按顺序初始化各个组件
     initializeUI();
     setupMenuBar();
     setupStatusBar();
@@ -56,6 +65,11 @@ MainWindow::MainWindow(QWidget *parent)
     setWindowTitle(tr("MusicBrainz Qt Client"));
 }
 
+/**
+ * @brief MainWindow析构函数
+ * 
+ * 清理UI对象。其他成员对象通过Qt的父子关系自动清理。
+ */
 MainWindow::~MainWindow()
 {
     delete ui;
@@ -63,22 +77,47 @@ MainWindow::~MainWindow()
 
 // =============================================================================
 // UI 初始化方法
+// 这些方法负责设置和配置用户界面的各个部分
+// 采用分层初始化模式，确保组件按正确顺序创建和配置
 // =============================================================================
 
+/**
+ * @brief 初始化整个用户界面
+ * 
+ * 协调所有UI组件的初始化过程，按依赖关系顺序调用各个设置方法。
+ * 这是UI初始化的主要入口点。
+ */
 void MainWindow::initializeUI()
 {
     // 设置窗口基本属性
-    resize(1400, 900);
-    setMinimumSize(1200, 700);
+    resize(1400, 900);  // 设置合适的默认窗口大小
+    setMinimumSize(1200, 700);  // 确保最小尺寸下界面仍然可用
     
-    // 初始化各部分 UI
-    setupSearchDock();
-    setupMainTabWidget();
-    setupMenuBar();
-    setupStatusBar();
-    setupConnections();
+    // 按依赖关系顺序初始化各部分UI
+    setupSearchDock();      // 设置搜索面板
+    setupMainTabWidget();   // 设置主标签页容器
+    setupMenuBar();         // 设置菜单栏
+    setupStatusBar();       // 设置状态栏
+    setupConnections();     // 建立信号槽连接
 }
 
+/**
+ * @brief 设置搜索停靠窗口
+ * 
+ * 创建并配置高级搜索功能的停靠窗口，提供搜索选项和过滤器。
+ * 搜索面板作为应用程序的主要输入接口，支持多种搜索模式和过滤条件。
+ * 
+ * **窗口特性：**
+ * - 可停靠到左侧或右侧
+ * - 支持浮动窗口模式
+ * - 固定宽度范围（300-400px）
+ * - 自动连接搜索信号
+ * 
+ * **UI布局：**
+ * - 左侧停靠（默认）
+ * - 可移动和浮动
+ * - 自适应内容高度
+ */
 void MainWindow::setupSearchDock()
 {
     // 创建搜索面板作为左侧停靠窗口
@@ -106,10 +145,27 @@ void MainWindow::setupSearchDock()
 // 菜单栏和状态栏设置
 // =============================================================================
 
+/**
+ * @brief 设置菜单栏
+ * 
+ * 配置应用程序的主菜单栏，包括文件菜单、编辑菜单、帮助菜单等。
+ * 建立菜单项与相应功能的信号槽连接。
+ * 
+ * **菜单结构：**
+ * - File菜单：退出等基本操作
+ * - Edit菜单：偏好设置等配置选项
+ * - Help菜单：关于对话框等帮助信息
+ * 
+ * **快捷键设置：**
+ * - 退出：Ctrl+Q（或系统默认）
+ * - 其他快捷键按Qt标准设置
+ */
 void MainWindow::setupMenuBar()
 {
-    // 连接已存在的菜单动作
+    // 连接退出动作到窗口关闭
     connect(ui->actionExit, &QAction::triggered, this, &QWidget::close);
+    
+    // 连接关于动作到关于对话框
     connect(ui->actionAbout, &QAction::triggered, [this]() {
         QMessageBox::about(this, tr("About MusicBrainz Qt"),
                            tr("MusicBrainz Qt Client\n\n"
@@ -117,58 +173,98 @@ void MainWindow::setupMenuBar()
                               "browse and edit MusicBrainz data."));
     });
     
-    // 连接现有的Preferences动作（如果需要的话）
+    // 连接偏好设置动作（功能待实现）
     connect(ui->actionPreferences, &QAction::triggered, [this]() {
         // TODO: 实现偏好设置对话框
+        // 未来版本将包含：
+        // - API服务器配置
+        // - 界面主题设置
+        // - 搜索选项配置
+        // - 缓存和性能设置
         statusBar()->showMessage(tr("Preferences not implemented yet"), 2000);
     });
     
-    // 设置快捷键
+    // 设置标准快捷键
     ui->actionExit->setShortcut(QKeySequence::Quit);
 }
 
+/**
+ * @brief 设置状态栏
+ * 
+ * 初始化应用程序底部的状态栏，用于显示操作状态、进度信息等。
+ * 状态栏是用户获取应用程序状态反馈的主要途径。
+ */
 void MainWindow::setupStatusBar()
 {
     statusBar()->showMessage(tr("Ready"));
 }
 
+/**
+ * @brief 设置主标签页容器
+ * 
+ * 创建并配置应用程序的主要内容区域 - 标签页容器。
+ * 支持多标签页展示搜索结果和详细信息。
+ * 
+ * **标签页特性：**
+ * - 可关闭标签页（除欢迎页）
+ * - 可拖拽重排标签页顺序
+ * - 动态添加搜索结果和详情标签页
+ * - 智能标签页标题生成
+ * 
+ * **初始状态：**
+ * - 创建欢迎页作为默认标签页
+ * - 提供使用指导信息
+ * - 设置适当的字体和布局
+ */
 void MainWindow::setupMainTabWidget()
 {
     // 创建主标签页容器
     m_mainTabWidget = new QTabWidget(this);
-    m_mainTabWidget->setTabsClosable(true);
-    m_mainTabWidget->setMovable(true);
+    m_mainTabWidget->setTabsClosable(true);     // 允许关闭标签页
+    m_mainTabWidget->setMovable(true);          // 允许拖拽移动标签页
     
     // 设置为中央部件
     setCentralWidget(m_mainTabWidget);
     
+    // =============================================================================
     // 创建欢迎页面
+    // =============================================================================
+    
     QWidget *welcomePage = new QWidget();
     QVBoxLayout *welcomeLayout = new QVBoxLayout(welcomePage);
     
+    // 欢迎标题
     QLabel *welcomeLabel = new QLabel(tr("Welcome to MusicBrainz Qt"));
     welcomeLabel->setAlignment(Qt::AlignCenter);
     QFont welcomeFont = welcomeLabel->font();
-    welcomeFont.setPointSize(welcomeFont.pointSize() + 4);
-    welcomeFont.setBold(true);
+    welcomeFont.setPointSize(welcomeFont.pointSize() + 4);  // 增大字体
+    welcomeFont.setBold(true);                              // 加粗显示
     welcomeLabel->setFont(welcomeFont);
     
+    // 使用说明
     QLabel *instructionLabel = new QLabel(tr("Use the search panel to find music information.\n"
                                              "Search results will appear in new tabs."));
     instructionLabel->setAlignment(Qt::AlignCenter);
-    instructionLabel->setWordWrap(true);
+    instructionLabel->setWordWrap(true);                    // 允许自动换行
     
-    welcomeLayout->addStretch();
+    // 布局设置：垂直居中显示
+    welcomeLayout->addStretch();                            // 上方弹性空间
     welcomeLayout->addWidget(welcomeLabel);
     welcomeLayout->addWidget(instructionLabel);
-    welcomeLayout->addStretch();
+    welcomeLayout->addStretch();                            // 下方弹性空间
     
-    // 添加欢迎页面作为第一个标签页
+    // 添加欢迎页面作为第一个标签页（不可关闭）
     m_mainTabWidget->addTab(welcomePage, tr("Welcome"));
     
+    // =============================================================================
     // 连接标签页信号
+    // =============================================================================
+    
+    // 标签页关闭请求
     connect(m_mainTabWidget, &QTabWidget::tabCloseRequested,
             this, &MainWindow::onTabCloseRequested);
+    
+    // 标签页切换
     connect(m_mainTabWidget, &QTabWidget::currentChanged,
             this, &MainWindow::onTabChanged);
 }

@@ -88,7 +88,7 @@ void ConfigManager::NetworkConfig::load(const QSettings &settings) {
     timeoutMs = settings.value("timeoutMs", 60000).toInt();
     maxRetries = settings.value("maxRetries", 3).toInt();
     retryDelayMs = settings.value("retryDelayMs", 1000).toInt();
-    userAgent = settings.value("userAgent", "MusicBrainzQt/1.0 ( musicbrainzqt@example.com )").toString();
+    userAgent = settings.value("userAgent", "MusicBrainzQt/1.0 ( https://github.com/MoeclubL/MusicBrainzQt )").toString();
 }
 
 // ApiConfig 实现

@@ -75,7 +75,7 @@ void LibMusicBrainzApi::getDetails(const QString &mbid, EntityType type)
 void LibMusicBrainzApi::setUserAgent(const QString &userAgent)
 {
     m_userAgent = userAgent;
-    LOG_SERVICE_DEBUG("User-Agent set to: %s", userAgent.toUtf8().constData());
+    LOG_SERVICE_DEBUG("User-Agent set to: %s", "MusicBrainzQt/1.0 ( https://github.com/MoeclubL/MusicBrainzQt )");
 }
 
 void LibMusicBrainzApi::setRateLimitDelay(int milliseconds)
