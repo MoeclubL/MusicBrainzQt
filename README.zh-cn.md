@@ -2,17 +2,17 @@
 
 [English Version](README.md)
 
-一个现代化的、跨平台的桌面应用程序，用于浏览和搜索 MusicBrainz 音乐数据库。MusicBrainzQt 使用 Qt 6 构建，为探索音乐元数据提供了原生的桌面体验。
+一个现代化的跨平台桌面应用程序，用于浏览和搜索 MusicBrainz 音乐数据库。基于 Qt 6 构建，MusicBrainzQt 为探索音乐元数据提供了原生桌面体验。
 
-## 🎵 MusicBrainzQt 是什么？
+## 🎵 什么是 MusicBrainzQt？
 
-MusicBrainzQt 是一个连接到 [MusicBrainz](https://musicbrainz.org/) 数据库的桌面客户端，它允许您：
+MusicBrainzQt 是一个连接到 [MusicBrainz](https://musicbrainz.org/) 数据库的桌面客户端，允许您：
 
-* **搜索** 艺术家、专辑、录音和其他音乐实体
-* **浏览** 包含全面元数据的详细音乐信息
-* **探索** 不同音乐实体之间的关系
-* **查看** 标签、别名和社区贡献的信息
-* **导航** 直观、现代化的用户界面
+- **搜索**艺术家、专辑、录音和其他音乐实体
+- **浏览**包含详细元数据的音乐详细信息
+- **探索**不同音乐实体之间的关系
+- **查看**标签、别名和社区贡献的信息
+- **导航**通过直观、现代的界面
 
 ## 🚀 致最终用户
 

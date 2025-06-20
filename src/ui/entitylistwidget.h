@@ -154,6 +154,7 @@ private slots:    void onTableDoubleClicked(const QModelIndex &index);
     void onTableSelectionChanged();
     void onContextMenuRequested(const QPoint &pos);
     void onHeaderContextMenuRequested(const QPoint &pos);
+    void onOpen();
     void onOpenInBrowser();
     void onCopyId();
     void onShowColumnSettings();
@@ -171,6 +172,7 @@ private:
     QMenu *m_contextMenu;
     
     // Actions
+    QAction *m_openAction;
     QAction *m_openInBrowserAction;
     QAction *m_copyIdAction;
     QAction *m_columnSettingsAction;

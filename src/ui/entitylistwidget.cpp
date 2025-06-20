@@ -40,9 +40,10 @@ void EntityListWidget::setupUI()
 {
     // 创建模型
     m_model = new ResultTableModel(this);
-    ui->tableView->setModel(m_model);
-      // 配置表格视图
+    ui->tableView->setModel(m_model);    // 配置表格视图
     ui->tableView->horizontalHeader()->setStretchLastSection(true);
+    ui->tableView->horizontalHeader()->setSectionsMovable(true);  // 允许拖动列
+    ui->tableView->horizontalHeader()->setDragDropMode(QAbstractItemView::InternalMove);
     ui->tableView->setAlternatingRowColors(true);
     ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui->tableView->setSortingEnabled(true);
@@ -72,9 +73,15 @@ void EntityListWidget::setupUI()
 
 void EntityListWidget::setupActions()
 {
+    // 打开（与双击效果相同）
+    m_openAction = new QAction(tr("Open"), this);
+    m_openAction->setIcon(QIcon(":/icons/app_icon.svg"));
+    connect(m_openAction, &QAction::triggered,
+            this, &EntityListWidget::onOpen);
+    
     // 在浏览器中打开
     m_openInBrowserAction = new QAction(tr("Open in Browser"), this);
-    m_openInBrowserAction->setIcon(QIcon(":/icons/app_icon.svg"));
+    m_openInBrowserAction->setIcon(QIcon(":/icons/browser.svg"));
     connect(m_openInBrowserAction, &QAction::triggered,
             this, &EntityListWidget::onOpenInBrowser);
     
@@ -99,6 +106,7 @@ void EntityListWidget::setupActions()
 void EntityListWidget::setupContextMenu()
 {
     m_contextMenu = new QMenu(this);
+    m_contextMenu->addAction(m_openAction);
     m_contextMenu->addAction(m_openInBrowserAction);
     m_contextMenu->addAction(m_copyIdAction);
     m_contextMenu->addSeparator();
@@ -194,6 +202,14 @@ void EntityListWidget::onContextMenuRequested(const QPoint &pos)
         // 将表格视图中的位置映射到全局坐标
         QPoint globalPos = ui->tableView->viewport()->mapToGlobal(pos);
         m_contextMenu->exec(globalPos);
+    }
+}
+
+void EntityListWidget::onOpen()
+{
+    auto item = getCurrentItem();
+    if (item) {
+        emit itemDoubleClicked(item);
     }
 }
 

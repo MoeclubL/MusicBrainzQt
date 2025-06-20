@@ -210,7 +210,7 @@ QTimer::singleShot(1000, [this, request]() {
 MusicBrainzQt identifies itself with a proper user agent:
 
 ```cpp
-const QString USER_AGENT = "MusicBrainzQt/1.0.0 ( https://github.com/your-username/MusicBrainzQt )";
+const QString USER_AGENT = "MusicBrainzQt/1.0.0 ( https://github.com/MoeclubL/MusicBrainzQt )";
 ```
 
 ### Request Headers

@@ -413,3 +413,58 @@ void ResultTableModel::updateColumnsFromData() {
         m_visibleColumns = getDefaultColumns(m_type);
     }
 }
+
+void ResultTableModel::sort(int column, Qt::SortOrder order) {
+    if (column < 0 || column >= m_visibleColumns.count() || m_items.isEmpty()) {
+        return;
+    }
+    
+    const QString &fieldKey = m_visibleColumns[column].key;
+    
+    emit layoutAboutToBeChanged();
+    
+    // 创建一个包含原始索引的排序对列表
+    QList<QPair<QSharedPointer<ResultItem>, int>> sortPairs;
+    for (int i = 0; i < m_items.size(); ++i) {
+        sortPairs.append(qMakePair(m_items[i], i));
+    }
+    
+    // 执行排序
+    std::sort(sortPairs.begin(), sortPairs.end(), [this, &fieldKey, order](const QPair<QSharedPointer<ResultItem>, int> &a, const QPair<QSharedPointer<ResultItem>, int> &b) {
+        QVariant valueA = getFieldValue(a.first, fieldKey);
+        QVariant valueB = getFieldValue(b.first, fieldKey);
+        
+        // 处理空值
+        if (!valueA.isValid() && !valueB.isValid()) {
+            return false;
+        }
+        if (!valueA.isValid()) {
+            return order == Qt::AscendingOrder ? true : false;
+        }
+        if (!valueB.isValid()) {
+            return order == Qt::AscendingOrder ? false : true;
+        }
+        
+        // 比较值
+        bool result = false;
+        if (valueA.type() == QVariant::String && valueB.type() == QVariant::String) {
+            result = valueA.toString().compare(valueB.toString(), Qt::CaseInsensitive) < 0;
+        } else if (valueA.canConvert<double>() && valueB.canConvert<double>()) {
+            result = valueA.toDouble() < valueB.toDouble();
+        } else {
+            result = valueA.toString().compare(valueB.toString(), Qt::CaseInsensitive) < 0;
+        }
+        
+        return order == Qt::AscendingOrder ? result : !result;
+    });
+    
+    // 更新项目列表
+    for (int i = 0; i < sortPairs.size(); ++i) {
+        m_items[i] = sortPairs[i].first;
+    }
+    
+    emit layoutChanged();
+    
+    qCDebug(logUI) << "ResultTableModel::sort - Sorted by column" << column 
+                   << "(" << fieldKey << ") in" << (order == Qt::AscendingOrder ? "ascending" : "descending") << "order";
+}

@@ -587,12 +587,91 @@ void ItemDetailTab::populateSubTabs()
         QVariant subData = m_item->getDetailProperty(key);
         qCDebug(logUI) << "Sub data for key" << key << ":" << subData.typeName() << "canConvert:" << subData.canConvert<QVariantList>();
         
-        if (subData.canConvert<QVariantList>()) {
+        QList<QSharedPointer<ResultItem>> resultItems;
+        
+        // 特殊处理不同的数据键
+        if (key == "artist-credits" || key == "artist-credit") {
+            // 尝试两种可能的键名
+            QVariant artistCreditData = m_item->getDetailProperty("artist-credit");
+            if (!artistCreditData.isValid()) {
+                artistCreditData = m_item->getDetailProperty("artist-credits");
+            }
+            
+            if (artistCreditData.canConvert<QVariantList>()) {
+                QVariantList artistList = artistCreditData.toList();
+                qCDebug(logUI) << "Artist credit list size:" << artistList.size();
+                
+                for (const QVariant &artistData : artistList) {
+                    if (artistData.canConvert<QVariantMap>()) {
+                        QVariantMap artistMap = artistData.toMap();
+                        QVariantMap artistInfo = artistMap.value("artist").toMap();
+                        
+                        QString id = artistInfo.value("id").toString();
+                        QString name = artistInfo.value("name").toString();
+                        
+                        if (!id.isEmpty() && !name.isEmpty()) {
+                            QSharedPointer<ResultItem> resultItem = QSharedPointer<ResultItem>::create(id, name, EntityType::Artist);
+                            
+                            // 设置其他属性
+                            for (auto mapIt = artistInfo.begin(); mapIt != artistInfo.end(); ++mapIt) {
+                                resultItem->setDetailProperty(mapIt.key(), mapIt.value());
+                            }
+                            
+                            resultItems << resultItem;
+                            qCDebug(logUI) << "Created artist item:" << name << "id:" << id;
+                        }
+                    }
+                }
+            }
+        } else if (key == "recordings") {
+            // 处理recordings数据 - 可能在media数组中
+            QVariant mediaData = m_item->getDetailProperty("media");
+            if (mediaData.canConvert<QVariantList>()) {
+                QVariantList mediaList = mediaData.toList();
+                qCDebug(logUI) << "Media list size:" << mediaList.size();
+                
+                for (const QVariant &mediaItem : mediaList) {
+                    if (mediaItem.canConvert<QVariantMap>()) {
+                        QVariantMap mediaMap = mediaItem.toMap();
+                        QVariant tracksData = mediaMap.value("tracks");
+                        
+                        if (tracksData.canConvert<QVariantList>()) {
+                            QVariantList tracksList = tracksData.toList();
+                            
+                            for (const QVariant &trackData : tracksList) {
+                                if (trackData.canConvert<QVariantMap>()) {
+                                    QVariantMap trackMap = trackData.toMap();
+                                    QVariantMap recordingMap = trackMap.value("recording").toMap();
+                                    
+                                    QString id = recordingMap.value("id").toString();
+                                    QString title = recordingMap.value("title").toString();
+                                    
+                                    if (!id.isEmpty() && !title.isEmpty()) {
+                                        QSharedPointer<ResultItem> resultItem = QSharedPointer<ResultItem>::create(id, title, EntityType::Recording);
+                                        
+                                        // 设置录音属性
+                                        for (auto mapIt = recordingMap.begin(); mapIt != recordingMap.end(); ++mapIt) {
+                                            resultItem->setDetailProperty(mapIt.key(), mapIt.value());
+                                        }
+                                        
+                                        // 设置曲目相关属性
+                                        resultItem->setDetailProperty("track_number", trackMap.value("number"));
+                                        resultItem->setDetailProperty("track_title", trackMap.value("title"));
+                                        
+                                        resultItems << resultItem;
+                                        qCDebug(logUI) << "Created recording item:" << title << "id:" << id;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } else if (subData.canConvert<QVariantList>()) {
+            // 通用处理方式
             QVariantList itemList = subData.toList();
             qCDebug(logUI) << "Sub data list size:" << itemList.size();
             
-            // 转换为ResultItem列表
-            QList<QSharedPointer<ResultItem>> resultItems;
             for (const QVariant &itemData : itemList) {
                 if (itemData.canConvert<QVariantMap>()) {
                     QVariantMap itemMap = itemData.toMap();
@@ -603,28 +682,32 @@ void ItemDetailTab::populateSubTabs()
                     else if (key == "release-groups") entityType = EntityType::ReleaseGroup;
                     else if (key == "recordings") entityType = EntityType::Recording;
                     else if (key == "works") entityType = EntityType::Work;
+                    else if (key == "artists") entityType = EntityType::Artist;
                     
                     // 创建ResultItem
                     QString id = itemMap.value("id").toString();
                     QString name = itemMap.value("title", itemMap.value("name")).toString();
-                    QSharedPointer<ResultItem> resultItem = QSharedPointer<ResultItem>::create(id, name, entityType);
                     
-                    // 设置其他详细属性
-                    for (auto mapIt = itemMap.begin(); mapIt != itemMap.end(); ++mapIt) {
-                        resultItem->setDetailProperty(mapIt.key(), mapIt.value());
+                    if (!id.isEmpty() && !name.isEmpty()) {
+                        QSharedPointer<ResultItem> resultItem = QSharedPointer<ResultItem>::create(id, name, entityType);
+                        
+                        // 设置其他详细属性
+                        for (auto mapIt = itemMap.begin(); mapIt != itemMap.end(); ++mapIt) {
+                            resultItem->setDetailProperty(mapIt.key(), mapIt.value());
+                        }
+                        
+                        resultItems << resultItem;
+                        qCDebug(logUI) << "Created result item:" << name << "id:" << id;
                     }
-                    
-                    resultItems << resultItem;
-                    qCDebug(logUI) << "Created result item:" << name << "id:" << id;
                 }
             }
-            
-            // 设置到EntityListWidget
-            widget->setItems(resultItems);
-            qCDebug(logUI) << "Populated sub tab" << key << "with" << resultItems.size() << "items";
         } else {
             qCDebug(logUI) << "No valid data for sub tab:" << key;
         }
+        
+        // 设置到EntityListWidget
+        widget->setItems(resultItems);
+        qCDebug(logUI) << "Populated sub tab" << key << "with" << resultItems.size() << "items";
     }
 }
 

@@ -227,36 +227,6 @@ void MainWindow::setupMainTabWidget()
     setCentralWidget(m_mainTabWidget);
     
     // =============================================================================
-    // 创建欢迎页面
-    // =============================================================================
-    
-    QWidget *welcomePage = new QWidget();
-    QVBoxLayout *welcomeLayout = new QVBoxLayout(welcomePage);
-    
-    // 欢迎标题
-    QLabel *welcomeLabel = new QLabel(tr("Welcome to MusicBrainz Qt"));
-    welcomeLabel->setAlignment(Qt::AlignCenter);
-    QFont welcomeFont = welcomeLabel->font();
-    welcomeFont.setPointSize(welcomeFont.pointSize() + 4);  // 增大字体
-    welcomeFont.setBold(true);                              // 加粗显示
-    welcomeLabel->setFont(welcomeFont);
-    
-    // 使用说明
-    QLabel *instructionLabel = new QLabel(tr("Use the search panel to find music information.\n"
-                                             "Search results will appear in new tabs."));
-    instructionLabel->setAlignment(Qt::AlignCenter);
-    instructionLabel->setWordWrap(true);                    // 允许自动换行
-    
-    // 布局设置：垂直居中显示
-    welcomeLayout->addStretch();                            // 上方弹性空间
-    welcomeLayout->addWidget(welcomeLabel);
-    welcomeLayout->addWidget(instructionLabel);
-    welcomeLayout->addStretch();                            // 下方弹性空间
-    
-    // 添加欢迎页面作为第一个标签页（不可关闭）
-    m_mainTabWidget->addTab(welcomePage, tr("Welcome"));
-    
-    // =============================================================================
     // 连接标签页信号
     // =============================================================================
     

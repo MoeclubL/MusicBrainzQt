@@ -25,8 +25,12 @@ public:
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
     QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
+    
+    // 排序支持
+    void sort(int column, Qt::SortOrder order = Qt::AscendingOrder) override;
+    
     EntityType currentType() const;
-    QSharedPointer<ResultItem> getItem(int row) const;    // 自定义列功能
+    QSharedPointer<ResultItem> getItem(int row) const;// 自定义列功能
     QList<ColumnInfo> getAvailableColumns(EntityType type) const;
     QStringList getAvailableColumnNames(EntityType type) const;  // 字符串版本
     QStringList getVisibleColumns() const;
