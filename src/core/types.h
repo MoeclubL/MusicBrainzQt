@@ -4,6 +4,16 @@
 #include <QString>
 #include <QMap>
 
+#if __cplusplus >= 202002L
+#include <concepts>
+#include <string_view>
+#define CONCEPTS_SUPPORTED 1
+#else
+#define CONCEPTS_SUPPORTED 0
+#endif
+
+// C++20特性：仅在支持的编译器中启用concepts
+
 /**
  * @file types.h
  * @brief 核心类型定义 - MusicBrainzQt应用程序的基础数据结构
@@ -160,5 +170,44 @@ struct SearchResults {
     SearchResults(int total, int off, int cnt) 
         : totalCount(total), offset(off), count(cnt) {}
 };
+
+// =============================================================================
+// C++20现代化工具函数
+// =============================================================================
+
+#if CONCEPTS_SUPPORTED
+/**
+ * @brief 概念：检查类型是否为有效的MusicBrainz实体类型
+ */
+template<typename T>
+concept ValidEntityType = std::is_same_v<T, EntityType>;
+
+/**
+ * @brief 概念：检查是否为字符串类型
+ */
+template<typename T>
+concept StringLike = std::convertible_to<T, QString> || std::convertible_to<T, std::string>;
+#endif
+
+/**
+ * @brief 使用constexpr的现代化实体类型验证
+ * @param type 实体类型
+ * @return 是否为有效的实体类型
+ */
+constexpr bool isValidEntityType(EntityType type) noexcept {
+    return type != EntityType::Unknown;
+}
+
+/**
+ * @brief 现代化的搜索参数验证函数
+ * @param params 搜索参数
+ * @return 参数是否有效
+ */
+inline bool isValidSearchParams(const SearchParameters& params) noexcept {
+    return !params.query.isEmpty() && 
+           isValidEntityType(params.type) && 
+           params.limit > 0 && 
+           params.offset >= 0;
+}
 
 #endif // CORE_TYPES_H

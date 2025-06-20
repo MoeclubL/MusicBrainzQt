@@ -2,13 +2,27 @@ cmake_minimum_required(VERSION 3.16)
 
 project(MusicBrainzQt VERSION 1.0.0 LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 17)
+# 使用C++20标准以支持Qt6.9的现代特性
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Find Qt
-find_package(Qt6 COMPONENTS Core Widgets Network QUIET)
-if (NOT Qt6_FOUND)
+# 编译优化和警告设置
+if(MSVC)
+    add_compile_options(/W4 /permissive-)
+else()
+    add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
+
+# 优先查找Qt6，要求最低版本6.2
+find_package(Qt6 6.2 COMPONENTS Core Widgets Network QUIET)
+if (Qt6_FOUND)
+    message(STATUS "Found Qt6: ${Qt6_VERSION}")
+    set(QT_VERSION_MAJOR 6)
+else()
     find_package(Qt5 5.15 COMPONENTS Core Widgets Network REQUIRED)
+    message(STATUS "Found Qt5: ${Qt5_VERSION}")
+    set(QT_VERSION_MAJOR 5)
 endif()
 
 # Set up Qt
@@ -24,8 +38,10 @@ set(SOURCES
     src/main.cpp
     src/mainwindow.cpp
     src/api/libmusicbrainzapi.cpp
+    src/api/musicbrainzparser.cpp
+    src/api/musicbrainz_utils.cpp
+    src/api/network_manager.cpp
     src/models/resultitem.cpp
-    src/models/resultitemmodel.cpp
     src/models/resulttablemodel.cpp
     src/ui/advancedsearchwidget.cpp
     src/ui/searchresulttab.cpp
@@ -41,9 +57,10 @@ set(SOURCES
 set(HEADERS
     src/mainwindow.h
     src/api/libmusicbrainzapi.h
-    src/api/musicbrainztypes.h
+    src/api/musicbrainzparser.h
+    src/api/musicbrainz_utils.h
+    src/api/network_manager.h
     src/models/resultitem.h
-    src/models/resultitemmodel.h
     src/models/resulttablemodel.h
     src/ui/advancedsearchwidget.h
     src/ui/searchresulttab.h
@@ -75,8 +92,10 @@ set(RESOURCES
 add_executable(MusicBrainzQt ${SOURCES} ${HEADERS} ${UIS} ${RESOURCES})
 
 # Link Qt libraries
-if (Qt6_FOUND)
+if (QT_VERSION_MAJOR EQUAL 6)
     target_link_libraries(MusicBrainzQt Qt6::Core Qt6::Widgets Qt6::Network)
+    # 启用Qt6的现代特性
+    target_compile_definitions(MusicBrainzQt PRIVATE QT_DISABLE_DEPRECATED_BEFORE=0x060000)
 else()
     target_link_libraries(MusicBrainzQt Qt5::Core Qt5::Widgets Qt5::Network)
 endif()

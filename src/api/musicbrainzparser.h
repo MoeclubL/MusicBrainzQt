@@ -72,16 +72,7 @@ public:
      * @param jsonObj JSON对象
      * @return 检测到的实体类型
      */
-    static EntityType detectEntityType(const QJsonObject &jsonObj);
-    
-    /**
-     * @brief 获取实体的复数形式名称
-     * @param type 实体类型
-     * @return 复数形式名称（如"artists", "releases"）
-     */
-    static QString getEntityPluralName(EntityType type);
-    
-    /**
+    static EntityType detectEntityType(const QJsonObject &jsonObj);      /**
      * @brief 递归解析JSON值为QVariant
      * @param value JSON值
      * @return 解析后的QVariant

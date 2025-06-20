@@ -4,12 +4,11 @@
 #include <QObject>
 #include <QSharedPointer>
 #include <QVariantMap>
-#include <QNetworkAccessManager>
-#include <QNetworkReply>
-#include <QTimer>
 #include "../core/types.h"
 
 class ResultItem;
+class NetworkManager;
+class QNetworkReply;
 
 /**
  * @brief MusicBrainz Web Service API接口实现
@@ -131,39 +130,23 @@ signals:
     void errorOccurred(const QString &error);
 
 private slots:
-    void onSearchReplyFinished();
-    void onDetailsReplyFinished();
-    void onRateLimitTimerTimeout();
+    void onRequestFinished(QNetworkReply *reply, const QString &url);
+    void onRequestError(const QString &error, const QString &url);
 
-private:
-    // 构建API URL
+private:    // 构建API URL
     QString buildSearchUrl(const QString &query, EntityType type, int limit, int offset) const;
     QString buildDetailsUrl(const QString &mbid, EntityType type) const;
     
-    // 解析响应
-    QList<QSharedPointer<ResultItem>> parseSearchResponse(const QByteArray &data, EntityType type) const;
-    QVariantMap parseDetailsResponse(const QByteArray &data, EntityType type) const;
-    
-    // 实体类型到字符串的转换
-    QString entityTypeToString(EntityType type) const;
-    
-    // 发送HTTP请求（带速率限制）
-    void sendRequest(const QString &url, bool isDetailsRequest = false);
-    
-    // 速率限制相关
-    void enforceRateLimit();
-    
-    QNetworkAccessManager *m_networkManager;
+    // 请求处理
+    void processReply(QNetworkReply *reply, const QString &url);
+
+    NetworkManager *m_networkManager;
+    class MusicBrainzParser *m_parser;
     QString m_userAgent;
     
-    // 速率限制
-    QTimer *m_rateLimitTimer;
-    int m_rateLimitDelay;  // 毫秒
-    QList<QPair<QString, bool>> m_pendingRequests; // URL, isDetailsRequest
-    
     // 当前请求追踪
-    QNetworkReply *m_currentSearchReply;
-    QNetworkReply *m_currentDetailsReply;
+    QStringList m_pendingSearchUrls;
+    QStringList m_pendingDetailsUrls;
     EntityType m_currentSearchType;
     EntityType m_currentDetailsType;
 };

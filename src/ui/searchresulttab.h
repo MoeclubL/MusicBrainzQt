@@ -207,23 +207,13 @@ private:
      * 初始化所有UI组件，建立布局结构和信号连接。
      */
     void setupUI();
-    
-    /**
+      /**
      * @brief 更新分页控件状态
      * @param stats 搜索结果统计信息
      * 
      * 根据搜索结果统计信息更新分页按钮的可用状态和显示文本。
      */
     void updatePaginationControls(const SearchResults &stats);
-    
-    /**
-     * @brief 获取MusicBrainz网站URL
-     * @param item 结果项
-     * @return 该实体在MusicBrainz网站上的URL
-     * 
-     * 构建指向MusicBrainz官方网站相应实体页面的URL。
-     */
-    QString getMusicBrainzUrl(const QSharedPointer<ResultItem> &item) const;
     
     // =============================================================================
     // 成员变量

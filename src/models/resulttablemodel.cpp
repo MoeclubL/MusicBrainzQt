@@ -444,10 +444,9 @@ void ResultTableModel::sort(int column, Qt::SortOrder order) {
         if (!valueB.isValid()) {
             return order == Qt::AscendingOrder ? false : true;
         }
-        
-        // 比较值
+          // 比较值
         bool result = false;
-        if (valueA.type() == QVariant::String && valueB.type() == QVariant::String) {
+        if (valueA.typeId() == QMetaType::QString && valueB.typeId() == QMetaType::QString) {
             result = valueA.toString().compare(valueB.toString(), Qt::CaseInsensitive) < 0;
         } else if (valueA.canConvert<double>() && valueB.canConvert<double>()) {
             result = valueA.toDouble() < valueB.toDouble();

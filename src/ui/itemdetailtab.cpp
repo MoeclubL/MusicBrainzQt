@@ -1,6 +1,7 @@
 #include "itemdetailtab.h"
 #include "ui_itemdetailtab.h"
 #include "entitylistwidget.h"
+#include "../api/musicbrainz_utils.h"
 #include "../models/resultitem.h"
 #include "../utils/logger.h"
 #include <QDesktopServices>
@@ -745,33 +746,7 @@ void ItemDetailTab::onCopyId(const QString &itemId)
 
 QString ItemDetailTab::buildMusicBrainzUrl(const QString &itemId, EntityType type) const
 {
-    QString baseUrl = "https://musicbrainz.org/";
-    QString typeStr;
-    
-    switch (type) {
-        case EntityType::Artist:
-            typeStr = "artist";
-            break;
-        case EntityType::Release:
-            typeStr = "release";
-            break;
-        case EntityType::ReleaseGroup:
-            typeStr = "release-group";
-            break;
-        case EntityType::Recording:
-            typeStr = "recording";
-            break;
-        case EntityType::Work:
-            typeStr = "work";
-            break;
-        case EntityType::Label:
-            typeStr = "label";
-            break;
-        default:
-            return QString();
-    }
-    
-    return baseUrl + typeStr + "/" + itemId;
+    return MusicBrainzUtils::buildMusicBrainzUrl(itemId, type);
 }
 
 void ItemDetailTab::clearInfoLayout(QVBoxLayout *layout)
