@@ -98,6 +98,86 @@ api->searchEntity(EntityType::Work, "work name", limit, offset);
 
 ### Detail Operations
 
+#### Entity Detail Requests
+When you have an MBID (MusicBrainz Identifier), you can request detailed information about a specific entity.
+
+```cpp
+api->getEntityDetails(EntityType::Artist, "5b11f4ce-a62d-471e-81fc-a69a8278c7da");
+```
+
+**API Endpoint**: `GET /{entity_type}/{mbid}?inc={includes}&fmt=json`
+
+#### Supported Include Parameters
+
+The `inc=` parameter allows you to request additional information about the entity. According to the MusicBrainz API documentation, different entity types support different includes:
+
+##### Artist (`/artist/{mbid}`)
+**Supported includes**:
+- `recordings` - Recordings by this artist
+- `releases` - Releases by this artist  
+- `release-groups` - Release groups by this artist
+- `works` - Works by this artist
+- `aliases` - Alternative names for the artist
+- `tags` - Tags applied to this artist
+- `ratings` - User ratings for this artist
+- `genres` - Genres applied to this artist
+- Various relationship types: `artist-rels`, `release-rels`, etc.
+
+**Default includes used by MusicBrainzQt**: `aliases+tags+ratings+genres+recordings+releases+release-groups+works`
+
+##### Recording (`/recording/{mbid}`)
+**Supported includes**:
+- `artists` - Artists credited for this recording
+- `releases` - Releases containing this recording
+- `release-groups` - Release groups containing this recording
+- `isrcs` - ISRC codes for this recording
+- `url-rels` - URL relationships
+- `aliases` - Alternative names
+- `tags`, `ratings`, `genres` - Metadata
+
+**Default includes used by MusicBrainzQt**: `aliases+tags+ratings+genres+artists+releases+release-groups+isrcs`
+
+##### Release (`/release/{mbid}`)
+**Supported includes**:
+- `artists` - Artists credited for this release
+- `labels` - Labels that released this
+- `recordings` - Recordings on this release
+- `release-groups` - Release group this belongs to
+- `collections` - Collections containing this release
+- `aliases`, `tags`, `ratings`, `genres` - Metadata
+
+**Default includes used by MusicBrainzQt**: `aliases+tags+ratings+genres+artists+labels+recordings+release-groups`
+
+##### Release Group (`/release-group/{mbid}`)
+**Supported includes**:
+- `artists` - Artists credited for this release group
+- `releases` - Releases in this group
+- `aliases`, `tags`, `ratings`, `genres` - Metadata
+
+**Default includes used by MusicBrainzQt**: `aliases+tags+ratings+genres+artists+releases`
+
+##### Label (`/label/{mbid}`)
+**Supported includes**:
+- `releases` - Releases on this label
+- `aliases`, `tags`, `ratings`, `genres` - Metadata
+
+**Default includes used by MusicBrainzQt**: `aliases+tags+ratings+genres+releases`
+
+##### Work (`/work/{mbid}`)
+**Supported includes**:
+- `aliases`, `tags`, `ratings`, `genres` - Metadata
+- Various relationship types
+
+**Default includes used by MusicBrainzQt**: `aliases+tags+ratings+genres`
+
+#### Rate Limiting
+All API requests are subject to MusicBrainz's rate limiting:
+- **Maximum**: 1 request per second
+- **Enforcement**: Strictly enforced by the server
+- **Implementation**: Automatic delays in LibMusicBrainzApi
+
+## 🔧 API Implementation Details
+
 #### Get Entity Details
 ```cpp
 api->getEntityDetails(entityId, EntityType::Artist);

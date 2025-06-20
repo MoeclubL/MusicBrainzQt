@@ -7,8 +7,6 @@
     <file>icons/label.svg</file>
     <file>icons/work.svg</file>
     <file>icons/area.svg</file>
-    <file>icons/search.svg</file>
     <file>icons/browser.svg</file>
-    <file>icons/copy.svg</file>
 </qresource>
 </RCC>

@@ -31,14 +31,17 @@ struct EntityMapping {
 
 /**
  * @brief 编译时实体类型映射表
+ * 
+ * 基于MusicBrainz API v2官方文档更新includes参数
+ * https://musicbrainz.org/doc/MusicBrainz_API#Subqueries
  */
 constexpr std::array<EntityMapping, 16> ENTITY_MAPPINGS = {{
     {EntityType::Artist, "artist", "artists", "aliases+tags+ratings+genres+recordings+releases+release-groups+works"},
     {EntityType::Release, "release", "releases", "aliases+tags+ratings+genres+artists+labels+recordings+release-groups"},
-    {EntityType::Recording, "recording", "recordings", "aliases+tags+ratings+genres+artists+releases+release-groups"},
+    {EntityType::Recording, "recording", "recordings", "aliases+tags+ratings+genres+artists+releases+release-groups+isrcs"},
     {EntityType::ReleaseGroup, "release-group", "release-groups", "aliases+tags+ratings+genres+artists+releases"},
     {EntityType::Label, "label", "labels", "aliases+tags+ratings+genres+releases"},
-    {EntityType::Work, "work", "works", "aliases+tags+ratings+genres+artists+recordings"},
+    {EntityType::Work, "work", "works", "aliases+tags+ratings+genres"},
     {EntityType::Area, "area", "areas", "aliases+tags+ratings+genres"},
     {EntityType::Place, "place", "places", "aliases+tags+ratings+genres"},
     {EntityType::Annotation, "annotation", "annotations", "tags+ratings+genres"},
@@ -83,16 +86,7 @@ QString getEntityPluralName(EntityType type);
  */
 QString getDefaultIncludes(EntityType type);
 
-/**
- * @brief 构建MusicBrainz网站URL
- * @param entityId 实体ID（MBID）
- * @param type 实体类型
- * @return 完整的MusicBrainz网站URL
- * 
- * 统一的URL构建函数，用于所有UI组件中的"在浏览器中打开"功能。
- * 避免在多个UI组件中重复实现相同的URL构建逻辑。
- */
-QString buildMusicBrainzUrl(const QString &entityId, EntityType type);
+
 
 #if CONCEPTS_SUPPORTED
 /**

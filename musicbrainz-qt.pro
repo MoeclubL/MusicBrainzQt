@@ -2,8 +2,8 @@ TEMPLATE = app
 TARGET = musicbrainz-qt
 QT += core gui widgets network
 
-# 使用C++20标准以支持现代Qt6特性
-CONFIG += c++20
+# 使用C++17标准以确保更好的兼容性
+CONFIG += c++17
 
 SOURCES += \
     src/main.cpp \
@@ -18,6 +18,7 @@ SOURCES += \
     src/ui/searchresulttab.cpp \
     src/ui/itemdetailtab.cpp \
     src/ui/entitylistwidget.cpp \
+    src/ui/ui_utils.cpp \
     src/services/searchservice.cpp \
     src/services/entitydetailmanager.cpp \
     src/utils/logger.cpp \
@@ -35,6 +36,7 @@ HEADERS += \
     src/ui/searchresulttab.h \
     src/ui/itemdetailtab.h \
     src/ui/entitylistwidget.h \
+    src/ui/ui_utils.h \
     src/services/searchservice.h \
     src/services/entitydetailmanager.h \
     src/core/types.h \

@@ -15,7 +15,6 @@ QT_BEGIN_NAMESPACE
 class Ui_SearchResultTab;
 QT_END_NAMESPACE
 
-class ResultTableModel;
 class ResultItem;
 class EntityDetailManager;
 class EntityListWidget;

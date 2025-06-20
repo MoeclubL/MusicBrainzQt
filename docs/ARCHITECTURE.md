@@ -11,10 +11,12 @@ MusicBrainzQt follows a **layered architecture** pattern with clear separation o
 │                    Presentation Layer                   │
 │  ┌─────────────┐ ┌─────────────┐ ┌─────────────────────┐ │
 │  │ MainWindow  │ │ItemDetailTab│ │EntityListWidget    │ │
+│  │   (UI 协调)  │ │  (详情展示)  │ │   (实体列表)        │ │
 │  └─────────────┘ └─────────────┘ └─────────────────────┘ │
 │  ┌─────────────┐ ┌─────────────┐ ┌─────────────────────┐ │
-│  │SearchResult │ │AdvancedSrch │ │     Other UI        │ │
-│  │    Tab      │ │   Widget    │ │   Components        │ │
+│  │SearchResult │ │AdvancedSrch │ │    UiUtils         │ │
+│  │    Tab      │ │   Widget    │ │  (UI工具类)         │ │
+│  │  (搜索结果)  │ │  (高级搜索)  │ │                     │ │
 │  └─────────────┘ └─────────────┘ └─────────────────────┘ │
 └─────────────────┬───────────────────────────────────────┘
                   │ Qt Signals & Slots
@@ -22,32 +24,37 @@ MusicBrainzQt follows a **layered architecture** pattern with clear separation o
 │                   Service Layer                         │
 │  ┌─────────────────┐     ┌─────────────────────────────┐ │
 │  │  SearchService  │     │  EntityDetailManager       │ │
-│  │                 │     │                             │ │
-│  │ • Coordinates   │     │ • Manages entity details   │ │
-│  │   search ops    │     │ • Handles caching          │ │
-│  │ • Manages state │     │ • Batch operations         │ │
+│  │   (搜索协调)     │     │    (详情管理)               │ │
+│  │ • 搜索操作协调   │     │ • 实体详情管理             │ │
+│  │ • 分页状态管理   │     │ • 缓存处理                 │ │
+│  │ • 参数验证      │     │ • 批量操作                 │ │
 │  └─────────────────┘     └─────────────────────────────┘ │
 └─────────────────┬───────────────────────────────────────┘
                   │
 ┌─────────────────▼───────────────────────────────────────┐
 │                    API Layer                            │
+│  ┌─────────────────┐ ┌─────────────┐ ┌─────────────────┐ │
+│  │LibMusicBrainzApi│ │MusicBrainz  │ │ NetworkManager  │ │
+│  │  (API 协调器)    │ │   Parser    │ │  (网络管理)     │ │
+│  │ • API调用协调   │ │ • JSON解析  │ │ • HTTP请求     │ │
+│  │ • 错误处理      │ │ • 数据转换  │ │ • 速率限制     │ │
+│  └─────────────────┘ └─────────────┘ └─────────────────┘ │
 │  ┌─────────────────────────────────────────────────────┐ │
-│  │             LibMusicBrainzApi                       │ │
-│  │                                                     │ │
-│  │ • HTTP request handling                            │ │
-│  │ • JSON parsing                                     │ │
-│  │ • Rate limiting                                    │ │
-│  │ • Error handling                                   │ │
-│  │ • User agent management                           │ │
+│  │            MusicBrainzUtils                         │ │
+│  │             (API工具类)                              │ │
+│  │ • 实体类型转换 • URL构建 • Include参数管理           │ │
 │  └─────────────────────────────────────────────────────┘ │
 └─────────────────┬───────────────────────────────────────┘
                   │
 ┌─────────────────▼───────────────────────────────────────┐
-│                  Data Layer                             │
+│                  Data & Models Layer                    │
 │  ┌─────────────┐ ┌─────────────┐ ┌─────────────────────┐ │
-│  │ ResultItem  │ │ResultTable  │ │   ResultItem        │ │
-│  │             │ │   Model     │ │     Model           │ │
-│  │ • Unified   │ │             │ │                     │ │
+│  │ ResultItem  │ │ResultTable  │ │    Core Types       │ │
+│  │ (数据容器)   │ │   Model     │ │   (核心类型)        │ │
+│  │ • 实体数据   │ │ (表格模型)   │ │ • EntityType       │ │
+│  │ • 详情属性   │ │ • 排序/过滤  │ │ • SearchParams     │ │
+│  └─────────────┘ └─────────────┘ └─────────────────────┘ │
+└─────────────────────────────────────────────────────────┘
 │  │   entity    │ │ • Table     │ │ • List view         │ │
 │  │   container │ │   display   │ │   support           │ │
 │  └─────────────┘ └─────────────┘ └─────────────────────┘ │

@@ -1,13 +1,11 @@
 #include "itemdetailtab.h"
 #include "ui_itemdetailtab.h"
 #include "entitylistwidget.h"
-#include "../api/musicbrainz_utils.h"
+#include "ui_utils.h"
 #include "../models/resultitem.h"
 #include "../utils/logger.h"
 #include <QDesktopServices>
 #include <QUrl>
-#include <QClipboard>
-#include <QGuiApplication>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QGridLayout>
@@ -152,6 +150,7 @@ void ItemDetailTab::createOverviewTab()
     
     // 获取项目详细数据
     QVariantMap detailData = m_item->getDetailData();
+    EntityType itemType = m_item->getType();
     
     // 基本信息区域
     QWidget *basicInfoWidget = new QWidget();
@@ -163,71 +162,67 @@ void ItemDetailTab::createOverviewTab()
     basicInfoTitle->setAlignment(Qt::AlignLeft);
     basicInfoLayout->addWidget(basicInfoTitle);
     
-    // Release Group类型
-    QString releaseGroupType = detailData.value("type", tr("Unknown")).toString();
-    if (!releaseGroupType.isEmpty()) {
-        createInfoItem(basicInfoLayout, tr("Type"), releaseGroupType);
+    // MBID
+    QString mbid = m_item->getId();
+    if (!mbid.isEmpty()) {
+        QWidget *mbidItem = UiUtils::createInfoItem(tr("MBID"), mbid, overviewWidget);
+        basicInfoLayout->addWidget(mbidItem);
     }
     
-    // 主要类型 (primary-type)
-    QString primaryType = detailData.value("primary-type", "").toString();
-    if (!primaryType.isEmpty()) {
-        createInfoItem(basicInfoLayout, tr("Primary Type"), primaryType);
+    // 根据实体类型显示不同的字段
+    switch (itemType) {
+    case EntityType::Artist:
+        populateArtistOverview(basicInfoLayout, detailData, overviewWidget);
+        break;
+    case EntityType::Release:
+        populateReleaseOverview(basicInfoLayout, detailData, overviewWidget);
+        break;
+    case EntityType::Recording:
+        populateRecordingOverview(basicInfoLayout, detailData, overviewWidget);
+        break;
+    case EntityType::ReleaseGroup:
+        populateReleaseGroupOverview(basicInfoLayout, detailData, overviewWidget);
+        break;
+    case EntityType::Label:
+        populateLabelOverview(basicInfoLayout, detailData, overviewWidget);
+        break;
+    case EntityType::Work:
+        populateWorkOverview(basicInfoLayout, detailData, overviewWidget);
+        break;
+    default:
+        break;
     }
     
-    // 次要类型 (secondary-types)
-    QVariantList secondaryTypes = detailData.value("secondary-types", QVariantList()).toList();
-    if (!secondaryTypes.isEmpty()) {
-        QStringList typeStrings;
-        for (const QVariant &type : secondaryTypes) {
-            typeStrings << type.toString();
+    // 评分信息（如果有）
+    QVariantMap rating = detailData.value("rating", QVariantMap()).toMap();
+    if (!rating.isEmpty()) {
+        double ratingValue = rating.value("value", 0.0).toDouble();
+        int votesCount = rating.value("votes-count", 0).toInt();
+        if (ratingValue > 0) {
+            QString ratingText = QString("%1/5 (%2 votes)").arg(ratingValue, 0, 'f', 1).arg(votesCount);
+            QWidget *ratingItem = UiUtils::createInfoItem(tr("Rating"), ratingText, overviewWidget);
+            basicInfoLayout->addWidget(ratingItem);
         }
-        createInfoItem(basicInfoLayout, tr("Secondary Types"), typeStrings.join(", "));
-    }
-    
-    // 开始时间
-    QString beginDate = detailData.value("first-release-date", "").toString();
-    if (!beginDate.isEmpty()) {
-        createInfoItem(basicInfoLayout, tr("First Release Date"), beginDate);
     }
     
     // 消歧信息
     QString disambiguation = m_item->getDisambiguation();
     if (!disambiguation.isEmpty()) {
-        createInfoItem(basicInfoLayout, tr("Disambiguation"), disambiguation);
+        QWidget *disambiguationItem = UiUtils::createInfoItem(tr("Disambiguation"), disambiguation, overviewWidget);
+        basicInfoLayout->addWidget(disambiguationItem);
     }
     
     layout->addWidget(basicInfoWidget);
-    
-    // 艺术家信息区域
+      // 艺术家信息区域（对于有artist-credit的实体）
     QVariantList artistCredits = detailData.value("artist-credit", QVariantList()).toList();
     if (!artistCredits.isEmpty()) {
-        QWidget *artistWidget = new QWidget();
-        QVBoxLayout *artistLayout = new QVBoxLayout(artistWidget);
-        artistWidget->setStyleSheet("QWidget { background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 5px; padding: 10px; margin: 5px; }");
-        
-        QLabel *artistTitle = new QLabel(tr("<h3>Artist Credit</h3>"));
-        artistTitle->setAlignment(Qt::AlignLeft);
-        artistLayout->addWidget(artistTitle);
-        
-        for (const QVariant &credit : artistCredits) {
-            QVariantMap creditMap = credit.toMap();
-            QVariantMap artist = creditMap.value("artist", QVariantMap()).toMap();
-            QString artistName = artist.value("name", "").toString();
-            QString joinPhrase = creditMap.value("joinphrase", "").toString();
-            
-            if (!artistName.isEmpty()) {
-                QString displayText = artistName;
-                if (!joinPhrase.isEmpty()) {
-                    displayText += " " + joinPhrase;
-                }
-                QLabel *artistLabel = new QLabel(displayText);
-                artistLabel->setStyleSheet("color: #0066cc; text-decoration: underline; cursor: pointer;");
-                artistLayout->addWidget(artistLabel);
-            }
-        }
-        
-        layout->addWidget(artistWidget);
+        layout->addWidget(createArtistCreditWidget(artistCredits));
+    }
+    
+    // 流派信息
+    QVariantList genres = detailData.value("genres", QVariantList()).toList();
+    if (!genres.isEmpty()) {
+        layout->addWidget(createGenresWidget(genres));
     }
     
     layout->addStretch();
@@ -238,7 +233,7 @@ void ItemDetailTab::createOverviewTab()
     
     ui->subTabWidget->addTab(scrollArea, tr("Overview"));
     
-    qCDebug(logUI) << "Created Overview tab with real data";
+    qCDebug(logUI) << "Created Overview tab with enhanced data for" << static_cast<int>(itemType);
 }
 
 void ItemDetailTab::createAliasesTab()
@@ -328,85 +323,37 @@ void ItemDetailTab::createTagsTab()
     QWidget *tagsWidget = new QWidget();
     QVBoxLayout *layout = new QVBoxLayout(tagsWidget);
     
-    // 获取标签数据
+    // 获取标签和流派数据
     QVariantMap detailData = m_item->getDetailData();
     QVariantList tags = detailData.value("tags", QVariantList()).toList();
+    QVariantList genres = detailData.value("genres", QVariantList()).toList();
     
-    if (tags.isEmpty()) {
-        QLabel *noTagsLabel = new QLabel(tr("No tags found for this release group."));
-        noTagsLabel->setStyleSheet("padding: 20px; text-align: center; color: #666; font-style: italic;");
-        noTagsLabel->setAlignment(Qt::AlignCenter);
-        layout->addWidget(noTagsLabel);
+    bool hasData = !tags.isEmpty() || !genres.isEmpty();
+    
+    if (!hasData) {
+        QString entityTypeName = m_item->getType() == EntityType::ReleaseGroup ? tr("release group") : 
+                                 m_item->getType() == EntityType::Artist ? tr("artist") :
+                                 m_item->getType() == EntityType::Release ? tr("release") :
+                                 m_item->getType() == EntityType::Recording ? tr("recording") :
+                                 m_item->getType() == EntityType::Work ? tr("work") :
+                                 m_item->getType() == EntityType::Label ? tr("label") : tr("entity");
+        
+        QLabel *noDataLabel = new QLabel(tr("No tags or genres found for this %1.").arg(entityTypeName));
+        noDataLabel->setStyleSheet("padding: 20px; text-align: center; color: #666; font-style: italic;");
+        noDataLabel->setAlignment(Qt::AlignCenter);
+        layout->addWidget(noDataLabel);
     } else {
-        // 创建标签说明
-        QLabel *descLabel = new QLabel(tr("Tags are user-generated keywords that describe this release group:"));
-        descLabel->setStyleSheet("padding: 10px; font-size: 12px; color: #666; border-bottom: 1px solid #dee2e6; margin-bottom: 10px;");
-        descLabel->setWordWrap(true);
-        layout->addWidget(descLabel);
-        
-        // 创建标签网格布局
-        QWidget *tagsContainer = new QWidget();
-        QGridLayout *tagsGrid = new QGridLayout(tagsContainer);
-        tagsGrid->setSpacing(10);
-        
-        // 按照投票数排序标签
-        std::sort(tags.begin(), tags.end(), [](const QVariant &a, const QVariant &b) {
-            QVariantMap tagA = a.toMap();
-            QVariantMap tagB = b.toMap();
-            int countA = tagA.value("count", 0).toInt();
-            int countB = tagB.value("count", 0).toInt();
-            return countA > countB;
-        });
-        
-        int row = 0, col = 0;
-        const int maxCols = 3;
-        
-        for (const QVariant &tagVar : tags) {
-            QVariantMap tag = tagVar.toMap();
-            QString tagName = tag.value("name", "").toString();
-            int tagCount = tag.value("count", 0).toInt();
-            
-            if (!tagName.isEmpty()) {
-                QWidget *tagItem = new QWidget();
-                QHBoxLayout *tagLayout = new QHBoxLayout(tagItem);
-                tagLayout->setContentsMargins(8, 4, 8, 4);
-                
-                // 根据标签使用频率设置样式
-                QString bgColor = "#e9ecef";
-                QString textColor = "#495057";
-                if (tagCount >= 10) {
-                    bgColor = "#007bff";
-                    textColor = "#ffffff";
-                } else if (tagCount >= 5) {
-                    bgColor = "#6c757d";
-                    textColor = "#ffffff";
-                }
-                
-                tagItem->setStyleSheet(QString("QWidget { background-color: %1; color: %2; border-radius: 15px; font-size: 12px; }")
-                                      .arg(bgColor, textColor));
-                
-                QLabel *tagLabel = new QLabel(tagName);
-                tagLabel->setStyleSheet("border: none; background: transparent;");
-                tagLayout->addWidget(tagLabel);
-                
-                // 显示投票数
-                if (tagCount > 0) {
-                    QLabel *countLabel = new QLabel(QString("(%1)").arg(tagCount));
-                    countLabel->setStyleSheet("border: none; background: transparent; font-size: 10px; opacity: 0.8;");
-                    tagLayout->addWidget(countLabel);
-                }
-                
-                tagsGrid->addWidget(tagItem, row, col);
-                
-                col++;
-                if (col >= maxCols) {
-                    col = 0;
-                    row++;
-                }
-            }
+        // 流派部分
+        if (!genres.isEmpty()) {
+            QWidget *genresSection = createGenresSection(genres);
+            layout->addWidget(genresSection);
         }
         
-        layout->addWidget(tagsContainer);
+        // 标签部分
+        if (!tags.isEmpty()) {
+            QWidget *tagsSection = createTagsSection(tags);
+            layout->addWidget(tagsSection);
+        }
     }
     
     layout->addStretch();
@@ -415,9 +362,152 @@ void ItemDetailTab::createTagsTab()
     scrollArea->setWidget(tagsWidget);
     scrollArea->setWidgetResizable(true);
     
-    ui->subTabWidget->addTab(scrollArea, tr("Tags"));
+    ui->subTabWidget->addTab(scrollArea, tr("Tags & Genres"));
     
-    qCDebug(logUI) << "Created Tags tab with" << tags.count() << "tags";
+    qCDebug(logUI) << "Created Tags & Genres tab with" << tags.size() << "tags and" << genres.size() << "genres";
+}
+
+QWidget* ItemDetailTab::createGenresSection(const QVariantList &genres)
+{
+    QWidget *genresSection = new QWidget();
+    QVBoxLayout *genresLayout = new QVBoxLayout(genresSection);
+    genresSection->setStyleSheet("QWidget { background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 5px; padding: 10px; margin: 5px; }");
+    
+    // 标题
+    QLabel *genresTitle = new QLabel(tr("<h3>Genres</h3>"));
+    genresTitle->setAlignment(Qt::AlignLeft);
+    genresLayout->addWidget(genresTitle);
+    
+    // 说明
+    QLabel *genresDesc = new QLabel(tr("Genres are standardized musical categories:"));
+    genresDesc->setStyleSheet("font-size: 12px; color: #666; margin-bottom: 10px;");
+    genresDesc->setWordWrap(true);
+    genresLayout->addWidget(genresDesc);
+    
+    // 创建流派网格
+    QWidget *genresContainer = new QWidget();
+    QGridLayout *genresGrid = new QGridLayout(genresContainer);
+    genresGrid->setSpacing(8);
+    
+    int row = 0, col = 0;
+    const int maxCols = 4;
+    
+    for (const QVariant &genreVar : genres) {
+        QVariantMap genre = genreVar.toMap();
+        QString genreName = genre.value("name", "").toString();
+        int genreCount = genre.value("count", 0).toInt();
+        
+        if (!genreName.isEmpty()) {
+            QWidget *genreItem = new QWidget();
+            QHBoxLayout *genreLayout = new QHBoxLayout(genreItem);
+            genreLayout->setContentsMargins(10, 6, 10, 6);
+            
+            genreItem->setStyleSheet("QWidget { background-color: #28a745; color: #ffffff; border-radius: 12px; font-weight: bold; }");
+            
+            QLabel *genreLabel = new QLabel(genreName);
+            genreLabel->setStyleSheet("border: none; background: transparent;");
+            genreLayout->addWidget(genreLabel);
+            
+            if (genreCount > 0) {
+                QLabel *countLabel = new QLabel(QString("(%1)").arg(genreCount));
+                countLabel->setStyleSheet("border: none; background: transparent; font-size: 10px; opacity: 0.8;");
+                genreLayout->addWidget(countLabel);
+            }
+            
+            genresGrid->addWidget(genreItem, row, col);
+            
+            col++;
+            if (col >= maxCols) {
+                col = 0;
+                row++;
+            }
+        }
+    }
+    
+    genresLayout->addWidget(genresContainer);
+    return genresSection;
+}
+
+QWidget* ItemDetailTab::createTagsSection(const QVariantList &tags)
+{
+    QWidget *tagsSection = new QWidget();
+    QVBoxLayout *tagsLayout = new QVBoxLayout(tagsSection);
+    tagsSection->setStyleSheet("QWidget { background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 5px; padding: 10px; margin: 5px; }");
+    
+    // 标题
+    QLabel *tagsTitle = new QLabel(tr("<h3>User Tags</h3>"));
+    tagsTitle->setAlignment(Qt::AlignLeft);
+    tagsLayout->addWidget(tagsTitle);
+    
+    // 说明
+    QLabel *tagsDesc = new QLabel(tr("Tags are user-generated keywords that describe this entity:"));
+    tagsDesc->setStyleSheet("font-size: 12px; color: #666; margin-bottom: 10px;");
+    tagsDesc->setWordWrap(true);
+    tagsLayout->addWidget(tagsDesc);
+    
+    // 创建标签网格
+    QWidget *tagsContainer = new QWidget();
+    QGridLayout *tagsGrid = new QGridLayout(tagsContainer);
+    tagsGrid->setSpacing(8);
+    
+    // 按照投票数排序标签
+    QVariantList sortedTags = tags;
+    std::sort(sortedTags.begin(), sortedTags.end(), [](const QVariant &a, const QVariant &b) {
+        QVariantMap tagA = a.toMap();
+        QVariantMap tagB = b.toMap();
+        int countA = tagA.value("count", 0).toInt();
+        int countB = tagB.value("count", 0).toInt();
+        return countA > countB;
+    });
+    
+    int row = 0, col = 0;
+    const int maxCols = 3;
+    
+    for (const QVariant &tagVar : sortedTags) {
+        QVariantMap tag = tagVar.toMap();
+        QString tagName = tag.value("name", "").toString();
+        int tagCount = tag.value("count", 0).toInt();
+        
+        if (!tagName.isEmpty()) {
+            QWidget *tagItem = new QWidget();
+            QHBoxLayout *tagLayout = new QHBoxLayout(tagItem);
+            tagLayout->setContentsMargins(8, 4, 8, 4);
+            
+            // 根据标签使用频率设置样式
+            QString bgColor = "#e9ecef";
+            QString textColor = "#495057";
+            if (tagCount >= 10) {
+                bgColor = "#007bff";
+                textColor = "#ffffff";
+            } else if (tagCount >= 5) {
+                bgColor = "#6c757d";
+                textColor = "#ffffff";
+            }
+            
+            tagItem->setStyleSheet(QString("QWidget { background-color: %1; color: %2; border-radius: 15px; font-size: 12px; }")
+                                  .arg(bgColor, textColor));
+            
+            QLabel *tagLabel = new QLabel(tagName);
+            tagLabel->setStyleSheet("border: none; background: transparent;");
+            tagLayout->addWidget(tagLabel);
+            
+            if (tagCount > 0) {
+                QLabel *countLabel = new QLabel(QString("(%1)").arg(tagCount));
+                countLabel->setStyleSheet("border: none; background: transparent; font-size: 10px; opacity: 0.8;");
+                tagLayout->addWidget(countLabel);
+            }
+            
+            tagsGrid->addWidget(tagItem, row, col);
+            
+            col++;
+            if (col >= maxCols) {
+                col = 0;
+                row++;
+            }
+        }
+    }
+      tagsLayout->addWidget(tagsContainer);
+    return tagsSection;
 }
 
 void ItemDetailTab::createRelationshipsTab()
@@ -740,13 +830,7 @@ void ItemDetailTab::onOpenInBrowser(const QString &itemId, EntityType type)
 void ItemDetailTab::onCopyId(const QString &itemId)
 {
     // 转发信号到MainWindow处理
-    emit copyId(itemId);
-    qCDebug(logUI) << "Forwarded copyId signal for:" << itemId;
-}
-
-QString ItemDetailTab::buildMusicBrainzUrl(const QString &itemId, EntityType type) const
-{
-    return MusicBrainzUtils::buildMusicBrainzUrl(itemId, type);
+    emit copyId(itemId);    qCDebug(logUI) << "Forwarded copyId signal for:" << itemId;
 }
 
 void ItemDetailTab::clearInfoLayout(QVBoxLayout *layout)
@@ -777,11 +861,11 @@ void ItemDetailTab::populateInfoSection(QVBoxLayout *layout, const QMap<QString,
     for (auto it = data.begin(); it != data.end(); ++it) {
         const QString &key = it.key();
         const QVariant &value = it.value();
-        
-        // 只显示在fieldNames中定义的字段，且值非空
+          // 只显示在fieldNames中定义的字段，且值非空
         if (fieldNames.contains(key) && value.canConvert<QString>() && !value.toString().isEmpty()) {
             QString displayName = fieldNames.value(key);
-            createInfoItem(layout, displayName, value.toString());
+            QWidget *infoItem = UiUtils::createInfoItem(displayName, value.toString(), layout->parentWidget());
+            layout->addWidget(infoItem);
             hasData = true;
         }
     }
@@ -832,11 +916,11 @@ void ItemDetailTab::populateDetailsSection(QVBoxLayout *layout, const QVariantMa
         if (!fieldNames.contains(key)) {
             continue;
         }
-        
-        // 处理不同类型的数据
+          // 处理不同类型的数据
         if (value.canConvert<QString>() && !value.toString().isEmpty()) {
             QString displayName = fieldNames.value(key);
-            createInfoItem(layout, displayName, value.toString());
+            QWidget *infoItem = UiUtils::createInfoItem(displayName, value.toString(), layout->parentWidget());
+            layout->addWidget(infoItem);
             hasData = true;
         } else if (value.canConvert<QVariantMap>()) {
             // 处理复杂对象
@@ -844,7 +928,8 @@ void ItemDetailTab::populateDetailsSection(QVBoxLayout *layout, const QVariantMa
             QString displayValue = formatComplexValue(subMap);
             if (!displayValue.isEmpty()) {
                 QString displayName = fieldNames.value(key);
-                createInfoItem(layout, displayName, displayValue);
+                QWidget *infoItem = UiUtils::createInfoItem(displayName, displayValue, layout->parentWidget());
+                layout->addWidget(infoItem);
                 hasData = true;
             }
         }
@@ -855,39 +940,8 @@ void ItemDetailTab::populateDetailsSection(QVBoxLayout *layout, const QVariantMa
         noDataLabel->setStyleSheet("color: #666; font-style: italic;");
         layout->addWidget(noDataLabel);
     }
-    
-    // 添加弹性空间
+      // 添加弹性空间
     layout->addStretch();
-}
-
-void ItemDetailTab::createInfoItem(QVBoxLayout *layout, const QString &label, const QString &value)
-{
-    // 创建一个包含标签和值的水平布局
-    QFrame *itemFrame = new QFrame();
-    itemFrame->setFrameStyle(QFrame::NoFrame);
-    itemFrame->setStyleSheet("QFrame { border-bottom: 1px solid #eee; padding: 3px 0px; }");
-    
-    QHBoxLayout *itemLayout = new QHBoxLayout(itemFrame);
-    itemLayout->setContentsMargins(0, 3, 0, 3);
-    itemLayout->setSpacing(10);
-    
-    // 标签
-    QLabel *keyLabel = new QLabel(label + ":");
-    keyLabel->setStyleSheet("font-weight: bold; color: #333;");
-    keyLabel->setMinimumWidth(80);
-    keyLabel->setMaximumWidth(120);
-    keyLabel->setWordWrap(true);
-    
-    // 值
-    QLabel *valueLabel = new QLabel(value);
-    valueLabel->setStyleSheet("color: #555;");
-    valueLabel->setWordWrap(true);
-    valueLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
-    
-    itemLayout->addWidget(keyLabel);
-    itemLayout->addWidget(valueLabel, 1);
-    
-    layout->addWidget(itemFrame);
 }
 
 QString ItemDetailTab::formatComplexValue(const QVariantMap &map)
@@ -909,4 +963,338 @@ QString ItemDetailTab::formatComplexValue(const QVariantMap &map)
     }
     
     return parts.join(" ");
+}
+
+void ItemDetailTab::populateArtistOverview(QVBoxLayout *layout, const QVariantMap &detailData, QWidget *parent)
+{
+    // 艺术家类型
+    QString type = detailData.value("type", "").toString();
+    if (!type.isEmpty()) {
+        QWidget *typeItem = UiUtils::createInfoItem(tr("Type"), type, parent);
+        layout->addWidget(typeItem);
+    }
+    
+    // 性别
+    QString gender = detailData.value("gender", "").toString();
+    if (!gender.isEmpty()) {
+        QWidget *genderItem = UiUtils::createInfoItem(tr("Gender"), gender, parent);
+        layout->addWidget(genderItem);
+    }
+    
+    // 生命周期
+    QVariantMap lifeSpan = detailData.value("life-span", QVariantMap()).toMap();
+    if (!lifeSpan.isEmpty()) {
+        QString begin = lifeSpan.value("begin", "").toString();
+        QString end = lifeSpan.value("end", "").toString();
+        QString ended = lifeSpan.value("ended", false).toBool() ? tr("ended") : tr("active");
+        
+        QString lifeSpanText;
+        if (!begin.isEmpty()) {
+            lifeSpanText = begin;
+            if (!end.isEmpty()) {
+                lifeSpanText += " - " + end;
+            } else if (lifeSpan.value("ended", false).toBool()) {
+                lifeSpanText += " - " + tr("ended");
+            } else {
+                lifeSpanText += " - " + tr("present");
+            }
+        }
+        
+        if (!lifeSpanText.isEmpty()) {
+            QWidget *lifeSpanItem = UiUtils::createInfoItem(tr("Life Span"), lifeSpanText, parent);
+            layout->addWidget(lifeSpanItem);
+        }
+    }
+    
+    // 地区
+    QVariantMap area = detailData.value("area", QVariantMap()).toMap();
+    if (!area.isEmpty()) {
+        QString areaName = area.value("name", "").toString();
+        if (!areaName.isEmpty()) {
+            QWidget *areaItem = UiUtils::createInfoItem(tr("Area"), areaName, parent);
+            layout->addWidget(areaItem);
+        }
+    }
+    
+    // 开始地区
+    QVariantMap beginArea = detailData.value("begin-area", QVariantMap()).toMap();
+    if (!beginArea.isEmpty()) {
+        QString beginAreaName = beginArea.value("name", "").toString();
+        if (!beginAreaName.isEmpty()) {
+            QWidget *beginAreaItem = UiUtils::createInfoItem(tr("Begin Area"), beginAreaName, parent);
+            layout->addWidget(beginAreaItem);
+        }
+    }
+}
+
+void ItemDetailTab::populateReleaseOverview(QVBoxLayout *layout, const QVariantMap &detailData, QWidget *parent)
+{
+    // 发行状态
+    QString status = detailData.value("status", "").toString();
+    if (!status.isEmpty()) {
+        QWidget *statusItem = UiUtils::createInfoItem(tr("Status"), status, parent);
+        layout->addWidget(statusItem);
+    }
+    
+    // 发行日期
+    QString date = detailData.value("date", "").toString();
+    if (!date.isEmpty()) {
+        QWidget *dateItem = UiUtils::createInfoItem(tr("Release Date"), date, parent);
+        layout->addWidget(dateItem);
+    }
+    
+    // 包装
+    QString packaging = detailData.value("packaging", "").toString();
+    if (!packaging.isEmpty()) {
+        QWidget *packagingItem = UiUtils::createInfoItem(tr("Packaging"), packaging, parent);
+        layout->addWidget(packagingItem);
+    }
+    
+    // 条形码
+    QString barcode = detailData.value("barcode", "").toString();
+    if (!barcode.isEmpty()) {
+        QWidget *barcodeItem = UiUtils::createInfoItem(tr("Barcode"), barcode, parent);
+        layout->addWidget(barcodeItem);
+    }
+    
+    // 国家
+    QVariantMap releaseCountry = detailData.value("release-country", QVariantMap()).toMap();
+    if (!releaseCountry.isEmpty()) {
+        QString countryName = releaseCountry.value("name", "").toString();
+        if (!countryName.isEmpty()) {
+            QWidget *countryItem = UiUtils::createInfoItem(tr("Country"), countryName, parent);
+            layout->addWidget(countryItem);
+        }
+    }
+    
+    // 音轨数量
+    QVariantList media = detailData.value("media", QVariantList()).toList();
+    if (!media.isEmpty()) {
+        int totalTracks = 0;
+        QStringList mediaInfo;
+        for (const QVariant &medium : media) {
+            QVariantMap mediumMap = medium.toMap();
+            int trackCount = mediumMap.value("track-count", 0).toInt();
+            QString format = mediumMap.value("format", "").toString();
+            totalTracks += trackCount;
+            if (!format.isEmpty()) {
+                mediaInfo << QString("%1 (%2 tracks)").arg(format).arg(trackCount);
+            }
+        }
+        
+        if (totalTracks > 0) {
+            QWidget *tracksItem = UiUtils::createInfoItem(tr("Total Tracks"), QString::number(totalTracks), parent);
+            layout->addWidget(tracksItem);
+        }
+        
+        if (!mediaInfo.isEmpty()) {
+            QWidget *mediaItem = UiUtils::createInfoItem(tr("Media"), mediaInfo.join(", "), parent);
+            layout->addWidget(mediaItem);
+        }
+    }
+}
+
+void ItemDetailTab::populateRecordingOverview(QVBoxLayout *layout, const QVariantMap &detailData, QWidget *parent)
+{
+    // 录音长度
+    int length = detailData.value("length", 0).toInt();
+    if (length > 0) {
+        int minutes = length / 60000;
+        int seconds = (length % 60000) / 1000;
+        QString lengthText = QString("%1:%2").arg(minutes).arg(seconds, 2, 10, QLatin1Char('0'));
+        QWidget *lengthItem = UiUtils::createInfoItem(tr("Length"), lengthText, parent);
+        layout->addWidget(lengthItem);
+    }
+    
+    // ISRC
+    QVariantList isrcs = detailData.value("isrcs", QVariantList()).toList();
+    if (!isrcs.isEmpty()) {
+        QStringList isrcStrings;
+        for (const QVariant &isrc : isrcs) {
+            isrcStrings << isrc.toString();
+        }
+        QWidget *isrcItem = UiUtils::createInfoItem(tr("ISRC"), isrcStrings.join(", "), parent);
+        layout->addWidget(isrcItem);
+    }
+    
+    // 录音状态
+    QString status = detailData.value("status", "").toString();
+    if (!status.isEmpty()) {
+        QWidget *statusItem = UiUtils::createInfoItem(tr("Status"), status, parent);
+        layout->addWidget(statusItem);
+    }
+}
+
+void ItemDetailTab::populateReleaseGroupOverview(QVBoxLayout *layout, const QVariantMap &detailData, QWidget *parent)
+{
+    // 发行组类型
+    QString type = detailData.value("type", "").toString();
+    if (!type.isEmpty()) {
+        QWidget *typeItem = UiUtils::createInfoItem(tr("Type"), type, parent);
+        layout->addWidget(typeItem);
+    }
+    
+    // 主要类型
+    QString primaryType = detailData.value("primary-type", "").toString();
+    if (!primaryType.isEmpty()) {
+        QWidget *primaryTypeItem = UiUtils::createInfoItem(tr("Primary Type"), primaryType, parent);
+        layout->addWidget(primaryTypeItem);
+    }
+    
+    // 次要类型
+    QVariantList secondaryTypes = detailData.value("secondary-types", QVariantList()).toList();
+    if (!secondaryTypes.isEmpty()) {
+        QStringList typeStrings;
+        for (const QVariant &type : secondaryTypes) {
+            typeStrings << type.toString();
+        }
+        QWidget *secondaryTypesItem = UiUtils::createInfoItem(tr("Secondary Types"), typeStrings.join(", "), parent);
+        layout->addWidget(secondaryTypesItem);
+    }
+    
+    // 首次发行日期
+    QString firstReleaseDate = detailData.value("first-release-date", "").toString();
+    if (!firstReleaseDate.isEmpty()) {
+        QWidget *dateItem = UiUtils::createInfoItem(tr("First Release Date"), firstReleaseDate, parent);
+        layout->addWidget(dateItem);
+    }
+}
+
+void ItemDetailTab::populateLabelOverview(QVBoxLayout *layout, const QVariantMap &detailData, QWidget *parent)
+{
+    // 标签类型
+    QString type = detailData.value("type", "").toString();
+    if (!type.isEmpty()) {
+        QWidget *typeItem = UiUtils::createInfoItem(tr("Type"), type, parent);
+        layout->addWidget(typeItem);
+    }
+    
+    // 标签代码
+    QString labelCode = detailData.value("label-code", "").toString();
+    if (!labelCode.isEmpty()) {
+        QWidget *codeItem = UiUtils::createInfoItem(tr("Label Code"), labelCode, parent);
+        layout->addWidget(codeItem);
+    }
+    
+    // 地区
+    QVariantMap area = detailData.value("area", QVariantMap()).toMap();
+    if (!area.isEmpty()) {
+        QString areaName = area.value("name", "").toString();
+        if (!areaName.isEmpty()) {
+            QWidget *areaItem = UiUtils::createInfoItem(tr("Area"), areaName, parent);
+            layout->addWidget(areaItem);
+        }
+    }
+    
+    // 活动期间
+    QVariantMap lifeSpan = detailData.value("life-span", QVariantMap()).toMap();
+    if (!lifeSpan.isEmpty()) {
+        QString begin = lifeSpan.value("begin", "").toString();
+        QString end = lifeSpan.value("end", "").toString();
+        
+        QString lifeSpanText;
+        if (!begin.isEmpty()) {
+            lifeSpanText = begin;
+            if (!end.isEmpty()) {
+                lifeSpanText += " - " + end;
+            } else if (!lifeSpan.value("ended", false).toBool()) {
+                lifeSpanText += " - " + tr("present");
+            }
+        }
+        
+        if (!lifeSpanText.isEmpty()) {
+            QWidget *lifeSpanItem = UiUtils::createInfoItem(tr("Active Period"), lifeSpanText, parent);
+            layout->addWidget(lifeSpanItem);
+        }
+    }
+}
+
+void ItemDetailTab::populateWorkOverview(QVBoxLayout *layout, const QVariantMap &detailData, QWidget *parent)
+{
+    // 作品类型
+    QString type = detailData.value("type", "").toString();
+    if (!type.isEmpty()) {
+        QWidget *typeItem = UiUtils::createInfoItem(tr("Type"), type, parent);
+        layout->addWidget(typeItem);
+    }
+    
+    // 语言
+    QVariantList languages = detailData.value("languages", QVariantList()).toList();
+    if (!languages.isEmpty()) {
+        QStringList languageStrings;
+        for (const QVariant &lang : languages) {
+            languageStrings << lang.toString();
+        }
+        QWidget *languageItem = UiUtils::createInfoItem(tr("Languages"), languageStrings.join(", "), parent);
+        layout->addWidget(languageItem);
+    }
+    
+    // ISWC
+    QVariantList iswcs = detailData.value("iswcs", QVariantList()).toList();
+    if (!iswcs.isEmpty()) {
+        QStringList iswcStrings;
+        for (const QVariant &iswc : iswcs) {
+            iswcStrings << iswc.toString();
+        }
+        QWidget *iswcItem = UiUtils::createInfoItem(tr("ISWC"), iswcStrings.join(", "), parent);
+        layout->addWidget(iswcItem);
+    }
+}
+
+QWidget* ItemDetailTab::createArtistCreditWidget(const QVariantList &artistCredits)
+{
+    QWidget *artistWidget = new QWidget();
+    QVBoxLayout *artistLayout = new QVBoxLayout(artistWidget);
+    artistWidget->setStyleSheet("QWidget { background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 5px; padding: 10px; margin: 5px; }");
+    
+    QLabel *artistTitle = new QLabel(tr("<h3>Artist Credit</h3>"));
+    artistTitle->setAlignment(Qt::AlignLeft);
+    artistLayout->addWidget(artistTitle);
+    
+    for (const QVariant &credit : artistCredits) {
+        QVariantMap creditMap = credit.toMap();
+        QVariantMap artist = creditMap.value("artist", QVariantMap()).toMap();
+        QString artistName = artist.value("name", "").toString();
+        QString joinPhrase = creditMap.value("joinphrase", "").toString();
+        
+        if (!artistName.isEmpty()) {
+            QString displayText = artistName;
+            if (!joinPhrase.isEmpty()) {
+                displayText += " " + joinPhrase;
+            }
+            QLabel *artistLabel = new QLabel(displayText);
+            artistLabel->setStyleSheet("color: #0066cc; text-decoration: underline; cursor: pointer;");
+            artistLayout->addWidget(artistLabel);
+        }
+    }
+    
+    return artistWidget;
+}
+
+QWidget* ItemDetailTab::createGenresWidget(const QVariantList &genres)
+{
+    QWidget *genreWidget = new QWidget();
+    QVBoxLayout *genreLayout = new QVBoxLayout(genreWidget);
+    genreWidget->setStyleSheet("QWidget { background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 5px; padding: 10px; margin: 5px; }");
+    
+    QLabel *genreTitle = new QLabel(tr("<h3>Genres</h3>"));
+    genreTitle->setAlignment(Qt::AlignLeft);
+    genreLayout->addWidget(genreTitle);
+    
+    QStringList genreNames;
+    for (const QVariant &genre : genres) {
+        QVariantMap genreMap = genre.toMap();
+        QString name = genreMap.value("name", "").toString();
+        if (!name.isEmpty()) {
+            genreNames << name;
+        }
+    }
+    
+    if (!genreNames.isEmpty()) {
+        QLabel *genreLabel = new QLabel(genreNames.join(", "));
+        genreLabel->setWordWrap(true);
+        genreLayout->addWidget(genreLabel);
+    }
+    
+    return genreWidget;
 }

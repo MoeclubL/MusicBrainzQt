@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 3.16)
 
 project(MusicBrainzQt VERSION 1.0.0 LANGUAGES CXX)
 
-# 使用C++20标准以支持Qt6.9的现代特性
-set(CMAKE_CXX_STANDARD 20)
+# 使用C++17标准以确保更好的兼容性
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -47,6 +47,7 @@ set(SOURCES
     src/ui/searchresulttab.cpp
     src/ui/itemdetailtab.cpp
     src/ui/entitylistwidget.cpp
+    src/ui/ui_utils.cpp
     src/services/searchservice.cpp
     src/services/entitydetailmanager.cpp
     src/utils/logger.cpp
@@ -66,6 +67,7 @@ set(HEADERS
     src/ui/searchresulttab.h
     src/ui/itemdetailtab.h
     src/ui/entitylistwidget.h
+    src/ui/ui_utils.h
     src/services/searchservice.h
     src/services/entitydetailmanager.h
     src/core/types.h

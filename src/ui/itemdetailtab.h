@@ -133,21 +133,31 @@ private slots:
     void onCopyId(const QString &itemId);
 
 private:
-    void setupUI();    void setupSubTabs();
+    void setupUI();
+    void setupSubTabs();
     void populateItemInfo();
     void populateSubTabs();
-    void createSubTab(const QString &title, const QString &key, EntityType entityType);
-    void createOverviewTab();
+    void createSubTab(const QString &title, const QString &key, EntityType entityType);    void createOverviewTab();
     void createAliasesTab();
     void createTagsTab();
     void createRelationshipsTab();
-    QString buildMusicBrainzUrl(const QString &itemId, EntityType type) const;
+    
+    // 实体类型特定的概览页面填充方法
+    void populateArtistOverview(QVBoxLayout *layout, const QVariantMap &detailData, QWidget *parent);
+    void populateReleaseOverview(QVBoxLayout *layout, const QVariantMap &detailData, QWidget *parent);
+    void populateRecordingOverview(QVBoxLayout *layout, const QVariantMap &detailData, QWidget *parent);
+    void populateReleaseGroupOverview(QVBoxLayout *layout, const QVariantMap &detailData, QWidget *parent);
+    void populateLabelOverview(QVBoxLayout *layout, const QVariantMap &detailData, QWidget *parent);
+    void populateWorkOverview(QVBoxLayout *layout, const QVariantMap &detailData, QWidget *parent);    // 通用组件创建方法
+    QWidget* createArtistCreditWidget(const QVariantList &artistCredits);
+    QWidget* createGenresWidget(const QVariantList &genres);
+    QWidget* createGenresSection(const QVariantList &genres);
+    QWidget* createTagsSection(const QVariantList &tags);
     
     // 结构化信息显示辅助方法
     void clearInfoLayout(QVBoxLayout *layout);
     void populateInfoSection(QVBoxLayout *layout, const QMap<QString, QVariant> &data);
     void populateDetailsSection(QVBoxLayout *layout, const QVariantMap &data);
-    void createInfoItem(QVBoxLayout *layout, const QString &label, const QString &value);
     QString formatComplexValue(const QVariantMap &map);
     
     Ui::ItemDetailTab *ui;

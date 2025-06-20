@@ -3,6 +3,7 @@
 #include "ui/advancedsearchwidget.h"
 #include "ui/searchresulttab.h"
 #include "ui/itemdetailtab.h"
+#include "ui/ui_utils.h"
 #include "services/searchservice.h"
 #include "services/entitydetailmanager.h"
 #include <QMenuBar>
@@ -21,10 +22,6 @@
 #include <QFont>
 #include <QListWidget>
 #include <QMessageBox>
-#include <QDesktopServices>
-#include <QUrl>
-#include <QClipboard>
-#include <QGuiApplication>
 
 // =============================================================================
 // 构造函数和析构函数
@@ -478,44 +475,15 @@ void MainWindow::onItemDetailsUpdated(const QSharedPointer<ResultItem> &item)
 
 void MainWindow::onOpenInBrowser(const QString &entityId, EntityType entityType)
 {
-    // 构建MusicBrainz URL
-    QString baseUrl = "https://musicbrainz.org";
-    QString typeString;
+    QString url = UiUtils::buildMusicBrainzUrl(entityId, entityType);
     
-    switch (entityType) {
-        case EntityType::Artist:
-            typeString = "artist";
-            break;
-        case EntityType::Release:
-            typeString = "release";
-            break;
-        case EntityType::ReleaseGroup:
-            typeString = "release-group";
-            break;
-        case EntityType::Recording:
-            typeString = "recording";
-            break;
-        case EntityType::Work:
-            typeString = "work";
-            break;
-        case EntityType::Label:
-            typeString = "label";
-            break;
-        case EntityType::Area:
-            typeString = "area";
-            break;
-        case EntityType::Place:
-            typeString = "place";
-            break;
-        default:
-            statusBar()->showMessage(tr("Unsupported entity type for browser opening"), 3000);
-            return;
+    if (url.isEmpty()) {
+        statusBar()->showMessage(tr("Unsupported entity type for browser opening"), 3000);
+        return;
     }
     
-    QString url = QString("%1/%2/%3").arg(baseUrl).arg(typeString).arg(entityId);
-    
     // 在默认浏览器中打开URL
-    if (QDesktopServices::openUrl(QUrl(url))) {
+    if (UiUtils::openUrlInBrowser(url)) {
         statusBar()->showMessage(tr("Opened in browser: %1").arg(url), 3000);
     } else {
         statusBar()->showMessage(tr("Failed to open URL in browser"), 3000);
@@ -524,10 +492,7 @@ void MainWindow::onOpenInBrowser(const QString &entityId, EntityType entityType)
 
 void MainWindow::onCopyId(const QString &entityId)
 {
-    // 复制ID到剪贴板
-    QClipboard *clipboard = QGuiApplication::clipboard();
-    clipboard->setText(entityId);
-    
+    UiUtils::copyToClipboard(entityId);
     statusBar()->showMessage(tr("Copied ID to clipboard: %1").arg(entityId), 2000);
 }
 

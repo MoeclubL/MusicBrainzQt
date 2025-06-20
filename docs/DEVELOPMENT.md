@@ -12,6 +12,7 @@ MusicBrainzQt follows a layered architecture pattern with clear separation of co
 ┌─────────────────────────────────────────┐
 │                UI Layer                 │
 │  (MainWindow, ItemDetailTab, etc.)     │
+│  Uses: UiUtils (UI-specific utilities) │
 └─────────────────┬───────────────────────┘
                   │
 ┌─────────────────▼───────────────────────┐
@@ -21,7 +22,8 @@ MusicBrainzQt follows a layered architecture pattern with clear separation of co
                   │
 ┌─────────────────▼───────────────────────┐
 │               API Layer                 │
-│        (LibMusicBrainzApi)             │
+│    (LibMusicBrainzApi, NetworkManager) │
+│   Uses: MusicBrainzUtils (API-only)    │
 └─────────────────┬───────────────────────┘
                   │
 ┌─────────────────▼───────────────────────┐
@@ -30,17 +32,27 @@ MusicBrainzQt follows a layered architecture pattern with clear separation of co
 └─────────────────────────────────────────┘
 ```
 
+### Key Architectural Principles
+
+1. **Layered Architecture**: Clear separation between UI, business logic, and data access
+2. **Utility Separation**: 
+   - `UiUtils` for UI-specific operations (formatting, clipboard, URLs)
+   - `MusicBrainzUtils` for API-specific operations (entity conversion, URL building)
+3. **Single Responsibility**: Each class has a focused, well-defined purpose
+4. **Dependency Direction**: Higher layers depend on lower layers, not vice versa
+
 ### Core Components
 
 #### API Layer (`src/api/`)
 - **LibMusicBrainzApi**: Main interface to MusicBrainz web service
-- **MusicBrainzTypes**: Type definitions for API responses
+- **MusicBrainzParser**: Universal JSON response parser for all entity types
+- **MusicBrainzUtils**: Entity type conversion and utilities (API-only)
+- **NetworkManager**: HTTP request handling with rate limiting
 - Handles rate limiting, authentication, and error management
 
 #### Data Models (`src/models/`)
 - **ResultItem**: Unified data container for all entity types
 - **ResultTableModel**: Qt model for displaying search results
-- **ResultItemModel**: List model for various UI components
 
 #### UI Components (`src/ui/`)
 - **MainWindow**: Application main window with search interface
@@ -48,6 +60,19 @@ MusicBrainzQt follows a layered architecture pattern with clear separation of co
 - **EntityListWidget**: Reusable list component for all entity types
 - **AdvancedSearchWidget**: Complex search form builder
 - **SearchResultTab**: Search results display and management
+- **UiUtils**: UI-specific utilities (formatting, clipboard, URLs)
+
+#### Service Layer (`src/services/`)
+- **SearchService**: Business logic for search operations
+- **EntityDetailManager**: Entity detail retrieval and caching
+
+#### Core Types (`src/core/`)
+- **types.h**: Common type definitions and enums
+- **error_types.h**: Error handling types
+
+#### Utilities (`src/utils/`)
+- **ConfigManager**: Application configuration management
+- **Logger**: Logging utilities
 
 #### Services (`src/services/`)
 - **SearchService**: Coordinates search operations
@@ -396,3 +421,109 @@ We follow semantic versioning (SemVer):
 - **Documentation**: Improve and expand these guides
 
 Remember: Good code is not just working code—it's code that others can understand, maintain, and extend.
+
+## 🔧 Development Best Practices
+
+### Utility Layer Usage
+
+**Important**: Use the correct utility layer for your code:
+
+#### UI Code should use `UiUtils`
+```cpp
+#include "ui/ui_utils.h"
+
+// ✅ Correct - UI code using UI utilities
+void MyWidget::copyToClipboard(const QString &text) {
+    UiUtils::copyToClipboard(text);
+}
+
+void MyWidget::openUrl(const QString &url) {
+    UiUtils::openUrl(url);
+}
+
+QString MyWidget::formatDuration(int seconds) {
+    return UiUtils::formatDuration(seconds);
+}
+```
+
+#### API/Business Logic should use `MusicBrainzUtils`
+```cpp
+#include "api/musicbrainz_utils.h"
+
+// ✅ Correct - API code using API utilities
+QString ApiClass::buildEntityUrl(EntityType type, const QString &mbid) {
+    return MusicBrainzUtils::buildEntityUrl(type, mbid);
+}
+
+QString ApiClass::getIncludes(EntityType type) {
+    return MusicBrainzUtils::getDefaultIncludes(type);
+}
+```
+
+### Entity Type Handling
+
+Use the modern constexpr-based entity type utilities:
+
+```cpp
+// Convert enum to string
+EntityType type = EntityType::Artist;
+QString typeStr = MusicBrainzUtils::entityTypeToString(type); // "artist"
+
+// Convert string to enum
+QString typeStr = "release-group";
+EntityType type = MusicBrainzUtils::stringToEntityType(typeStr); // EntityType::ReleaseGroup
+
+// Get plural form
+QString plural = MusicBrainzUtils::getEntityPluralName(EntityType::Artist); // "artists"
+```
+
+### Network Requests
+
+All network requests should go through the `NetworkManager`:
+
+```cpp
+#include "api/network_manager.h"
+
+// Create request
+QNetworkRequest request(url);
+request.setHeader(QNetworkRequest::UserAgentHeader, USER_AGENT);
+
+// Use NetworkManager for rate-limited requests
+auto reply = NetworkManager::instance().get(request);
+connect(reply, &QNetworkReply::finished, this, &MyClass::onRequestFinished);
+```
+
+### Error Handling
+
+Use the standardized error types:
+
+```cpp
+#include "core/error_types.h"
+
+// Handle different error types
+void handleError(const ApiError &error) {
+    switch (error.type) {
+        case ApiErrorType::NetworkError:
+            // Handle network issues
+            break;
+        case ApiErrorType::RateLimitExceeded:
+            // Handle rate limiting
+            break;
+        case ApiErrorType::ParseError:
+            // Handle JSON parsing errors
+            break;
+    }
+}
+```
+
+### JSON Parsing
+
+Use the universal `MusicBrainzParser` for all entity types:
+
+```cpp
+#include "api/musicbrainzparser.h"
+
+// Parse any entity type
+QJsonObject jsonObj = // ... from API response
+ResultItem item = MusicBrainzParser::parseEntity(jsonObj, EntityType::Artist);
+```

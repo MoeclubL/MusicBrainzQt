@@ -39,18 +39,6 @@ QString getDefaultIncludes(EntityType type)
     return "tags+ratings+genres";
 }
 
-QString buildMusicBrainzUrl(const QString &entityId, EntityType type)
-{
-    if (entityId.isEmpty()) {
-        return QString();
-    }
-    
-    QString typeStr = entityTypeToString(type);
-    if (typeStr == "unknown") {
-        return QString();
-    }
-    
-    return QString("https://musicbrainz.org/%1/%2").arg(typeStr, entityId);
-}
+
 
 }
