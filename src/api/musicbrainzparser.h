@@ -192,6 +192,13 @@ private:
     QVariantList parseAliases(const QJsonArray &aliases);
     
     /**
+     * @brief 解析关系信息
+     * @param relations JSON数组
+     * @return 解析后的关系信息列表
+     */
+    QVariantList parseRelationships(const QJsonArray &relations);
+    
+    /**
      * @brief 解析生命周期信息
      * @param lifeSpan JSON对象
      * @return 解析后的生命周期信息

@@ -36,12 +36,12 @@ struct EntityMapping {
  * https://musicbrainz.org/doc/MusicBrainz_API#Subqueries
  */
 constexpr std::array<EntityMapping, 16> ENTITY_MAPPINGS = {{
-    {EntityType::Artist, "artist", "artists", "aliases+tags+ratings+genres+recordings+releases+release-groups+works"},
-    {EntityType::Release, "release", "releases", "aliases+tags+ratings+genres+artists+labels+recordings+release-groups"},
-    {EntityType::Recording, "recording", "recordings", "aliases+tags+ratings+genres+artists+releases+release-groups+isrcs"},
-    {EntityType::ReleaseGroup, "release-group", "release-groups", "aliases+tags+ratings+genres+artists+releases"},
-    {EntityType::Label, "label", "labels", "aliases+tags+ratings+genres+releases"},
-    {EntityType::Work, "work", "works", "aliases+tags+ratings+genres"},
+    {EntityType::Artist, "artist", "artists", "aliases+tags+ratings+genres+recordings+releases+release-groups+works+artist-rels+release-rels+release-group-rels+recording-rels+work-rels+url-rels"},
+    {EntityType::Release, "release", "releases", "aliases+tags+ratings+genres+artists+labels+recordings+release-groups+artist-rels+release-rels+release-group-rels+recording-rels+work-rels+url-rels"},
+    {EntityType::Recording, "recording", "recordings", "aliases+tags+ratings+genres+artists+releases+release-groups+isrcs+artist-rels+release-rels+release-group-rels+recording-rels+work-rels+url-rels"},
+    {EntityType::ReleaseGroup, "release-group", "release-groups", "aliases+tags+ratings+genres+artists+releases+artist-rels+release-rels+release-group-rels+recording-rels+work-rels+url-rels"},
+    {EntityType::Label, "label", "labels", "aliases+tags+ratings+genres+releases+artist-rels+release-rels+release-group-rels+recording-rels+work-rels+url-rels"},
+    {EntityType::Work, "work", "works", "aliases+tags+ratings+genres+artist-rels+release-rels+release-group-rels+recording-rels+work-rels+url-rels"},
     {EntityType::Area, "area", "areas", "aliases+tags+ratings+genres"},
     {EntityType::Place, "place", "places", "aliases+tags+ratings+genres"},
     {EntityType::Annotation, "annotation", "annotations", "tags+ratings+genres"},

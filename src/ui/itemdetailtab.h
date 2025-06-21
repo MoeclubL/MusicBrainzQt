@@ -142,6 +142,11 @@ private:
     void createTagsTab();
     void createRelationshipsTab();
     
+    // Relationships tab 辅助方法
+    QWidget* createRelationshipItem(const QVariantMap &relation);
+    QWidget* createRelationshipsSidebar();
+    void addSidebarItem(QVBoxLayout *layout, const QString &label, const QString &value);
+    
     // 实体类型特定的概览页面填充方法
     void populateArtistOverview(QVBoxLayout *layout, const QVariantMap &detailData, QWidget *parent);
     void populateReleaseOverview(QVBoxLayout *layout, const QVariantMap &detailData, QWidget *parent);

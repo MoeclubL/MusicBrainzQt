@@ -383,8 +383,8 @@ void MainWindow::onItemDoubleClicked(const QSharedPointer<ResultItem> &item)
 
 void MainWindow::onTabCloseRequested(int index)
 {
-    // 不允许关闭欢迎页面（第0个标签页）
-    if (index > 0) {
+    // 允许关闭任何标签页
+    if (index >= 0 && index < m_mainTabWidget->count()) {
         QWidget *widget = m_mainTabWidget->widget(index);
         
         // 如果是ItemDetailTab，从映射中移除
