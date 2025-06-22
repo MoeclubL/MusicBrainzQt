@@ -12,7 +12,7 @@
  * @class NetworkManager
  * @brief 专用的网络请求管理器
  * 
- * 从LibMusicBrainzApi中分离出来的网络层，专门负责：
+ * 从MusicBrainzApi中分离出来的网络层，专门负责：
  * - HTTP请求的发送和接收
  * - 速率限制管理
  * - 请求队列管理

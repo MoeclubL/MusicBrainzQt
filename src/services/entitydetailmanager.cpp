@@ -1,11 +1,11 @@
 #include "entitydetailmanager.h"
-#include "../api/libmusicbrainzapi.h"
+#include "../api/musicbrainzapi.h"
 #include "../utils/logger.h"
 #include <QDebug>
 
 EntityDetailManager::EntityDetailManager(QObject *parent)
     : QObject(parent)
-    , m_api(new LibMusicBrainzApi(this))
+    , m_api(new MusicBrainzApi(this))
     , m_batchTimer(new QTimer(this))
 {
     // 配置批量处理定时器
@@ -13,9 +13,9 @@ EntityDetailManager::EntityDetailManager(QObject *parent)
     connect(m_batchTimer, &QTimer::timeout, this, &EntityDetailManager::processBatchQueue);
     
     // 连接API信号
-    connect(m_api, &LibMusicBrainzApi::detailsReady,
+    connect(m_api, &MusicBrainzApi::detailsReady,
             this, &EntityDetailManager::onApiDetailsReady);
-    connect(m_api, &LibMusicBrainzApi::errorOccurred,
+    connect(m_api, &MusicBrainzApi::errorOccurred,
             this, &EntityDetailManager::onApiErrorOccurred);
             
     LOG_SERVICE_INFO("EntityDetailManager initialized with batch delay: %d ms", m_batchDelay);

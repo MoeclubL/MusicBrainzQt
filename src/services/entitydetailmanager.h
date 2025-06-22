@@ -11,7 +11,7 @@
 #include "../core/error_types.h"
 #include "../models/resultitem.h"
 
-class LibMusicBrainzApi;
+class MusicBrainzApi;
 
 /**
  * @class EntityDetailManager
@@ -50,7 +50,7 @@ class LibMusicBrainzApi;
  *       相关接口保留以维持API兼容性。
  * 
  * @author MusicBrainzQt Team
- * @see LibMusicBrainzApi, ResultItem
+ * @see MusicBrainzApi, ResultItem
  */
 class EntityDetailManager : public QObject {    Q_OBJECT
 
@@ -219,7 +219,7 @@ private:
     // 成员变量
     // =============================================================================
     
-    LibMusicBrainzApi *m_api;                           ///< MusicBrainz API接口
+    MusicBrainzApi *m_api;                           ///< MusicBrainz API接口
     
     // 缓存相关（已禁用但保留结构）
     QMap<QString, QVariantMap> m_detailsCache;          ///< 详细信息缓存（已禁用）

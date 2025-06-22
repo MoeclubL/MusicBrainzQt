@@ -47,11 +47,10 @@ public:
      * @param parent 父对象
      */
     explicit MusicBrainzApi(QObject *parent = nullptr);
-    
-    /**
+      /**
      * @brief 析构函数
      */
-    ~LibMusicBrainzApi();
+    ~MusicBrainzApi();
 
     // =============================================================================
     // 核心API方法

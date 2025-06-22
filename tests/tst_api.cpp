@@ -1,10 +1,10 @@
 #include <QtTest>
 #include <QSignalSpy>
 #include <QEventLoop>
-#include "../src/api/libmusicbrainzapi.h"
+#include "../src/api/musicbrainzapi.h"
 #include "../src/core/types.h"
 
-class TestLibMusicBrainzApi : public QObject
+class TestMusicBrainzApi : public QObject
 {
     Q_OBJECT
 
@@ -16,36 +16,36 @@ private slots:
     void testGetReleaseDetails();
 
 private:
-    LibMusicBrainzApi *api;
+    MusicBrainzApi *api;
 };
 
-void TestLibMusicBrainzApi::initTestCase()
+void TestMusicBrainzApi::initTestCase()
 {
-    api = new LibMusicBrainzApi();
+    api = new MusicBrainzApi();
 }
 
-void TestLibMusicBrainzApi::cleanupTestCase()
+void TestMusicBrainzApi::cleanupTestCase()
 {
     delete api;
 }
 
-void TestLibMusicBrainzApi::testSearchAlbum()
+void TestMusicBrainzApi::testSearchAlbum()
 {
     // 测试专辑搜索
     api->search("Abbey Road", EntityType::Release);
 }
 
-void TestLibMusicBrainzApi::testSearchArtist()
+void TestMusicBrainzApi::testSearchArtist()
 {
     // 测试艺术家搜索
     api->search("The Beatles", EntityType::Artist);
 }
 
-void TestLibMusicBrainzApi::testGetReleaseDetails()
+void TestMusicBrainzApi::testGetReleaseDetails()
 {
     // 测试获取发布详情
     api->getDetails("1e0eee38-a9f6-49bf-84d0-45d0647799af", EntityType::Release);
 }
 
-QTEST_MAIN(TestLibMusicBrainzApi)
+QTEST_MAIN(TestMusicBrainzApi)
 #include "tst_api.moc"

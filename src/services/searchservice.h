@@ -6,7 +6,7 @@
 #include "../core/types.h"
 
 class ResultItem;
-class LibMusicBrainzApi;
+class MusicBrainzApi;
 
 /**
  * @class SearchService
@@ -36,7 +36,7 @@ class LibMusicBrainzApi;
  * 支持前进/后退分页，自动管理页码状态和边界检查。
  * 
  * @author MusicBrainzQt Team
- * @see LibMusicBrainzApi, SearchParameters
+ * @see MusicBrainzApi, SearchParameters
  */
 class SearchService : public QObject
 {
@@ -202,7 +202,7 @@ private:
     // 成员变量
     // =============================================================================
     
-    LibMusicBrainzApi *m_api;              ///< MusicBrainz API接口
+    MusicBrainzApi *m_api;              ///< MusicBrainz API接口
     SearchParameters m_currentParams;       ///< 当前搜索参数
     SearchResults m_currentResults;         ///< 当前搜索结果统计
     int m_currentPage;                      ///< 当前页码（从1开始）

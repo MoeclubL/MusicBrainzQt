@@ -1,7 +1,7 @@
 #include "itemdetailtab.h"
 #include "ui_itemdetailtab.h"
 #include "entitylistwidget.h"
-#include "ui_utils.h"
+#include "widget_helpers.h"
 #include "../models/resultitem.h"
 #include "../utils/logger.h"
 #include <QDesktopServices>
@@ -166,7 +166,7 @@ void ItemDetailTab::createOverviewTab()
       // MBID
     QString mbid = m_item->getId();
     if (!mbid.isEmpty()) {
-        QWidget *mbidItem = UiUtils::createInfoItem(tr("MBID"), mbid, overviewWidget);
+        QWidget *mbidItem = WidgetHelpers::createInfoItem(tr("MBID"), mbid, overviewWidget);
         basicInfoLayout->addWidget(mbidItem);
     }
       // 根据实体类型显示不同字段
@@ -199,14 +199,14 @@ void ItemDetailTab::createOverviewTab()
         int votesCount = rating.value("votes-count", 0).toInt();
         if (ratingValue > 0) {
             QString ratingText = QString("%1/5 (%2 votes)").arg(ratingValue, 0, 'f', 1).arg(votesCount);
-            QWidget *ratingItem = UiUtils::createInfoItem(tr("Rating"), ratingText, overviewWidget);
+            QWidget *ratingItem = WidgetHelpers::createInfoItem(tr("Rating"), ratingText, overviewWidget);
             basicInfoLayout->addWidget(ratingItem);
         }
     }
       // 消歧义信息
     QString disambiguation = m_item->getDisambiguation();
     if (!disambiguation.isEmpty()) {
-        QWidget *disambiguationItem = UiUtils::createInfoItem(tr("Disambiguation"), disambiguation, overviewWidget);
+        QWidget *disambiguationItem = WidgetHelpers::createInfoItem(tr("Disambiguation"), disambiguation, overviewWidget);
         basicInfoLayout->addWidget(disambiguationItem);
     }
     
@@ -999,7 +999,7 @@ void ItemDetailTab::populateInfoSection(QVBoxLayout *layout, const QMap<QString,
           // 仅显示fieldNames中定义的字段且值非空
         if (fieldNames.contains(key) && value.canConvert<QString>() && !value.toString().isEmpty()) {
             QString displayName = fieldNames.value(key);
-            QWidget *infoItem = UiUtils::createInfoItem(displayName, value.toString(), layout->parentWidget());
+            QWidget *infoItem = WidgetHelpers::createInfoItem(displayName, value.toString(), layout->parentWidget());
             layout->addWidget(infoItem);
             hasData = true;
         }
@@ -1052,7 +1052,7 @@ void ItemDetailTab::populateDetailsSection(QVBoxLayout *layout, const QVariantMa
           // 处理不同类型的数据
         if (value.canConvert<QString>() && !value.toString().isEmpty()) {
             QString displayName = fieldNames.value(key);
-            QWidget *infoItem = UiUtils::createInfoItem(displayName, value.toString(), layout->parentWidget());
+            QWidget *infoItem = WidgetHelpers::createInfoItem(displayName, value.toString(), layout->parentWidget());
             layout->addWidget(infoItem);
             hasData = true;
         } else if (value.canConvert<QVariantMap>()) {
@@ -1061,7 +1061,7 @@ void ItemDetailTab::populateDetailsSection(QVBoxLayout *layout, const QVariantMa
             QString displayValue = formatComplexValue(subMap);
             if (!displayValue.isEmpty()) {
                 QString displayName = fieldNames.value(key);
-                QWidget *infoItem = UiUtils::createInfoItem(displayName, displayValue, layout->parentWidget());
+                QWidget *infoItem = WidgetHelpers::createInfoItem(displayName, displayValue, layout->parentWidget());
                 layout->addWidget(infoItem);
                 hasData = true;
             }
@@ -1104,14 +1104,14 @@ void ItemDetailTab::populateArtistOverview(QVBoxLayout *layout, const QVariantMa
       // 艺术家类型
     QString type = detailData.value("type", "").toString();
     if (!type.isEmpty()) {
-        QWidget *typeItem = UiUtils::createInfoItem(tr("Type:"), type);
+        QWidget *typeItem = WidgetHelpers::createInfoItem(tr("Type:"), type);
         layout->addWidget(typeItem);
     }
     
     // 地区
     QString area = detailData.value("area", "").toString();
     if (!area.isEmpty()) {
-        QWidget *areaItem = UiUtils::createInfoItem(tr("Area:"), area);
+        QWidget *areaItem = WidgetHelpers::createInfoItem(tr("Area:"), area);
         layout->addWidget(areaItem);
     }
     
@@ -1122,21 +1122,21 @@ void ItemDetailTab::populateArtistOverview(QVBoxLayout *layout, const QVariantMa
         QString end = lifeSpan.value("end", "").toString();
         QString lifeSpanText = end.isEmpty() ? (begin.isEmpty() ? tr("Unknown") : begin + " - ") 
                               : begin + " - " + end;
-        QWidget *lifeSpanItem = UiUtils::createInfoItem(tr("Life span:"), lifeSpanText);
+        QWidget *lifeSpanItem = WidgetHelpers::createInfoItem(tr("Life span:"), lifeSpanText);
         layout->addWidget(lifeSpanItem);
     }
     
     // 性别
     QString gender = detailData.value("gender", "").toString();
     if (!gender.isEmpty()) {
-        QWidget *genderItem = UiUtils::createInfoItem(tr("Gender:"), gender);
+        QWidget *genderItem = WidgetHelpers::createInfoItem(tr("Gender:"), gender);
         layout->addWidget(genderItem);
     }
     
     // 国家
     QString country = detailData.value("country", "").toString();
     if (!country.isEmpty()) {
-        QWidget *countryItem = UiUtils::createInfoItem(tr("Country:"), country);
+        QWidget *countryItem = WidgetHelpers::createInfoItem(tr("Country:"), country);
         layout->addWidget(countryItem);
     }
 }
@@ -1147,41 +1147,41 @@ void ItemDetailTab::populateReleaseOverview(QVBoxLayout *layout, const QVariantM
       // 发行状态
     QString status = detailData.value("status", "").toString();
     if (!status.isEmpty()) {
-        QWidget *statusItem = UiUtils::createInfoItem(tr("Status:"), status);
+        QWidget *statusItem = WidgetHelpers::createInfoItem(tr("Status:"), status);
         layout->addWidget(statusItem);
     }
     
     // 发行日期
     QString date = detailData.value("date", "").toString();
     if (!date.isEmpty()) {
-        QWidget *dateItem = UiUtils::createInfoItem(tr("Release date:"), date);
+        QWidget *dateItem = WidgetHelpers::createInfoItem(tr("Release date:"), date);
         layout->addWidget(dateItem);
     }
     
     // 国家/地区
     QString country = detailData.value("country", "").toString();
     if (!country.isEmpty()) {
-        QWidget *countryItem = UiUtils::createInfoItem(tr("Country:"), country);
+        QWidget *countryItem = WidgetHelpers::createInfoItem(tr("Country:"), country);
         layout->addWidget(countryItem);
     }
     
     // 条形码
     QString barcode = detailData.value("barcode", "").toString();
     if (!barcode.isEmpty()) {
-        QWidget *barcodeItem = UiUtils::createInfoItem(tr("Barcode:"), barcode);
+        QWidget *barcodeItem = WidgetHelpers::createInfoItem(tr("Barcode:"), barcode);
         layout->addWidget(barcodeItem);
     }
     
     // 包装
     QString packaging = detailData.value("packaging", "").toString();
     if (!packaging.isEmpty()) {
-        QWidget *packagingItem = UiUtils::createInfoItem(tr("Packaging:"), packaging);
+        QWidget *packagingItem = WidgetHelpers::createInfoItem(tr("Packaging:"), packaging);
         layout->addWidget(packagingItem);
     }
       // 音轨数量
     int trackCount = detailData.value("track-count", 0).toInt();
     if (trackCount > 0) {
-        QWidget *trackCountItem = UiUtils::createInfoItem(tr("Track count:"), QString::number(trackCount));
+        QWidget *trackCountItem = WidgetHelpers::createInfoItem(tr("Track count:"), QString::number(trackCount));
         layout->addWidget(trackCountItem);
     }
 }
@@ -1192,15 +1192,15 @@ void ItemDetailTab::populateRecordingOverview(QVBoxLayout *layout, const QVarian
       // 持续时间
     int length = detailData.value("length", 0).toInt();
     if (length > 0) {
-        QString duration = UiUtils::formatDuration(length / 1000); // 转换为秒
-        QWidget *durationItem = UiUtils::createInfoItem(tr("Duration:"), duration);
+        QString duration = WidgetHelpers::formatDuration(length / 1000); // 转换为秒
+        QWidget *durationItem = WidgetHelpers::createInfoItem(tr("Duration:"), duration);
         layout->addWidget(durationItem);
     }
     
     // 消歧义
     QString disambiguation = detailData.value("disambiguation", "").toString();
     if (!disambiguation.isEmpty()) {
-        QWidget *disambiguationItem = UiUtils::createInfoItem(tr("Disambiguation:"), disambiguation);
+        QWidget *disambiguationItem = WidgetHelpers::createInfoItem(tr("Disambiguation:"), disambiguation);
         layout->addWidget(disambiguationItem);
     }
 }
@@ -1211,7 +1211,7 @@ void ItemDetailTab::populateReleaseGroupOverview(QVBoxLayout *layout, const QVar
       // 主要类型
     QString primaryType = detailData.value("primary-type", "").toString();
     if (!primaryType.isEmpty()) {
-        QWidget *primaryTypeItem = UiUtils::createInfoItem(tr("Primary type:"), primaryType);
+        QWidget *primaryTypeItem = WidgetHelpers::createInfoItem(tr("Primary type:"), primaryType);
         layout->addWidget(primaryTypeItem);
     }
     
@@ -1223,20 +1223,20 @@ void ItemDetailTab::populateReleaseGroupOverview(QVBoxLayout *layout, const QVar
             typeNames << type.toString();
         }
         QString secondaryTypesText = typeNames.join(", ");
-        QWidget *secondaryTypesItem = UiUtils::createInfoItem(tr("Secondary types:"), secondaryTypesText);
+        QWidget *secondaryTypesItem = WidgetHelpers::createInfoItem(tr("Secondary types:"), secondaryTypesText);
         layout->addWidget(secondaryTypesItem);
     }
       // 首次发行日期
     QString firstReleaseDate = detailData.value("first-release-date", "").toString();
     if (!firstReleaseDate.isEmpty()) {
-        QWidget *dateItem = UiUtils::createInfoItem(tr("First release date:"), firstReleaseDate);
+        QWidget *dateItem = WidgetHelpers::createInfoItem(tr("First release date:"), firstReleaseDate);
         layout->addWidget(dateItem);
     }
     
     // 消歧义
     QString disambiguation = detailData.value("disambiguation", "").toString();
     if (!disambiguation.isEmpty()) {
-        QWidget *disambiguationItem = UiUtils::createInfoItem(tr("Disambiguation:"), disambiguation);
+        QWidget *disambiguationItem = WidgetHelpers::createInfoItem(tr("Disambiguation:"), disambiguation);
         layout->addWidget(disambiguationItem);
     }
 }
@@ -1247,20 +1247,20 @@ void ItemDetailTab::populateLabelOverview(QVBoxLayout *layout, const QVariantMap
       // 厂牌类型
     QString type = detailData.value("type", "").toString();
     if (!type.isEmpty()) {
-        QWidget *typeItem = UiUtils::createInfoItem(tr("Type:"), type);
+        QWidget *typeItem = WidgetHelpers::createInfoItem(tr("Type:"), type);
         layout->addWidget(typeItem);
     }
     
     // 厂牌代码
     QString labelCode = detailData.value("label-code", "").toString();
     if (!labelCode.isEmpty()) {
-        QWidget *labelCodeItem = UiUtils::createInfoItem(tr("Label code:"), QString("LC-%1").arg(labelCode));
+        QWidget *labelCodeItem = WidgetHelpers::createInfoItem(tr("Label code:"), QString("LC-%1").arg(labelCode));
         layout->addWidget(labelCodeItem);
     }
       // Area
     QString area = detailData.value("area", "").toString();
     if (!area.isEmpty()) {
-        QWidget *areaItem = UiUtils::createInfoItem(tr("Area:"), area);
+        QWidget *areaItem = WidgetHelpers::createInfoItem(tr("Area:"), area);
         layout->addWidget(areaItem);
     }
 }
@@ -1271,7 +1271,7 @@ void ItemDetailTab::populateWorkOverview(QVBoxLayout *layout, const QVariantMap 
       // 作品类型
     QString type = detailData.value("type", "").toString();
     if (!type.isEmpty()) {
-        QWidget *typeItem = UiUtils::createInfoItem(tr("Type:"), type);
+        QWidget *typeItem = WidgetHelpers::createInfoItem(tr("Type:"), type);
         layout->addWidget(typeItem);
     }
     
@@ -1283,14 +1283,14 @@ void ItemDetailTab::populateWorkOverview(QVBoxLayout *layout, const QVariantMap 
             languageNames << language.toString();
         }
         QString languageText = languageNames.join(", ");
-        QWidget *languageItem = UiUtils::createInfoItem(tr("Languages:"), languageText);
+        QWidget *languageItem = WidgetHelpers::createInfoItem(tr("Languages:"), languageText);
         layout->addWidget(languageItem);
     }
     
     // 消歧义
     QString disambiguation = detailData.value("disambiguation", "").toString();
     if (!disambiguation.isEmpty()) {
-        QWidget *disambiguationItem = UiUtils::createInfoItem(tr("Disambiguation:"), disambiguation);
+        QWidget *disambiguationItem = WidgetHelpers::createInfoItem(tr("Disambiguation:"), disambiguation);
         layout->addWidget(disambiguationItem);
     }
 }

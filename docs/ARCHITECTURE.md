@@ -14,7 +14,7 @@ MusicBrainzQt follows a **layered architecture** pattern with clear separation o
 │  │   (UI 协调)  │ │  (详情展示)  │ │   (实体列表)        │ │
 │  └─────────────┘ └─────────────┘ └─────────────────────┘ │
 │  ┌─────────────┐ ┌─────────────┐ ┌─────────────────────┐ │
-│  │SearchResult │ │AdvancedSrch │ │    UiUtils         │ │
+│  │SearchResult │ │AdvancedSrch │ │    WidgetHelpers         │ │
 │  │    Tab      │ │   Widget    │ │  (UI工具类)         │ │
 │  │  (搜索结果)  │ │  (高级搜索)  │ │                     │ │
 │  └─────────────┘ └─────────────┘ └─────────────────────┘ │
@@ -34,7 +34,7 @@ MusicBrainzQt follows a **layered architecture** pattern with clear separation o
 ┌─────────────────▼───────────────────────────────────────┐
 │                    API Layer                            │
 │  ┌─────────────────┐ ┌─────────────┐ ┌─────────────────┐ │
-│  │LibMusicBrainzApi│ │MusicBrainz  │ │ NetworkManager  │ │
+│  │MusicBrainzApi│ │MusicBrainz  │ │ NetworkManager  │ │
 │  │  (API 协调器)    │ │   Parser    │ │  (网络管理)     │ │
 │  │ • API调用协调   │ │ • JSON解析  │ │ • HTTP请求     │ │
 │  │ • 错误处理      │ │ • 数据转换  │ │ • 速率限制     │ │
@@ -239,7 +239,7 @@ sequenceDiagram
     participant U as User
     participant MW as MainWindow
     participant SS as SearchService
-    participant API as LibMusicBrainzApi
+    participant API as MusicBrainzApi
     participant MB as MusicBrainz
     participant RT as ResultTab
     
@@ -261,7 +261,7 @@ sequenceDiagram
     participant U as User
     participant IDT as ItemDetailTab
     participant EDM as EntityDetailManager
-    participant API as LibMusicBrainzApi
+    participant API as MusicBrainzApi
     participant MB as MusicBrainz
     
     U->>IDT: Double-click entity
@@ -352,7 +352,7 @@ QString ResultItem::getTypeString() const {
 
 3. **Add API support**:
 ```cpp
-void LibMusicBrainzApi::searchEntity(EntityType type, ...) {
+void MusicBrainzApi::searchEntity(EntityType type, ...) {
     QString endpoint;
     switch (type) {
         // ... existing cases
@@ -396,7 +396,7 @@ class AdvancedSearchWidget {
 
 1. **Extend API interface**:
 ```cpp
-class LibMusicBrainzApi {
+class MusicBrainzApi {
 public slots:
     void getEntityStatistics(const QString &entityId);
 };
@@ -428,7 +428,7 @@ class TestResultItem : public QObject {
 };
 
 // API tests
-class TestLibMusicBrainzApi : public QObject {
+class TestMusicBrainzApi : public QObject {
     void testRequestFormatting();
     void testResponseParsing();
     void testRateLimiting();

@@ -3,7 +3,7 @@
 #include "ui/advancedsearchwidget.h"
 #include "ui/searchresulttab.h"
 #include "ui/itemdetailtab.h"
-#include "ui/ui_utils.h"
+#include "ui/widget_helpers.h"
 #include "services/searchservice.h"
 #include "services/entitydetailmanager.h"
 #include <QMenuBar>
@@ -475,7 +475,7 @@ void MainWindow::onItemDetailsUpdated(const QSharedPointer<ResultItem> &item)
 
 void MainWindow::onOpenInBrowser(const QString &entityId, EntityType entityType)
 {
-    QString url = UiUtils::buildMusicBrainzUrl(entityId, entityType);
+    QString url = WidgetHelpers::buildMusicBrainzUrl(entityId, entityType);
     
     if (url.isEmpty()) {
         statusBar()->showMessage(tr("Unsupported entity type for browser opening"), 3000);
@@ -483,7 +483,7 @@ void MainWindow::onOpenInBrowser(const QString &entityId, EntityType entityType)
     }
     
     // 在默认浏览器中打开URL
-    if (UiUtils::openUrlInBrowser(url)) {
+    if (WidgetHelpers::openUrlInBrowser(url)) {
         statusBar()->showMessage(tr("Opened in browser: %1").arg(url), 3000);
     } else {
         statusBar()->showMessage(tr("Failed to open URL in browser"), 3000);
@@ -492,7 +492,7 @@ void MainWindow::onOpenInBrowser(const QString &entityId, EntityType entityType)
 
 void MainWindow::onCopyId(const QString &entityId)
 {
-    UiUtils::copyToClipboard(entityId);
+    WidgetHelpers::copyToClipboard(entityId);
     statusBar()->showMessage(tr("Copied ID to clipboard: %1").arg(entityId), 2000);
 }
 

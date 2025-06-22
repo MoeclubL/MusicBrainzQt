@@ -37,7 +37,7 @@ include_directories(src)
 set(SOURCES
     src/main.cpp
     src/mainwindow.cpp
-    src/api/libmusicbrainzapi.cpp
+    src/api/musicbrainzapi.cpp
     src/api/musicbrainzparser.cpp
     src/api/musicbrainz_utils.cpp
     src/api/network_manager.cpp
@@ -47,7 +47,7 @@ set(SOURCES
     src/ui/searchresulttab.cpp
     src/ui/itemdetailtab.cpp
     src/ui/entitylistwidget.cpp
-    src/ui/ui_utils.cpp
+    src/ui/widget_helpers.cpp
     src/services/searchservice.cpp
     src/services/entitydetailmanager.cpp
     src/utils/logger.cpp
@@ -57,7 +57,7 @@ set(SOURCES
 # Header files
 set(HEADERS
     src/mainwindow.h
-    src/api/libmusicbrainzapi.h
+    src/api/musicbrainzapi.h
     src/api/musicbrainzparser.h
     src/api/musicbrainz_utils.h
     src/api/network_manager.h
@@ -67,7 +67,7 @@ set(HEADERS
     src/ui/searchresulttab.h
     src/ui/itemdetailtab.h
     src/ui/entitylistwidget.h
-    src/ui/ui_utils.h
+    src/ui/widget_helpers.h
     src/services/searchservice.h
     src/services/entitydetailmanager.h
     src/core/types.h

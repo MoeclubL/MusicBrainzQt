@@ -1,4 +1,4 @@
-#include "ui_utils.h"
+#include "widget_helpers.h"
 #include <QDesktopServices>
 #include <QUrl>
 #include <QClipboard>
@@ -12,7 +12,7 @@
 #include <QDate>
 #include <QCoreApplication>
 
-namespace UiUtils {
+namespace WidgetHelpers {
 
 // =============================================================================
 // URL和链接相关

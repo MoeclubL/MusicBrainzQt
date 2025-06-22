@@ -1,19 +1,19 @@
 #include "searchservice.h"
-#include "../api/libmusicbrainzapi.h"
+#include "../api/musicbrainzapi.h"
 #include "../models/resultitem.h"
 #include <QDebug>
 
 SearchService::SearchService(QObject *parent)
     : QObject(parent)
-    , m_api(new LibMusicBrainzApi(this))
+    , m_api(new MusicBrainzApi(this))
     , m_currentPage(0)
     , m_totalPages(0)
     , m_itemsPerPage(25)
 {
     // 连接API信号
-    connect(m_api, &LibMusicBrainzApi::searchResultsReady,
+    connect(m_api, &MusicBrainzApi::searchResultsReady,
             this, &SearchService::handleApiResults);
-    connect(m_api, &LibMusicBrainzApi::errorOccurred,
+    connect(m_api, &MusicBrainzApi::errorOccurred,
             this, &SearchService::handleApiError);
 }
 

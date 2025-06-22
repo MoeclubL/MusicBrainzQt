@@ -12,7 +12,7 @@ MusicBrainzQt follows a layered architecture pattern with clear separation of co
 ┌─────────────────────────────────────────┐
 │                UI Layer                 │
 │  (MainWindow, ItemDetailTab, etc.)     │
-│  Uses: UiUtils (UI-specific utilities) │
+│  Uses: WidgetHelpers (UI-specific utilities) │
 └─────────────────┬───────────────────────┘
                   │
 ┌─────────────────▼───────────────────────┐
@@ -22,7 +22,7 @@ MusicBrainzQt follows a layered architecture pattern with clear separation of co
                   │
 ┌─────────────────▼───────────────────────┐
 │               API Layer                 │
-│    (LibMusicBrainzApi, NetworkManager) │
+│    (MusicBrainzApi, NetworkManager) │
 │   Uses: MusicBrainzUtils (API-only)    │
 └─────────────────┬───────────────────────┘
                   │
@@ -36,7 +36,7 @@ MusicBrainzQt follows a layered architecture pattern with clear separation of co
 
 1. **Layered Architecture**: Clear separation between UI, business logic, and data access
 2. **Utility Separation**: 
-   - `UiUtils` for UI-specific operations (formatting, clipboard, URLs)
+   - `WidgetHelpers` for UI-specific operations (formatting, clipboard, URLs)
    - `MusicBrainzUtils` for API-specific operations (entity conversion, URL building)
 3. **Single Responsibility**: Each class has a focused, well-defined purpose
 4. **Dependency Direction**: Higher layers depend on lower layers, not vice versa
@@ -44,7 +44,7 @@ MusicBrainzQt follows a layered architecture pattern with clear separation of co
 ### Core Components
 
 #### API Layer (`src/api/`)
-- **LibMusicBrainzApi**: Main interface to MusicBrainz web service
+- **MusicBrainzApi**: Main interface to MusicBrainz web service
 - **MusicBrainzParser**: Universal JSON response parser for all entity types
 - **MusicBrainzUtils**: Entity type conversion and utilities (API-only)
 - **NetworkManager**: HTTP request handling with rate limiting
@@ -60,7 +60,7 @@ MusicBrainzQt follows a layered architecture pattern with clear separation of co
 - **EntityListWidget**: Reusable list component for all entity types
 - **AdvancedSearchWidget**: Complex search form builder
 - **SearchResultTab**: Search results display and management
-- **UiUtils**: UI-specific utilities (formatting, clipboard, URLs)
+- **WidgetHelpers**: UI-specific utilities (formatting, clipboard, URLs)
 
 #### Service Layer (`src/services/`)
 - **SearchService**: Business logic for search operations
@@ -428,21 +428,21 @@ Remember: Good code is not just working code—it's code that others can underst
 
 **Important**: Use the correct utility layer for your code:
 
-#### UI Code should use `UiUtils`
+#### UI Code should use `WidgetHelpers`
 ```cpp
-#include "ui/ui_utils.h"
+#include "ui/widget_helpers.h"
 
 // ✅ Correct - UI code using UI utilities
 void MyWidget::copyToClipboard(const QString &text) {
-    UiUtils::copyToClipboard(text);
+    WidgetHelpers::copyToClipboard(text);
 }
 
 void MyWidget::openUrl(const QString &url) {
-    UiUtils::openUrl(url);
+    WidgetHelpers::openUrl(url);
 }
 
 QString MyWidget::formatDuration(int seconds) {
-    return UiUtils::formatDuration(seconds);
+    return WidgetHelpers::formatDuration(seconds);
 }
 ```
 
