@@ -104,8 +104,7 @@
           </property>
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
-          </property>         </widget>        </item>        <item>
-         <layout class="QVBoxLayout" name="infoContentLayout">
+          </property>         </widget>        </item>        <item>         <layout class="QVBoxLayout" name="infoContentLayout">
           <property name="spacing">
            <number>3</number>
           </property>
@@ -121,6 +120,104 @@
           <property name="bottomMargin">
            <number>0</number>
           </property>
+          <item>
+           <widget class="QLabel" name="entityInfoTitle">
+            <property name="text">
+             <string>&lt;b&gt;Information&lt;/b&gt;</string>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">font-weight: bold; color: #495057; margin-top: 5px; margin-bottom: 10px;</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QWidget" name="entityInfoContainer">
+            <layout class="QVBoxLayout" name="entityInfoLayout">
+             <property name="spacing">
+              <number>5</number>
+             </property>
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>15</number>
+             </property>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="tagsTitle">
+            <property name="text">
+             <string>&lt;b&gt;Tags&lt;/b&gt;</string>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">font-weight: bold; color: #495057; margin-top: 5px; margin-bottom: 10px;</string>
+            </property>
+            <property name="visible">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QWidget" name="tagsContainer">
+            <layout class="QVBoxLayout" name="tagsLayout">
+             <property name="spacing">
+              <number>3</number>
+             </property>
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>15</number>
+             </property>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="externalLinksTitle">
+            <property name="text">
+             <string>&lt;b&gt;External Links&lt;/b&gt;</string>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">font-weight: bold; color: #495057; margin-top: 5px; margin-bottom: 10px;</string>
+            </property>
+            <property name="visible">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>          <item>
+           <widget class="QWidget" name="externalLinksContainer">
+            <layout class="QVBoxLayout" name="externalLinksLayout">
+             <property name="spacing">
+              <number>2</number>
+             </property>
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>15</number>
+             </property>
+            </layout>
+           </widget>
+          </item>
          </layout></item>
         <item>
          <spacer name="verticalSpacer">

@@ -15,6 +15,9 @@
 #include <QVariantMap>
 #include <QVariantList>
 #include <QDebug>
+#include <QPushButton>
+#include <QMap>
+#include <QLoggingCategory>
 #include <algorithm>
 
 ItemDetailTab::ItemDetailTab(const QSharedPointer<ResultItem> &item, QWidget *parent)
@@ -23,6 +26,31 @@ ItemDetailTab::ItemDetailTab(const QSharedPointer<ResultItem> &item, QWidget *pa
     , m_item(item)
 {
     ui->setupUi(this);
+    
+    // 检查项目是否有效
+    if (!m_item) {
+        qDebug() << "ItemDetailTab: Cannot create tab with null item!";
+        // 隐藏所有UI组件并显示错误信息
+        if (ui->mainSplitter) {
+            ui->mainSplitter->setVisible(false);
+        }
+        
+        // 创建错误显示标签并添加到现有布局中
+        QLabel *errorLabel = new QLabel(tr("Error: No item data available"));
+        errorLabel->setAlignment(Qt::AlignCenter);
+        errorLabel->setStyleSheet("color: red; font-size: 14px; padding: 20px;");
+        
+        // 将错误标签添加到主布局中
+        if (layout()) {
+            layout()->addWidget(errorLabel);
+        } else {
+            // 如果没有现有布局，创建一个新的
+            QVBoxLayout *errorLayout = new QVBoxLayout(this);
+            errorLayout->addWidget(errorLabel);
+        }
+        return;
+    }
+    
     setupUI();
     setupSubTabs();
     populateItemInfo();
@@ -53,6 +81,11 @@ void ItemDetailTab::setupUI()
 
 void ItemDetailTab::setupSubTabs()
 {
+    if (!m_item) {
+        qDebug() << "ItemDetailTab::setupSubTabs: m_item is null, skipping sub tabs setup";
+        return;
+    }
+    
     // 根据实体类型创建相应的子标签页
     EntityType itemType = m_item->getType();
     
@@ -75,10 +108,10 @@ void ItemDetailTab::setupSubTabs()
             createTagsTab();
             createRelationshipsTab();
             break;
-              
-        case EntityType::ReleaseGroup:
+                case EntityType::ReleaseGroup:
             createOverviewTab();
             createSubTab(tr("Releases"), "releases", EntityType::Release);
+            createReviewsTab();  // 新添加的Reviews页面
             createAliasesTab();
             createTagsTab();
             createRelationshipsTab();
@@ -150,7 +183,13 @@ void ItemDetailTab::createSubTab(const QString &title, const QString &key, Entit
 }
 
 void ItemDetailTab::createOverviewTab()
-{    // 创建概览标签页 - 显示基本信息和摘要
+{
+    if (!m_item) {
+        qCWarning(logUI) << "ItemDetailTab::createOverviewTab: m_item is null, skipping overview tab creation";
+        return;
+    }
+    
+    // 创建概览标签页 - 显示基本信息和摘要
     QScrollArea *scrollArea = new QScrollArea();
     QWidget *overviewWidget = new QWidget();
     QVBoxLayout *layout = new QVBoxLayout(overviewWidget);
@@ -246,7 +285,13 @@ void ItemDetailTab::createOverviewTab()
 }
 
 void ItemDetailTab::createAliasesTab()
-{    // 创建别名标签页
+{
+    if (!m_item) {
+        qCWarning(logUI) << "ItemDetailTab::createAliasesTab: m_item is null, skipping aliases tab creation";
+        return;
+    }
+    
+    // 创建别名标签页
     QScrollArea *scrollArea = new QScrollArea();
     QWidget *aliasesWidget = new QWidget();
     QVBoxLayout *layout = new QVBoxLayout(aliasesWidget);
@@ -339,7 +384,13 @@ void ItemDetailTab::createAliasesTab()
 }
 
 void ItemDetailTab::createTagsTab()
-{    // 创建标签页
+{
+    if (!m_item) {
+        qCWarning(logUI) << "ItemDetailTab::createTagsTab: m_item is null, skipping tags tab creation";
+        return;
+    }
+    
+    // 创建标签页
     QScrollArea *scrollArea = new QScrollArea();
     QWidget *tagsWidget = new QWidget();
     QVBoxLayout *layout = new QVBoxLayout(tagsWidget);
@@ -536,6 +587,11 @@ QWidget* ItemDetailTab::createTagsSection(const QVariantList &tags)
 
 void ItemDetailTab::createRelationshipsTab()
 {
+    if (!m_item) {
+        qCWarning(logUI) << "ItemDetailTab::createRelationshipsTab: m_item is null, skipping relationships tab creation";
+        return;
+    }
+    
     // 创建关系标签页 - 简单的单列布局
     QScrollArea *scrollArea = new QScrollArea();
     QWidget *contentWidget = new QWidget();
@@ -740,14 +796,7 @@ void ItemDetailTab::populateItemInfo()
     ui->nameLabel->setText(m_item->getName());
     ui->typeLabel->setText(m_item->getTypeString());
     
-    qCDebug(logUI) << "ItemDetailTab::populateItemInfo - Item:" << m_item->getName() << "Type:" << m_item->getTypeString();
-      // 清除现有项目 - 清除布局中的所有项目
-    while (QLayoutItem *item = ui->infoContentLayout->takeAt(0)) {
-        if (QWidget *widget = item->widget()) {
-            widget->deleteLater();
-        }
-        delete item;
-    }
+    qCDebug(logUI) << "ItemDetailTab::populateItemInfo - Item:" << m_item->getName() << "Type:" << m_item->getTypeString();    // 无需清除布局项目，因为populateEntityInformation会处理各个容器
 
     // 填充信息区域 - 根据图片样式排列
     populateEntityInformation();
@@ -1115,6 +1164,16 @@ QWidget* ItemDetailTab::createGenresWidget(const QVariantList &genres)
 
 void ItemDetailTab::populateEntityInformation()
 {
+    if (!m_item) {
+        qCWarning(logUI) << "ItemDetailTab::populateEntityInformation: m_item is null, skipping entity information population";
+        return;
+    }
+      // 检查UI组件是否有效
+    if (!ui || !ui->entityInfoTitle || !ui->entityInfoContainer) {
+        qCCritical(logUI) << "ItemDetailTab::populateEntityInformation: UI components are not available";
+        return;
+    }
+    
     QVariantMap detailData = m_item->getDetailData();
     EntityType itemType = m_item->getType();
     
@@ -1141,12 +1200,22 @@ void ItemDetailTab::populateEntityInformation()
             break;
         default:
             sectionTitle = tr("Information");
-            break;    }
+            break;
+    }
     
-    // 直接添加信息表格标题（不使用容器包裹）
-    QLabel *infoTitle = new QLabel(QString("<b>%1</b>").arg(sectionTitle));
-    infoTitle->setStyleSheet("font-weight: bold; color: #495057; margin-top: 5px; margin-bottom: 10px;");
-    ui->infoContentLayout->addWidget(infoTitle);
+    // 设置实体信息标题
+    ui->entityInfoTitle->setText(QString("<b>%1</b>").arg(sectionTitle));
+      // 清除现有内容
+    QLayout *entityLayout = ui->entityInfoContainer->layout();
+    if (entityLayout) {
+        QLayoutItem *child;
+        while ((child = entityLayout->takeAt(0)) != nullptr) {
+            if (child->widget()) {
+                child->widget()->deleteLater();
+            }
+            delete child;
+        }
+    }
     
     // 创建信息表格
     QWidget *tableWidget = new QWidget();
@@ -1161,19 +1230,19 @@ void ItemDetailTab::populateEntityInformation()
     switch (itemType) {        case EntityType::Artist:
             {
                 if (detailData.contains("type")) {
-                    QString type = detailData["type"].toString();
+                    QString type = detailData.value("type").toString();
                     addTableRow(tableLayout, row++, tr("Type:"), type);
                 }
                 
                 QString area;
                 if (detailData.contains("area")) {
-                    QVariantMap areaMap = detailData["area"].toMap();
+                    QVariantMap areaMap = detailData.value("area").toMap();
                     if (areaMap.contains("name")) {
-                        area = areaMap["name"].toString();
+                        area = areaMap.value("name").toString();
                     }
                 }
                 if (area.isEmpty() && detailData.contains("country")) {
-                    area = detailData["country"].toString();
+                    area = detailData.value("country").toString();
                 }
                 if (!area.isEmpty()) {
                     addTableRow(tableLayout, row++, tr("Area:"), area);
@@ -1247,18 +1316,28 @@ void ItemDetailTab::populateEntityInformation()
             
         default:            // 对于其他实体类型，不显示特定字段
             break;
-    }
-    
-    // 直接添加表格到布局中（不使用容器包裹）
+    }      // 将表格添加到实体信息容器中
     tableWidget->setStyleSheet("background: transparent; border: none; margin-bottom: 15px;");
-    ui->infoContentLayout->addWidget(tableWidget);    
-    // 2. Tags section
+    if (entityLayout) {
+        entityLayout->addWidget(tableWidget);
+    }// 2. Tags section
     if (detailData.contains("tags")) {
-        QVariantList tags = detailData["tags"].toList();        if (!tags.empty()) {
-            // 直接添加Tags标题（不使用容器包裹）
-            QLabel *tagsTitle = new QLabel("<b>Tags</b>");
-            tagsTitle->setStyleSheet("font-weight: bold; color: #495057; margin-top: 5px; margin-bottom: 10px;");
-            ui->infoContentLayout->addWidget(tagsTitle);
+        QVariantList tags = detailData["tags"].toList();
+        if (!tags.empty()) {
+            // 显示Tags标题和容器
+            ui->tagsTitle->setVisible(true);
+            ui->tagsContainer->setVisible(true);
+              // 清除现有Tags内容
+            QLayout *tagsLayout = ui->tagsContainer->layout();
+            if (tagsLayout) {
+                QLayoutItem *child;
+                while ((child = tagsLayout->takeAt(0)) != nullptr) {
+                    if (child->widget()) {
+                        child->widget()->deleteLater();
+                    }
+                    delete child;
+                }
+            }
             
             // 创建标签文本，每行显示多个标签，用逗号分隔
             QStringList tagNames;
@@ -1271,16 +1350,400 @@ void ItemDetailTab::populateEntityInformation()
                     }
                 }
             }
-            
-            if (!tagNames.isEmpty()) {
+              if (!tagNames.isEmpty()) {
                 QString tagsText = tagNames.join(", ");
                 QLabel *tagsLabel = new QLabel(tagsText);
                 tagsLabel->setWordWrap(true);
                 tagsLabel->setStyleSheet("color: #6c757d; margin-bottom: 15px;");
-                ui->infoContentLayout->addWidget(tagsLabel);
+                if (tagsLayout) {
+                    tagsLayout->addWidget(tagsLabel);
+                }
+            }
+        } else {
+            // 隐藏Tags部分
+            ui->tagsTitle->setVisible(false);
+            ui->tagsContainer->setVisible(false);
+        }
+    } else {
+        // 隐藏Tags部分
+        ui->tagsTitle->setVisible(false);
+        ui->tagsContainer->setVisible(false);
+    }// 3. External Links section
+    if (detailData.contains("relationships")) {
+        QVariantList relationships = detailData["relationships"].toList();
+        QMap<QString, QList<QPair<QString, QString>>> groupedLinks; // type -> list of (url, displayName)
+        
+        // 按类型分组收集外部链接
+        for (const QVariant &rel : relationships) {
+            QVariantMap relMap = rel.toMap();
+            if (relMap.contains("url")) {
+                QVariantMap urlMap = relMap["url"].toMap();
+                QString resource = urlMap["resource"].toString();
+                QString relationType = relMap["type"].toString();
+                
+                if (!resource.isEmpty() && !relationType.isEmpty()) {
+                    QString displayName = getPlatformDisplayName(resource, relationType);
+                    groupedLinks[relationType].append(qMakePair(resource, displayName));
+                }
             }
         }
+          if (!groupedLinks.isEmpty()) {
+            // 显示外部链接标题
+            ui->externalLinksTitle->setVisible(true);
+              // 清除现有外部链接内容
+            QLayout *externalLinksLayout = ui->externalLinksContainer->layout();
+            if (externalLinksLayout) {
+                QLayoutItem *child;
+                while ((child = externalLinksLayout->takeAt(0)) != nullptr) {
+                    if (child->widget()) {
+                        child->widget()->deleteLater();
+                    }
+                    delete child;
+                }
+            }
+            
+            // 为每个类型创建可折叠的链接组
+            for (auto it = groupedLinks.begin(); it != groupedLinks.end(); ++it) {
+                QString linkType = it.key();
+                QList<QPair<QString, QString>> links = it.value();
+                
+                if (links.isEmpty()) continue;
+                
+                // 创建组容器
+                QWidget *linkGroupWidget = new QWidget();
+                QVBoxLayout *groupLayout = new QVBoxLayout(linkGroupWidget);
+                groupLayout->setContentsMargins(0, 0, 0, 5);
+                groupLayout->setSpacing(2);
+                
+                // 第一个链接（总是显示）
+                QPair<QString, QString> firstLink = links.first();
+                QWidget *firstLinkWidget = new QWidget();
+                QHBoxLayout *firstLinkLayout = new QHBoxLayout(firstLinkWidget);
+                firstLinkLayout->setContentsMargins(0, 0, 0, 0);
+                firstLinkLayout->setSpacing(5);
+                  QLabel *firstLinkLabel = new QLabel(QString("<a href=\"%1\" style=\"color: #007bff; text-decoration: none;\">%2</a>")
+                                                   .arg(firstLink.first, firstLink.second));
+                firstLinkLabel->setOpenExternalLinks(true);
+                firstLinkLabel->setTextFormat(Qt::RichText);
+                firstLinkLabel->setStyleSheet("margin-bottom: 3px;");
+                firstLinkLayout->addWidget(firstLinkLabel);
+                
+                // 如果有多个链接，添加展开按钮
+                if (links.size() > 1) {
+                    QPushButton *expandButton = new QPushButton(QString("▶ (+%1)").arg(links.size() - 1));
+                    expandButton->setFixedSize(60, 20);
+                    expandButton->setStyleSheet(
+                        "QPushButton {"
+                        "    background: #f8f9fa;"
+                        "    border: 1px solid #dee2e6;"
+                        "    border-radius: 3px;"
+                        "    color: #6c757d;"
+                        "    font-size: 10px;"
+                        "    padding: 2px 4px;"
+                        "}"
+                        "QPushButton:hover {"
+                        "    background: #e9ecef;"
+                        "    color: #495057;"
+                        "}"
+                    );                    // 创建隐藏的附加链接容器
+                    QWidget *additionalLinksWidget = new QWidget();
+                    QVBoxLayout *additionalLayout = new QVBoxLayout(additionalLinksWidget);
+                    additionalLayout->setContentsMargins(0, 0, 0, 0); // 完全无边距
+                    additionalLayout->setSpacing(2);
+                    
+                    for (int i = 1; i < links.size(); ++i) {
+                        QPair<QString, QString> link = links.at(i);
+                        
+                        // 为每个附加链接创建与第一个链接相同的布局结构
+                        QWidget *linkWidget = new QWidget();
+                        QHBoxLayout *linkLayout = new QHBoxLayout(linkWidget);
+                        linkLayout->setContentsMargins(0, 0, 0, 0);
+                        linkLayout->setSpacing(5);
+                        
+                        QLabel *linkLabel = new QLabel(QString("<a href=\"%1\" style=\"color: #007bff; text-decoration: none;\">%2</a>")
+                                                      .arg(link.first, link.second));
+                        linkLabel->setOpenExternalLinks(true);
+                        linkLabel->setTextFormat(Qt::RichText);
+                        linkLabel->setStyleSheet("margin-bottom: 3px;");
+                        linkLayout->addWidget(linkLabel);
+                        linkLayout->addStretch(); // 添加弹性空间，使布局一致
+                        
+                        additionalLayout->addWidget(linkWidget);
+                    }
+                    
+                    additionalLinksWidget->setVisible(false);
+                      // 连接展开按钮信号
+                    connect(expandButton, &QPushButton::clicked, [expandButton, additionalLinksWidget, links]() {
+                        bool isExpanded = additionalLinksWidget->isVisible();
+                        additionalLinksWidget->setVisible(!isExpanded);
+                        if (isExpanded) {
+                            expandButton->setText(QString("▶ (+%1)").arg(links.size() - 1));
+                        } else {
+                            expandButton->setText("▼ Collapse");
+                        }
+                    });
+                    
+                    firstLinkLayout->addWidget(expandButton);
+                    firstLinkLayout->addStretch();
+                    firstLinkLayout->addStretch();
+                    
+                    groupLayout->addWidget(firstLinkWidget);
+                    groupLayout->addWidget(additionalLinksWidget);
+                } else {
+                    firstLinkLayout->addStretch();
+                    groupLayout->addWidget(firstLinkWidget);
+                }
+                
+                if (externalLinksLayout) {
+                    externalLinksLayout->addWidget(linkGroupWidget);
+                }            }        } else {
+            // 隐藏外部链接部分
+            ui->externalLinksTitle->setVisible(false);
+        }
+    } else {
+        // 隐藏外部链接部分
+        ui->externalLinksTitle->setVisible(false);
     }
+}
+
+QString ItemDetailTab::getPlatformDisplayName(const QString &url, const QString &relationType)
+{
+    QString lowerUrl = url.toLower();
+    QString lowerType = relationType.toLower();
+    
+    // 根据URL域名识别具体平台，添加emoji图标
+    if (lowerUrl.contains("spotify.com")) {
+        return "🎵 Spotify";
+    }
+    else if (lowerUrl.contains("apple.com") || lowerUrl.contains("itunes.apple.com") || lowerUrl.contains("music.apple.com")) {
+        return "🍎 Apple Music";
+    }
+    else if (lowerUrl.contains("deezer.com")) {
+        return "🎶 Deezer";
+    }
+    else if (lowerUrl.contains("music.163.com") || lowerUrl.contains("netease")) {
+        return "🎧 网易云音乐";
+    }
+    else if (lowerUrl.contains("youtube.com") || lowerUrl.contains("youtu.be")) {
+        return "📺 YouTube";
+    }
+    else if (lowerUrl.contains("twitter.com") || lowerUrl.contains("x.com")) {
+        return "🐦 X (Twitter)";
+    }
+    else if (lowerUrl.contains("tiktok.com")) {
+        return "🎵 TikTok";
+    }
+    else if (lowerUrl.contains("bilibili.com") || lowerUrl.contains("space.bilibili.com")) {
+        return "📱 Bilibili";
+    }
+    else if (lowerUrl.contains("wikidata.org")) {
+        return "📖 Wikidata";
+    }
+    else if (lowerType.contains("homepage") || lowerType.contains("official")) {
+        return "🏠 Official homepage";
+    }
+    else if (lowerType.contains("social")) {
+        // 尝试从URL中提取更具体的平台名
+        if (lowerUrl.contains("facebook.com")) return "📘 Facebook";
+        if (lowerUrl.contains("instagram.com")) return "📷 Instagram";
+        return "🌐 Social networking";
+    }
+    else if (lowerType.contains("stream")) {
+        if (lowerType.contains("free")) {
+            return "🎵 Stream for free";
+        }
+        return "🎬 Streaming page";
+    }
+    
+    // 如果无法识别，返回原始类型名
+    return relationType;
+}
+
+void ItemDetailTab::createReviewsTab()
+{
+    if (!m_item) {
+        qDebug() << "ItemDetailTab::createReviewsTab: m_item is null, skipping reviews tab creation";
+        return;
+    }
+    
+    // 创建评价标签页
+    QScrollArea *scrollArea = new QScrollArea();
+    QWidget *reviewsWidget = new QWidget();
+    QVBoxLayout *layout = new QVBoxLayout(reviewsWidget);
+    layout->setContentsMargins(20, 20, 20, 20);
+    layout->setSpacing(15);
+      // 获取评价数据
+    QVariantMap detailData = m_item->getDetailData();
+    
+    bool hasRating = detailData.contains("rating") && !detailData.value("rating").toMap().isEmpty();
+    bool hasReviews = detailData.contains("reviews") && !detailData.value("reviews").toList().isEmpty();
+    
+    if (!hasRating && !hasReviews) {
+        QLabel *noDataLabel = new QLabel(tr("No ratings or reviews found for this release group."));
+        noDataLabel->setStyleSheet("padding: 40px; text-align: center; color: #6c757d; font-style: italic; font-size: 14px;");
+        noDataLabel->setAlignment(Qt::AlignCenter);
+        layout->addWidget(noDataLabel);
+    } else {        // 评分部分
+        if (hasRating) {
+            QWidget *ratingSection = createRatingSection(detailData.value("rating").toMap());
+            layout->addWidget(ratingSection);
+        }
+        
+        // 评论部分
+        if (hasReviews) {
+            QWidget *reviewsSection = createReviewsSection(detailData.value("reviews").toList());
+            layout->addWidget(reviewsSection);
+        }
+    }
+    
+    layout->addStretch();
+    
+    reviewsWidget->setLayout(layout);
+    scrollArea->setWidget(reviewsWidget);
+    scrollArea->setWidgetResizable(true);
+    
+    ui->subTabWidget->addTab(scrollArea, tr("Reviews & Ratings"));
+    
+    qDebug() << "Created Reviews & Ratings tab";
+}
+
+QWidget* ItemDetailTab::createRatingSection(const QVariantMap &rating)
+{
+    QWidget *ratingSection = new QWidget();
+    QVBoxLayout *ratingLayout = new QVBoxLayout(ratingSection);
+    ratingSection->setStyleSheet("QWidget { background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 5px; padding: 15px; margin: 5px; }");
+    
+    // 标题
+    QLabel *ratingTitle = new QLabel(tr("<h3>Community Rating</h3>"));
+    ratingTitle->setAlignment(Qt::AlignLeft);
+    ratingLayout->addWidget(ratingTitle);
+    
+    // 评分信息
+    QWidget *ratingInfo = new QWidget();
+    QHBoxLayout *ratingInfoLayout = new QHBoxLayout(ratingInfo);
+    ratingInfoLayout->setContentsMargins(0, 10, 0, 10);
+      // 评分值
+    if (rating.contains("value")) {
+        double ratingValue = rating.value("value").toDouble();
+        
+        // 星级显示
+        QLabel *starsLabel = new QLabel();
+        QString starsText = generateStarsDisplay(ratingValue);
+        starsLabel->setText(starsText);
+        starsLabel->setStyleSheet("font-size: 20px; color: #ffc107;");
+        ratingInfoLayout->addWidget(starsLabel);
+        
+        // 数值显示
+        QLabel *valueLabel = new QLabel(QString("<b>%1/5</b>").arg(QString::number(ratingValue, 'f', 1)));
+        valueLabel->setStyleSheet("font-size: 18px; color: #495057; margin-left: 10px;");
+        ratingInfoLayout->addWidget(valueLabel);
+    }
+    
+    ratingInfoLayout->addStretch();
+      // 投票数
+    if (rating.contains("votes-count")) {
+        int votesCount = rating.value("votes-count").toInt();
+        QLabel *votesLabel = new QLabel(tr("(%1 votes)").arg(QString::number(votesCount)));
+        votesLabel->setStyleSheet("color: #6c757d; font-size: 14px;");
+        ratingInfoLayout->addWidget(votesLabel);
+    }
+    
+    ratingLayout->addWidget(ratingInfo);
+    return ratingSection;
+}
+
+QWidget* ItemDetailTab::createReviewsSection(const QVariantList &reviews)
+{
+    QWidget *reviewsSection = new QWidget();
+    QVBoxLayout *reviewsLayout = new QVBoxLayout(reviewsSection);
+    reviewsSection->setStyleSheet("QWidget { background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 5px; padding: 15px; margin: 5px; }");
+    
+    // 标题
+    QLabel *reviewsTitle = new QLabel(tr("<h3>User Reviews</h3>"));
+    reviewsTitle->setAlignment(Qt::AlignLeft);
+    reviewsLayout->addWidget(reviewsTitle);
+    
+    // 评论列表
+    for (const QVariant &reviewVar : reviews) {
+        QVariantMap review = reviewVar.toMap();
+        QWidget *reviewItem = createReviewItem(review);
+        reviewsLayout->addWidget(reviewItem);
+    }
+    
+    return reviewsSection;
+}
+
+QWidget* ItemDetailTab::createReviewItem(const QVariantMap &review)
+{
+    QWidget *reviewItem = new QWidget();
+    QVBoxLayout *reviewLayout = new QVBoxLayout(reviewItem);
+    reviewItem->setStyleSheet("QWidget { background-color: #ffffff; border: 1px solid #e9ecef; border-radius: 4px; padding: 12px; margin: 5px 0; }");
+    
+    // 评论标题行（作者、评分、日期）
+    QWidget *headerWidget = new QWidget();
+    QHBoxLayout *headerLayout = new QHBoxLayout(headerWidget);
+    headerLayout->setContentsMargins(0, 0, 0, 5);
+      // 作者
+    if (review.contains("author")) {
+        QString author = review.value("author").toString();
+        QLabel *authorLabel = new QLabel(QString("<b>%1</b>").arg(author));
+        authorLabel->setStyleSheet("color: #495057; font-size: 14px;");
+        headerLayout->addWidget(authorLabel);
+    }
+    
+    headerLayout->addStretch();
+      // 评分
+    if (review.contains("rating")) {
+        double rating = review.value("rating").toDouble();
+        QString starsText = generateStarsDisplay(rating);
+        QLabel *ratingLabel = new QLabel(starsText);
+        ratingLabel->setStyleSheet("color: #ffc107; font-size: 14px;");
+        headerLayout->addWidget(ratingLabel);
+    }
+      // 日期
+    if (review.contains("date")) {
+        QString date = review.value("date").toString();
+        QLabel *dateLabel = new QLabel(date);
+        dateLabel->setStyleSheet("color: #6c757d; font-size: 12px; margin-left: 10px;");
+        headerLayout->addWidget(dateLabel);
+    }
+    
+    reviewLayout->addWidget(headerWidget);
+      // 评论内容
+    if (review.contains("content")) {
+        QString content = review.value("content").toString();
+        QLabel *contentLabel = new QLabel(content);
+        contentLabel->setWordWrap(true);
+        contentLabel->setStyleSheet("color: #495057; font-size: 13px; line-height: 1.4; margin-top: 5px;");
+        reviewLayout->addWidget(contentLabel);
+    }
+    
+    return reviewItem;
+}
+
+QString ItemDetailTab::generateStarsDisplay(double rating)
+{
+    QString stars;
+    int fullStars = static_cast<int>(rating);
+    bool hasHalfStar = (rating - fullStars) >= 0.5;
+    
+    // 添加满星
+    for (int i = 0; i < fullStars; i++) {
+        stars += "★";
+    }
+    
+    // 添加半星
+    if (hasHalfStar) {
+        stars += "☆";
+    }
+    
+    // 添加空星
+    int emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+    for (int i = 0; i < emptyStars; i++) {
+        stars += "☆";
+    }
+    
+    return stars;
 }
 
 

@@ -12,6 +12,7 @@ class QLabel;
 class QTextEdit;
 class QVBoxLayout;
 class QGridLayout;
+class QPushButton;
 QT_END_NAMESPACE
 
 class ResultItem;
@@ -139,6 +140,7 @@ private:    void setupUI();
     void populateSubTabs();    void createSubTab(const QString &title, const QString &key, EntityType entityType);    void createOverviewTab();
     void createAliasesTab();
     void createTagsTab();
+    void createReviewsTab();
     void createRelationshipsTab();
 
     
@@ -155,16 +157,23 @@ private:    void setupUI();
     void populateWorkOverview(QVBoxLayout *layout, const QVariantMap &detailData, QWidget *parent);    // 通用组件创建方法
     QWidget* createArtistCreditWidget(const QVariantList &artistCredits);
     QWidget* createGenresWidget(const QVariantList &genres);
-    QWidget* createGenresSection(const QVariantList &genres);
-    QWidget* createTagsSection(const QVariantList &tags);    // 结构化信息显示辅助方法
-
-
-
+    QWidget* createGenresSection(const QVariantList &genres);    QWidget* createTagsSection(const QVariantList &tags);
+    
+    // 结构化信息显示辅助方法
     void populateEntityInformation();
-    QString formatComplexValue(const QVariantMap &map);    // 通用辅助方法
+    QString formatComplexValue(const QVariantMap &map);
+    QString getPlatformDisplayName(const QString &url, const QString &relationType);
+    
+    // 通用辅助方法
     void addInfoItemIfExists(QVBoxLayout *layout, const QString &label, const QVariant &value);
     void addTableRow(QGridLayout *layout, int row, const QString &label, const QString &value);
     
+    // Reviews tab 辅助方法
+    QWidget* createRatingSection(const QVariantMap &rating);
+    QWidget* createReviewsSection(const QVariantList &reviews);
+    QWidget* createReviewItem(const QVariantMap &review);
+    QString generateStarsDisplay(double rating);
+
     Ui::ItemDetailTab *ui;
     QSharedPointer<ResultItem> m_item;
     

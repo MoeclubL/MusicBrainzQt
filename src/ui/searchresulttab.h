@@ -7,6 +7,9 @@
 #include <QTableView>
 #include <QLabel>
 #include <QPushButton>
+#include <QScrollArea>
+#include <QFrame>
+#include <QVariantMap>
 #include <QSharedPointer>
 #include "../core/types.h"
 #include "../core/error_types.h"
@@ -198,6 +201,13 @@ private slots:
      * @param error 错误信息
      */
     void onDetailLoadingFailed(const QString &entityId, const ErrorInfo &error);
+    
+    /**
+     * @brief 处理项目选择变化
+     * 
+     * 当用户在结果列表中选择不同项目时调用，更新右侧面板显示。
+     */
+    void onItemSelectionChanged();
 
 private:
     /**
@@ -206,13 +216,81 @@ private:
      * 初始化所有UI组件，建立布局结构和信号连接。
      */
     void setupUI();
-      /**
+    
+    /**
      * @brief 更新分页控件状态
      * @param stats 搜索结果统计信息
      * 
      * 根据搜索结果统计信息更新分页按钮的可用状态和显示文本。
      */
     void updatePaginationControls(const SearchResults &stats);
+    
+    /**
+     * @brief 清空右侧面板
+     * 
+     * 移除右侧面板中的所有组件，为显示新内容做准备。
+     */
+    void clearRightPanel();
+    
+    /**
+     * @brief 为选中的项目创建预览界面
+     * @param item 要预览的项目
+     * 
+     * 在右侧面板创建选中项目的详细信息预览。
+     */
+    void createItemPreview(const QSharedPointer<ResultItem> &item);
+    
+    /**
+     * @brief 添加详细信息预览
+     * @param layout 目标布局
+     * @param detailData 详细数据
+     * @param type 实体类型
+     * 
+     * 根据实体类型添加相应的详细信息预览组件。
+     */
+    void addDetailPreview(QVBoxLayout *layout, const QVariantMap &detailData, EntityType type);
+    
+    /**
+     * @brief 添加艺术家详细信息预览
+     * @param layout 目标布局
+     * @param detailData 艺术家详细数据
+     */
+    void addArtistDetailPreview(QVBoxLayout *layout, const QVariantMap &detailData);
+    
+    /**
+     * @brief 添加专辑详细信息预览
+     * @param layout 目标布局
+     * @param detailData 专辑详细数据
+     */
+    void addReleaseDetailPreview(QVBoxLayout *layout, const QVariantMap &detailData);
+    
+    /**
+     * @brief 添加录音详细信息预览
+     * @param layout 目标布局
+     * @param detailData 录音详细数据
+     */
+    void addRecordingDetailPreview(QVBoxLayout *layout, const QVariantMap &detailData);
+    
+    /**
+     * @brief 添加发行组详细信息预览
+     * @param layout 目标布局
+     * @param detailData 发行组详细数据
+     */
+    void addReleaseGroupDetailPreview(QVBoxLayout *layout, const QVariantMap &detailData);
+    
+    /**
+     * @brief 添加作品详细信息预览
+     * @param layout 目标布局
+     * @param detailData 作品详细数据
+     */
+    void addWorkDetailPreview(QVBoxLayout *layout, const QVariantMap &detailData);
+    
+    /**
+     * @brief 添加厂牌详细信息预览
+     * @param layout 目标布局
+     * @param detailData 厂牌详细数据
+     */
+    void addLabelDetailPreview(QVBoxLayout *layout, const QVariantMap &detailData);
     
     // =============================================================================
     // 成员变量
