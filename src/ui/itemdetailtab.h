@@ -11,6 +11,7 @@ class QScrollArea;
 class QLabel;
 class QTextEdit;
 class QVBoxLayout;
+class QGridLayout;
 QT_END_NAMESPACE
 
 class ResultItem;
@@ -132,20 +133,18 @@ private slots:
     void onOpenInBrowser(const QString &itemId, EntityType type);
     void onCopyId(const QString &itemId);
 
-private:
-    void setupUI();
+private:    void setupUI();
     void setupSubTabs();
     void populateItemInfo();
-    void populateSubTabs();
-    void createSubTab(const QString &title, const QString &key, EntityType entityType);    void createOverviewTab();
+    void populateSubTabs();    void createSubTab(const QString &title, const QString &key, EntityType entityType);    void createOverviewTab();
     void createAliasesTab();
     void createTagsTab();
     void createRelationshipsTab();
+
     
     // Relationships tab 辅助方法
     QWidget* createRelationshipItem(const QVariantMap &relation);
-    QWidget* createRelationshipsSidebar();
-    void addSidebarItem(QVBoxLayout *layout, const QString &label, const QString &value);
+
     
     // 实体类型特定的概览页面填充方法
     void populateArtistOverview(QVBoxLayout *layout, const QVariantMap &detailData, QWidget *parent);
@@ -157,13 +156,14 @@ private:
     QWidget* createArtistCreditWidget(const QVariantList &artistCredits);
     QWidget* createGenresWidget(const QVariantList &genres);
     QWidget* createGenresSection(const QVariantList &genres);
-    QWidget* createTagsSection(const QVariantList &tags);
-    
-    // 结构化信息显示辅助方法
-    void clearInfoLayout(QVBoxLayout *layout);
-    void populateInfoSection(QVBoxLayout *layout, const QMap<QString, QVariant> &data);
-    void populateDetailsSection(QVBoxLayout *layout, const QVariantMap &data);
-    QString formatComplexValue(const QVariantMap &map);
+    QWidget* createTagsSection(const QVariantList &tags);    // 结构化信息显示辅助方法
+
+
+
+    void populateEntityInformation();
+    QString formatComplexValue(const QVariantMap &map);    // 通用辅助方法
+    void addInfoItemIfExists(QVBoxLayout *layout, const QString &label, const QVariant &value);
+    void addTableRow(QGridLayout *layout, int row, const QString &label, const QString &value);
     
     Ui::ItemDetailTab *ui;
     QSharedPointer<ResultItem> m_item;

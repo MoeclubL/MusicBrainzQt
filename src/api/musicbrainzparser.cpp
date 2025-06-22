@@ -33,15 +33,15 @@ QList<QSharedPointer<ResultItem>> MusicBrainzParser::parseSearchResponse(const Q
         return results;
     }
     
-    // 如果没有指定类型，尝试自动检测
+    // 如果没有指定类型，尝试自动检�?
     EntityType actualType = expectedType;
-    if (actualType == EntityType::Unknown) {
-        // 通过检查root对象的键来推断类型
+    if (actualType == EntityType::Unknown) {        // 通过检查root对象的键来推断类�?
         QStringList keys = root.keys();
-        QStringList entityTypes = {"artists", "releases", "recordings", "release-groups", "works", "labels", "areas"};
+        QStringList entityTypes;
+        entityTypes << "artists" << "releases" << "recordings" << "release-groups" << "works" << "labels" << "areas";
           for (const QString &entityType : entityTypes) {
             if (keys.contains(entityType)) {
-                actualType = MusicBrainzUtils::stringToEntityType(entityType.chopped(1)); // 去掉末尾的's'
+                actualType = MusicBrainzUtils::stringToEntityType(entityType.chopped(1)); // 去掉末尾�?s'
                 break;
             }
         }
@@ -87,7 +87,7 @@ QSharedPointer<ResultItem> MusicBrainzParser::parseDetailsResponse(const QByteAr
         return nullptr;
     }
     
-    // 自动检测实体类型
+    // 自动检测实体类�?
     EntityType actualType = detectEntityType(root);
     if (expectedType != EntityType::Unknown && actualType != expectedType) {        qCWarning(logApi) << "MusicBrainzParser::parseDetailsResponse - Type mismatch: expected" 
                           << MusicBrainzUtils::entityTypeToString(expectedType) << "got" << MusicBrainzUtils::entityTypeToString(actualType);
@@ -126,10 +126,10 @@ QSharedPointer<ResultItem> MusicBrainzParser::parseEntity(const QJsonObject &jso
     // 解析基本信息
     parseBasicEntityInfo(resultItem, jsonObj);
     
-    // 解析类型特定属性
+    // 解析类型特定属�?
     parseTypeSpecificProperties(resultItem, jsonObj, type);    qCDebug(logApi) << "MusicBrainzParser::parseEntity - Parsed entity:" << name 
                     << "(" << MusicBrainzUtils::entityTypeToString(type) << ") with" 
-                    << resultItem->getDetailData().size() << "detail properties";
+                    << resultItem->getDetailData().count() << "detail properties";
     
     return resultItem;
 }
@@ -211,9 +211,8 @@ QVariant MusicBrainzParser::parseJsonValue(const QJsonValue &value)
         }
         case QJsonValue::Object: {
             QVariantMap map;
-            QJsonObject obj = value.toObject();
-            for (auto it = obj.begin(); it != obj.end(); ++it) {
-                map.insert(it.key(), parseJsonValue(it.value()));
+            QJsonObject obj = value.toObject();            for (auto it = obj.begin(); it != obj.end(); ++it) {
+                map[it.key()] = parseJsonValue(it.value());
             }
             return map;
         }
@@ -278,7 +277,7 @@ void MusicBrainzParser::parseBasicEntityInfo(QSharedPointer<ResultItem> &item, c
         const QString &key = it.key();
         const QJsonValue &value = it.value();
         
-        // 跳过已经处理的基本字段
+        // 跳过已经处理的基本字�?
         if (key == "id" || key == "name" || key == "title" || key == "disambiguation" || key == "score") {
             continue;
         }
@@ -334,7 +333,7 @@ void MusicBrainzParser::parseArtistProperties(QSharedPointer<ResultItem> &item, 
         item->setDetailProperty("area_info", area);
     }
     
-    // 解析开始地区
+    // 解析开始地�?
     if (jsonObj.contains("begin-area")) {
         QJsonObject beginAreaObj = jsonObj.value("begin-area").toObject();
         QVariantMap beginArea = parseArea(beginAreaObj);
@@ -361,75 +360,8 @@ void MusicBrainzParser::parseArtistProperties(QSharedPointer<ResultItem> &item, 
         QVariantList aliases = parseAliases(aliasesArray);
         item->setDetailProperty("aliases", aliases); // 使用统一键名
     }
-    
-    // 解析录音
-    if (jsonObj.contains("recordings")) {
-        QJsonArray recordingsArray = jsonObj.value("recordings").toArray();
-        QVariantList recordings;
-        for (const QJsonValue &value : recordingsArray) {
-            if (value.isObject()) {
-                QJsonObject recordingObj = value.toObject();
-                QVariantMap recording;
-                recording["id"] = getJsonString(recordingObj, "id");
-                recording["title"] = getJsonString(recordingObj, "title");
-                recording["length"] = getJsonInt(recordingObj, "length");
-                recordings.append(recording);
-            }
-        }
-        item->setDetailProperty("recordings", recordings); // 使用统一键名
-    }
-    
-    // 解析发行
-    if (jsonObj.contains("releases")) {
-        QJsonArray releasesArray = jsonObj.value("releases").toArray();  
-        QVariantList releases;
-        for (const QJsonValue &value : releasesArray) {
-            if (value.isObject()) {
-                QJsonObject releaseObj = value.toObject();
-                QVariantMap release;
-                release["id"] = getJsonString(releaseObj, "id");
-                release["title"] = getJsonString(releaseObj, "title");
-                release["status"] = getJsonString(releaseObj, "status");
-                release["date"] = getJsonString(releaseObj, "date");
-                releases.append(release);
-            }
-        }
-        item->setDetailProperty("releases", releases); // 使用统一键名
-    }
-    
-    // 解析发行组
-    if (jsonObj.contains("release-groups")) {
-        QJsonArray releaseGroupsArray = jsonObj.value("release-groups").toArray();
-        QVariantList releaseGroups;
-        for (const QJsonValue &value : releaseGroupsArray) {
-            if (value.isObject()) {
-                QJsonObject releaseGroupObj = value.toObject();
-                QVariantMap releaseGroup;
-                releaseGroup["id"] = getJsonString(releaseGroupObj, "id");
-                releaseGroup["title"] = getJsonString(releaseGroupObj, "title");
-                releaseGroup["primary-type"] = getJsonString(releaseGroupObj, "primary-type");
-                releaseGroup["first-release-date"] = getJsonString(releaseGroupObj, "first-release-date");
-                releaseGroups.append(releaseGroup);
-            }
-        }
-        item->setDetailProperty("release-groups", releaseGroups); // 使用统一键名
-    }
-    
-    // 解析作品
-    if (jsonObj.contains("works")) {
-        QJsonArray worksArray = jsonObj.value("works").toArray();
-        QVariantList works;
-        for (const QJsonValue &value : worksArray) {
-            if (value.isObject()) {
-                QJsonObject workObj = value.toObject();
-                QVariantMap work;
-                work["id"] = getJsonString(workObj, "id");
-                work["title"] = getJsonString(workObj, "title");
-                work["type"] = getJsonString(workObj, "type");
-                works.append(work);
-            }
-        }        item->setDetailProperty("works", works); // 使用统一键名
-    }
+      // 使用通用解析函数处理各种子实体列�?
+    parseCommonSubEntities(item, jsonObj);
     
     // 解析关系
     if (jsonObj.contains("relations")) {
@@ -437,7 +369,7 @@ void MusicBrainzParser::parseArtistProperties(QSharedPointer<ResultItem> &item, 
         qCDebug(logApi) << "Artist relations found:" << relationsArray.size() << "for" << item->getName();
         QVariantList relationships = parseRelationships(relationsArray);
         item->setDetailProperty("relationships", relationships);
-        qCDebug(logApi) << "Artist relationships stored:" << relationships.size();
+        qCDebug(logApi) << "Artist relationships stored:" << relationships.count();
     } else {
         qCDebug(logApi) << "No relations found for artist:" << item->getName();
     }
@@ -445,259 +377,79 @@ void MusicBrainzParser::parseArtistProperties(QSharedPointer<ResultItem> &item, 
 
 void MusicBrainzParser::parseReleaseProperties(QSharedPointer<ResultItem> &item, const QJsonObject &jsonObj)
 {
-    // 解析艺术家信用
-    if (jsonObj.contains("artist-credit")) {
-        QJsonArray artistCreditArray = jsonObj.value("artist-credit").toArray();
-        QVariantList artistCredits = parseArtistCredits(artistCreditArray);
-        item->setDetailProperty("artist-credits", artistCredits); // 使用统一键名
-    }
+    // 解析艺术家信�?
+    parseArtistCreditProperty(item, jsonObj);
     
     // 解析发行事件
     if (jsonObj.contains("release-events")) {
         QJsonArray releaseEventsArray = jsonObj.value("release-events").toArray();
         QVariantList releaseEvents = parseReleaseEvents(releaseEventsArray);
-        item->setDetailProperty("release-events", releaseEvents); // 使用统一键名
+        item->setDetailProperty("release-events", releaseEvents);
     }
     
     // 解析媒体
     if (jsonObj.contains("media")) {
         QJsonArray mediaArray = jsonObj.value("media").toArray();
         QVariantList media = parseMedia(mediaArray);
-        item->setDetailProperty("media", media); // 使用统一键名
+        item->setDetailProperty("media", media);
     }
     
     // 解析封面艺术档案
     if (jsonObj.contains("cover-art-archive")) {
         QJsonObject coverArtObj = jsonObj.value("cover-art-archive").toObject();
         QVariantMap coverArt = parseCoverArtArchive(coverArtObj);
-        item->setDetailProperty("cover-art-archive", coverArt); // 使用统一键名
+        item->setDetailProperty("cover-art-archive", coverArt);
     }
     
     // 解析文本表示
     if (jsonObj.contains("text-representation")) {
         QJsonObject textRepObj = jsonObj.value("text-representation").toObject();
         QVariantMap textRep = parseTextRepresentation(textRepObj);
-        item->setDetailProperty("text-representation", textRep); // 使用统一键名
+        item->setDetailProperty("text-representation", textRep);
     }
     
-    // 解析标签
-    if (jsonObj.contains("tags")) {
-        QJsonArray tagsArray = jsonObj.value("tags").toArray();
-        QVariantList tags = parseTags(tagsArray);
-        item->setDetailProperty("tags", tags); // 使用统一键名
-    }
-    
-    // 解析别名
-    if (jsonObj.contains("aliases")) {
-        QJsonArray aliasesArray = jsonObj.value("aliases").toArray();
-        QVariantList aliases = parseAliases(aliasesArray);
-        item->setDetailProperty("aliases", aliases); // 使用统一键名
-    }
-    
-    // 解析关系
-    if (jsonObj.contains("relations")) {
-        QJsonArray relationsArray = jsonObj.value("relations").toArray();
-        QVariantList relationships = parseRelationships(relationsArray);
-        item->setDetailProperty("relationships", relationships);
-    }
+    // 使用通用函数解析标签、别名和关系
+    parseCommonProperties(item, jsonObj);
 }
 
 void MusicBrainzParser::parseRecordingProperties(QSharedPointer<ResultItem> &item, const QJsonObject &jsonObj)
 {
-    // 艺术家信用
-    if (jsonObj.contains("artist-credit")) {
-        QJsonArray artistCreditArray = jsonObj.value("artist-credit").toArray();
-        QVariantList artistCredits = parseArtistCredits(artistCreditArray);
-        item->setDetailProperty("artist-credits", artistCredits);
-    }
-    // 发行列表
-    if (jsonObj.contains("releases")) {
-        QJsonArray releasesArray = jsonObj.value("releases").toArray();
-        QVariantList releases;
-        for (const QJsonValue &value : releasesArray) {
-            if (value.isObject()) {
-                QJsonObject releaseObj = value.toObject();
-                QVariantMap release;
-                release["id"] = getJsonString(releaseObj, "id");
-                release["title"] = getJsonString(releaseObj, "title");
-                release["status"] = getJsonString(releaseObj, "status");
-                release["date"] = getJsonString(releaseObj, "date");
-                releases.append(release);
-            }
-        }
-        item->setDetailProperty("releases", releases);
-    }
-    // 标签
-    if (jsonObj.contains("tags")) {
-        QJsonArray tagsArray = jsonObj.value("tags").toArray();
-        QVariantList tags = parseTags(tagsArray);
-        item->setDetailProperty("tags", tags);
-    }
-    // 别名
-    if (jsonObj.contains("aliases")) {
-        QJsonArray aliasesArray = jsonObj.value("aliases").toArray();
-        QVariantList aliases = parseAliases(aliasesArray);
-        item->setDetailProperty("aliases", aliases);
-    }
-    // 关系
-    if (jsonObj.contains("relations")) {
-        QJsonArray relationsArray = jsonObj.value("relations").toArray();
-        QVariantList relationships = parseRelationships(relationsArray);
-        item->setDetailProperty("relationships", relationships);
-    }
+    // 解析艺术家信�?
+    parseArtistCreditProperty(item, jsonObj);
+    
+    // 使用通用函数解析子实体和通用属�?
+    parseCommonSubEntities(item, jsonObj);
+    parseCommonProperties(item, jsonObj);
 }
 
 void MusicBrainzParser::parseReleaseGroupProperties(QSharedPointer<ResultItem> &item, const QJsonObject &jsonObj)
 {
-    // 艺术家信用
-    if (jsonObj.contains("artist-credit")) {
-        QJsonArray artistCreditArray = jsonObj.value("artist-credit").toArray();
-        QVariantList artistCredits = parseArtistCredits(artistCreditArray);
-        item->setDetailProperty("artist-credits", artistCredits);
-    }
-    // 发行列表
-    if (jsonObj.contains("releases")) {
-        QJsonArray releasesArray = jsonObj.value("releases").toArray();
-        QVariantList releases;
-        for (const QJsonValue &value : releasesArray) {
-            if (value.isObject()) {
-                QJsonObject releaseObj = value.toObject();
-                QVariantMap release;
-                release["id"] = getJsonString(releaseObj, "id");
-                release["title"] = getJsonString(releaseObj, "title");
-                release["status"] = getJsonString(releaseObj, "status");
-                release["date"] = getJsonString(releaseObj, "date");
-                release["country"] = getJsonString(releaseObj, "country");
-                releases.append(release);
-            }
-        }
-        item->setDetailProperty("releases", releases);
-    }
-    // 标签
-    if (jsonObj.contains("tags")) {
-        QJsonArray tagsArray = jsonObj.value("tags").toArray();
-        QVariantList tags = parseTags(tagsArray);
-        item->setDetailProperty("tags", tags);
-    }
-    // 别名
-    if (jsonObj.contains("aliases")) {
-        QJsonArray aliasesArray = jsonObj.value("aliases").toArray();
-        QVariantList aliases = parseAliases(aliasesArray);
-        item->setDetailProperty("aliases", aliases);
-    }
-    // 关系
-    if (jsonObj.contains("relations")) {
-        QJsonArray relationsArray = jsonObj.value("relations").toArray();
-        QVariantList relationships = parseRelationships(relationsArray);
-        item->setDetailProperty("relationships", relationships);
-    }
+    // 解析艺术家信�?
+    parseArtistCreditProperty(item, jsonObj);
+    
+    // 使用通用函数解析子实体和通用属�?
+    parseCommonSubEntities(item, jsonObj);
+    parseCommonProperties(item, jsonObj);
 }
 
 void MusicBrainzParser::parseWorkProperties(QSharedPointer<ResultItem> &item, const QJsonObject &jsonObj)
 {
-    // 解析录音列表
-    if (jsonObj.contains("recordings")) {
-        QJsonArray recordingsArray = jsonObj.value("recordings").toArray();
-        QVariantList recordings;
-        for (const QJsonValue &value : recordingsArray) {
-            if (value.isObject()) {
-                QJsonObject recordingObj = value.toObject();
-                QVariantMap recording;
-                recording["id"] = getJsonString(recordingObj, "id");
-                recording["title"] = getJsonString(recordingObj, "title");
-                recording["length"] = getJsonInt(recordingObj, "length");
-                recordings.append(recording);
-            }
-        }
-        item->setDetailProperty("recordings", recordings);
-    }
-    
-    // 解析标签
-    if (jsonObj.contains("tags")) {
-        QJsonArray tagsArray = jsonObj.value("tags").toArray();
-        QVariantList tags = parseTags(tagsArray);
-        item->setDetailProperty("tags", tags);
-    }
-    
-    // 解析别名
-    if (jsonObj.contains("aliases")) {
-        QJsonArray aliasesArray = jsonObj.value("aliases").toArray();
-        QVariantList aliases = parseAliases(aliasesArray);
-        item->setDetailProperty("aliases", aliases);
-    }
-    
-    // 解析关系
-    if (jsonObj.contains("relations")) {
-        QJsonArray relationsArray = jsonObj.value("relations").toArray();
-        QVariantList relationships = parseRelationships(relationsArray);
-        item->setDetailProperty("relationships", relationships);
-    }
+    // 使用通用函数解析子实体和通用属�?
+    parseCommonSubEntities(item, jsonObj);
+    parseCommonProperties(item, jsonObj);
 }
 
 void MusicBrainzParser::parseLabelProperties(QSharedPointer<ResultItem> &item, const QJsonObject &jsonObj)
 {
-    // 解析发行列表
-    if (jsonObj.contains("releases")) {
-        QJsonArray releasesArray = jsonObj.value("releases").toArray();
-        QVariantList releases;
-        for (const QJsonValue &value : releasesArray) {
-            if (value.isObject()) {
-                QJsonObject releaseObj = value.toObject();
-                QVariantMap release;
-                release["id"] = getJsonString(releaseObj, "id");
-                release["title"] = getJsonString(releaseObj, "title");
-                release["status"] = getJsonString(releaseObj, "status");
-                release["date"] = getJsonString(releaseObj, "date");
-                releases.append(release);
-            }
-        }
-        item->setDetailProperty("releases", releases);
-    }
-    
-    // 解析标签
-    if (jsonObj.contains("tags")) {
-        QJsonArray tagsArray = jsonObj.value("tags").toArray();
-        QVariantList tags = parseTags(tagsArray);
-        item->setDetailProperty("tags", tags);
-    }
-    
-    // 解析别名
-    if (jsonObj.contains("aliases")) {
-        QJsonArray aliasesArray = jsonObj.value("aliases").toArray();
-        QVariantList aliases = parseAliases(aliasesArray);
-        item->setDetailProperty("aliases", aliases);
-    }
-    
-    // 解析关系
-    if (jsonObj.contains("relations")) {
-        QJsonArray relationsArray = jsonObj.value("relations").toArray();
-        QVariantList relationships = parseRelationships(relationsArray);
-        item->setDetailProperty("relationships", relationships);
-    }
+    // 使用通用函数解析子实体和通用属�?
+    parseCommonSubEntities(item, jsonObj);
+    parseCommonProperties(item, jsonObj);
 }
 
 void MusicBrainzParser::parseAreaProperties(QSharedPointer<ResultItem> &item, const QJsonObject &jsonObj)
 {
-    // 解析标签
-    if (jsonObj.contains("tags")) {
-        QJsonArray tagsArray = jsonObj.value("tags").toArray();
-        QVariantList tags = parseTags(tagsArray);
-        item->setDetailProperty("tags", tags);
-    }
-    
-    // 解析别名
-    if (jsonObj.contains("aliases")) {
-        QJsonArray aliasesArray = jsonObj.value("aliases").toArray();
-        QVariantList aliases = parseAliases(aliasesArray);
-        item->setDetailProperty("aliases", aliases);
-    }
-    
-    // 解析关系
-    if (jsonObj.contains("relations")) {
-        QJsonArray relationsArray = jsonObj.value("relations").toArray();
-        QVariantList relationships = parseRelationships(relationsArray);
-        item->setDetailProperty("relationships", relationships);
-    }
+    // 使用通用函数解析通用属�?
+    parseCommonProperties(item, jsonObj);
 }
 
 QVariantList MusicBrainzParser::parseArtistCredits(const QJsonArray &artistCredits)
@@ -739,68 +491,68 @@ QVariantList MusicBrainzParser::parseRelationships(const QJsonArray &relations)
             QVariantMap relation;
             
             // 基本关系信息
-            relation["type"] = getJsonString(relationObj, "type");
-            relation["type-id"] = getJsonString(relationObj, "type-id");
-            relation["direction"] = getJsonString(relationObj, "direction");
-            relation["begin"] = getJsonString(relationObj, "begin");
-            relation["end"] = getJsonString(relationObj, "end");
-            relation["ended"] = getJsonBool(relationObj, "ended");
+            relation.insert("type", getJsonString(relationObj, "type"));
+            relation.insert("type-id", getJsonString(relationObj, "type-id"));
+            relation.insert("direction", getJsonString(relationObj, "direction"));
+            relation.insert("begin", getJsonString(relationObj, "begin"));
+            relation.insert("end", getJsonString(relationObj, "end"));
+            relation.insert("ended", getJsonBool(relationObj, "ended"));
             
             // 解析目标实体
             if (relationObj.contains("artist")) {
                 QJsonObject targetObj = relationObj.value("artist").toObject();
                 QVariantMap target;
-                target["id"] = getJsonString(targetObj, "id");
-                target["name"] = getJsonString(targetObj, "name");
-                target["sort-name"] = getJsonString(targetObj, "sort-name");
-                target["disambiguation"] = getJsonString(targetObj, "disambiguation");
-                relation["artist"] = target;
+                target.insert("id", getJsonString(targetObj, "id"));
+                target.insert("name", getJsonString(targetObj, "name"));
+                target.insert("sort-name", getJsonString(targetObj, "sort-name"));
+                target.insert("disambiguation", getJsonString(targetObj, "disambiguation"));
+                relation.insert("artist", target);
             }
             else if (relationObj.contains("release")) {
                 QJsonObject targetObj = relationObj.value("release").toObject();
                 QVariantMap target;
-                target["id"] = getJsonString(targetObj, "id");
-                target["title"] = getJsonString(targetObj, "title");
-                target["status"] = getJsonString(targetObj, "status");
-                target["disambiguation"] = getJsonString(targetObj, "disambiguation");
-                relation["release"] = target;
+                target.insert("id", getJsonString(targetObj, "id"));
+                target.insert("title", getJsonString(targetObj, "title"));
+                target.insert("status", getJsonString(targetObj, "status"));
+                target.insert("disambiguation", getJsonString(targetObj, "disambiguation"));
+                relation.insert("release", target);
             }
             else if (relationObj.contains("release-group")) {
                 QJsonObject targetObj = relationObj.value("release-group").toObject();
                 QVariantMap target;
-                target["id"] = getJsonString(targetObj, "id");
-                target["title"] = getJsonString(targetObj, "title");
-                target["primary-type"] = getJsonString(targetObj, "primary-type");
-                target["disambiguation"] = getJsonString(targetObj, "disambiguation");
-                relation["release-group"] = target;
+                target.insert("id", getJsonString(targetObj, "id"));
+                target.insert("title", getJsonString(targetObj, "title"));
+                target.insert("primary-type", getJsonString(targetObj, "primary-type"));
+                target.insert("disambiguation", getJsonString(targetObj, "disambiguation"));
+                relation.insert("release-group", target);
             }
             else if (relationObj.contains("recording")) {
                 QJsonObject targetObj = relationObj.value("recording").toObject();
                 QVariantMap target;
-                target["id"] = getJsonString(targetObj, "id");
-                target["title"] = getJsonString(targetObj, "title");
-                target["length"] = getJsonInt(targetObj, "length");
-                target["disambiguation"] = getJsonString(targetObj, "disambiguation");
-                relation["recording"] = target;
+                target.insert("id", getJsonString(targetObj, "id"));
+                target.insert("title", getJsonString(targetObj, "title"));
+                target.insert("length", getJsonInt(targetObj, "length"));
+                target.insert("disambiguation", getJsonString(targetObj, "disambiguation"));
+                relation.insert("recording", target);
             }
             else if (relationObj.contains("work")) {
                 QJsonObject targetObj = relationObj.value("work").toObject();
                 QVariantMap target;
-                target["id"] = getJsonString(targetObj, "id");
-                target["title"] = getJsonString(targetObj, "title");
-                target["type"] = getJsonString(targetObj, "type");
-                target["disambiguation"] = getJsonString(targetObj, "disambiguation");
-                relation["work"] = target;
+                target.insert("id", getJsonString(targetObj, "id"));
+                target.insert("title", getJsonString(targetObj, "title"));
+                target.insert("type", getJsonString(targetObj, "type"));
+                target.insert("disambiguation", getJsonString(targetObj, "disambiguation"));
+                relation.insert("work", target);
             }
             else if (relationObj.contains("url")) {
                 QJsonObject targetObj = relationObj.value("url").toObject();
                 QVariantMap target;
-                target["id"] = getJsonString(targetObj, "id");
-                target["resource"] = getJsonString(targetObj, "resource");
-                relation["url"] = target;
+                target.insert("id", getJsonString(targetObj, "id"));
+                target.insert("resource", getJsonString(targetObj, "resource"));
+                relation.insert("url", target);
             }
             
-            // 解析属性
+            // 解析属�?
             if (relationObj.contains("attributes")) {
                 QJsonArray attributesArray = relationObj.value("attributes").toArray();
                 QVariantList attributes;
@@ -809,7 +561,7 @@ QVariantList MusicBrainzParser::parseRelationships(const QJsonArray &relations)
                         attributes.append(attrValue.toString());
                     }
                 }
-                relation["attributes"] = attributes;
+                relation.insert("attributes", attributes);
             }
             
             result.append(relation);
@@ -828,11 +580,11 @@ QVariantList MusicBrainzParser::parseMedia(const QJsonArray &media)
             QJsonObject mediaObj = value.toObject();
             QVariantMap medium;
             
-            medium["position"] = getJsonInt(mediaObj, "position");
-            medium["title"] = getJsonString(mediaObj, "title");
-            medium["format"] = getJsonString(mediaObj, "format");
-            medium["format-id"] = getJsonString(mediaObj, "format-id");
-            medium["track-count"] = getJsonInt(mediaObj, "track-count");
+            medium.insert("position", getJsonInt(mediaObj, "position"));
+            medium.insert("title", getJsonString(mediaObj, "title"));
+            medium.insert("format", getJsonString(mediaObj, "format"));
+            medium.insert("format-id", getJsonString(mediaObj, "format-id"));
+            medium.insert("track-count", getJsonInt(mediaObj, "track-count"));
             
             // 解析曲目列表
             if (mediaObj.contains("tracks")) {
@@ -844,26 +596,26 @@ QVariantList MusicBrainzParser::parseMedia(const QJsonArray &media)
                         QJsonObject trackObj = trackValue.toObject();
                         QVariantMap track;
                         
-                        track["id"] = getJsonString(trackObj, "id");
-                        track["position"] = getJsonInt(trackObj, "position");
-                        track["title"] = getJsonString(trackObj, "title");
-                        track["length"] = getJsonInt(trackObj, "length");
-                        track["number"] = getJsonString(trackObj, "number");
+                        track.insert("id", getJsonString(trackObj, "id"));
+                        track.insert("position", getJsonInt(trackObj, "position"));
+                        track.insert("title", getJsonString(trackObj, "title"));
+                        track.insert("length", getJsonInt(trackObj, "length"));
+                        track.insert("number", getJsonString(trackObj, "number"));
                         
                         if (trackObj.contains("artist-credit")) {
                             QJsonArray artistCreditArray = trackObj.value("artist-credit").toArray();
-                            track["artist-credit"] = parseArtistCredits(artistCreditArray);
+                            track.insert("artist-credit", parseArtistCredits(artistCreditArray));
                         }
                         
                         if (trackObj.contains("recording")) {
-                            track["recording"] = parseJsonValue(trackObj.value("recording"));
+                            track.insert("recording", parseJsonValue(trackObj.value("recording")));
                         }
                         
                         tracks.append(track);
                     }
                 }
                 
-                medium["tracks"] = tracks;
+                medium.insert("tracks", tracks);
             }
             
             result.append(medium);
@@ -882,8 +634,8 @@ QVariantList MusicBrainzParser::parseTags(const QJsonArray &tags)
             QJsonObject tagObj = value.toObject();
             QVariantMap tag;
             
-            tag["count"] = getJsonInt(tagObj, "count");
-            tag["name"] = getJsonString(tagObj, "name");
+            tag.insert("count", getJsonInt(tagObj, "count"));
+            tag.insert("name", getJsonString(tagObj, "name"));
             
             result.append(tag);
         }
@@ -901,15 +653,15 @@ QVariantList MusicBrainzParser::parseAliases(const QJsonArray &aliases)
             QJsonObject aliasObj = value.toObject();
             QVariantMap alias;
             
-            alias["name"] = getJsonString(aliasObj, "name");
-            alias["sort-name"] = getJsonString(aliasObj, "sort-name");
-            alias["type"] = getJsonString(aliasObj, "type");
-            alias["type-id"] = getJsonString(aliasObj, "type-id");
-            alias["locale"] = getJsonString(aliasObj, "locale");
-            alias["primary"] = getJsonBool(aliasObj, "primary");
-            alias["begin"] = getJsonString(aliasObj, "begin");
-            alias["end"] = getJsonString(aliasObj, "end");
-            alias["ended"] = getJsonBool(aliasObj, "ended");
+            alias.insert("name", getJsonString(aliasObj, "name"));
+            alias.insert("sort-name", getJsonString(aliasObj, "sort-name"));
+            alias.insert("type", getJsonString(aliasObj, "type"));
+            alias.insert("type-id", getJsonString(aliasObj, "type-id"));
+            alias.insert("locale", getJsonString(aliasObj, "locale"));
+            alias.insert("primary", getJsonBool(aliasObj, "primary"));
+            alias.insert("begin", getJsonString(aliasObj, "begin"));
+            alias.insert("end", getJsonString(aliasObj, "end"));
+            alias.insert("ended", getJsonBool(aliasObj, "ended"));
             
             result.append(alias);
         }
@@ -922,9 +674,9 @@ QVariantMap MusicBrainzParser::parseLifeSpan(const QJsonObject &lifeSpan)
 {
     QVariantMap result;
     
-    result["begin"] = getJsonString(lifeSpan, "begin");
-    result["end"] = getJsonString(lifeSpan, "end");
-    result["ended"] = getJsonBool(lifeSpan, "ended");
+    result.insert("begin", getJsonString(lifeSpan, "begin"));
+    result.insert("end", getJsonString(lifeSpan, "end"));
+    result.insert("ended", getJsonBool(lifeSpan, "ended"));
     
     return result;
 }
@@ -933,19 +685,19 @@ QVariantMap MusicBrainzParser::parseArea(const QJsonObject &area)
 {
     QVariantMap result;
     
-    result["id"] = getJsonString(area, "id");
-    result["name"] = getJsonString(area, "name");
-    result["sort-name"] = getJsonString(area, "sort-name");
-    result["type"] = getJsonString(area, "type");
-    result["type-id"] = getJsonString(area, "type-id");
+    result.insert("id", getJsonString(area, "id"));
+    result.insert("name", getJsonString(area, "name"));
+    result.insert("sort-name", getJsonString(area, "sort-name"));
+    result.insert("type", getJsonString(area, "type"));
+    result.insert("type-id", getJsonString(area, "type-id"));
     
     // ISO 代码
     if (area.contains("iso-3166-1-codes")) {
-        result["iso-3166-1-codes"] = parseJsonValue(area.value("iso-3166-1-codes"));
+        result.insert("iso-3166-1-codes", parseJsonValue(area.value("iso-3166-1-codes")));
     }
     
     if (area.contains("iso-3166-2-codes")) {
-        result["iso-3166-2-codes"] = parseJsonValue(area.value("iso-3166-2-codes"));
+        result.insert("iso-3166-2-codes", parseJsonValue(area.value("iso-3166-2-codes")));
     }
     
     return result;
@@ -960,11 +712,11 @@ QVariantList MusicBrainzParser::parseReleaseEvents(const QJsonArray &releaseEven
             QJsonObject eventObj = value.toObject();
             QVariantMap event;
             
-            event["date"] = getJsonString(eventObj, "date");
+            event.insert("date", getJsonString(eventObj, "date"));
             
             if (eventObj.contains("area")) {
                 QJsonObject areaObj = eventObj.value("area").toObject();
-                event["area"] = parseArea(areaObj);
+                event.insert("area", parseArea(areaObj));
             }
             
             result.append(event);
@@ -978,10 +730,10 @@ QVariantMap MusicBrainzParser::parseCoverArtArchive(const QJsonObject &coverArtA
 {
     QVariantMap result;
     
-    result["artwork"] = getJsonBool(coverArtArchive, "artwork");
-    result["count"] = getJsonInt(coverArtArchive, "count");
-    result["front"] = getJsonBool(coverArtArchive, "front");
-    result["back"] = getJsonBool(coverArtArchive, "back");
+    result.insert("artwork", getJsonBool(coverArtArchive, "artwork"));
+    result.insert("count", getJsonInt(coverArtArchive, "count"));
+    result.insert("front", getJsonBool(coverArtArchive, "front"));
+    result.insert("back", getJsonBool(coverArtArchive, "back"));
     
     return result;
 }
@@ -990,8 +742,8 @@ QVariantMap MusicBrainzParser::parseTextRepresentation(const QJsonObject &textRe
 {
     QVariantMap result;
     
-    result["language"] = getJsonString(textRepresentation, "language");
-    result["script"] = getJsonString(textRepresentation, "script");
+    result.insert("language", getJsonString(textRepresentation, "language"));
+    result.insert("script", getJsonString(textRepresentation, "script"));
     
     return result;
 }
@@ -1048,4 +800,115 @@ QJsonObject MusicBrainzParser::getJsonObject(const QJsonObject &obj, const QStri
         return obj.value(key).toObject();
     }
     return QJsonObject();
+}
+
+void MusicBrainzParser::parseCommonSubEntities(QSharedPointer<ResultItem> &item, const QJsonObject &jsonObj) {
+    // 定义需要解析的子实体映�?
+    static const QMap<QString, EntityType> subEntityMappings = {
+        {"recordings", EntityType::Recording},
+        {"releases", EntityType::Release},
+        {"release-groups", EntityType::ReleaseGroup},
+        {"works", EntityType::Work}
+    };
+    
+    // 遍历并解析所有存在的子实体列�?
+    for (auto it = subEntityMappings.begin(); it != subEntityMappings.end(); ++it) {
+        const QString &arrayKey = it.key();
+        const EntityType &entityType = it.value();
+        
+        if (jsonObj.contains(arrayKey)) {
+            QVariantList subEntities = parseSubEntityList(jsonObj, arrayKey, entityType);
+            item->setDetailProperty(arrayKey, subEntities);
+        }
+    }
+}
+
+void MusicBrainzParser::parseCommonProperties(QSharedPointer<ResultItem> &item, const QJsonObject &jsonObj) {
+    // 解析标签
+    if (jsonObj.contains("tags")) {
+        QJsonArray tagsArray = jsonObj.value("tags").toArray();
+        QVariantList tags = parseTags(tagsArray);
+        item->setDetailProperty("tags", tags);
+    }
+    
+    // 解析别名
+    if (jsonObj.contains("aliases")) {
+        QJsonArray aliasesArray = jsonObj.value("aliases").toArray();
+        QVariantList aliases = parseAliases(aliasesArray);
+        item->setDetailProperty("aliases", aliases);
+    }
+    
+    // 解析关系
+    if (jsonObj.contains("relations")) {
+        QJsonArray relationsArray = jsonObj.value("relations").toArray();
+        QVariantList relationships = parseRelationships(relationsArray);
+        item->setDetailProperty("relationships", relationships);
+    }
+}
+
+void MusicBrainzParser::parseArtistCreditProperty(QSharedPointer<ResultItem> &item, const QJsonObject &jsonObj) {    if (jsonObj.contains("artist-credit")) {
+        QJsonArray artistCreditArray = jsonObj.value("artist-credit").toArray();
+        QVariantList artistCredits = parseArtistCredits(artistCreditArray);
+        item->setDetailProperty("artist-credits", artistCredits);
+    }
+}
+
+QVariantList MusicBrainzParser::parseSubEntityList(const QJsonObject &jsonObj, const QString &arrayKey, EntityType entityType)
+{
+    QVariantList result;
+    
+    if (!jsonObj.contains(arrayKey)) {
+        return result;
+    }
+    
+    QJsonArray entityArray = jsonObj.value(arrayKey).toArray();
+    
+    for (const QJsonValue &value : entityArray) {
+        if (value.isObject()) {
+            QJsonObject entityObj = value.toObject();
+            
+            // 创建简化的实体信息，只包含基本字段
+            QVariantMap entityInfo;
+            
+            // 基本字段
+            entityInfo.insert("id", getJsonString(entityObj, "id"));
+            entityInfo.insert("name", getJsonString(entityObj, "name"));
+            
+            // 对于某些实体类型，name字段可能叫title
+            if (entityInfo.value("name").toString().isEmpty()) {
+                entityInfo.insert("name", getJsonString(entityObj, "title"));
+            }
+            
+            entityInfo.insert("disambiguation", getJsonString(entityObj, "disambiguation"));
+            
+            // 根据实体类型添加特定字段
+            switch (entityType) {
+            case EntityType::Recording:
+                entityInfo.insert("length", getJsonInt(entityObj, "length"));
+                break;
+            case EntityType::Release:
+                entityInfo.insert("date", getJsonString(entityObj, "date"));
+                entityInfo.insert("status", getJsonString(entityObj, "status"));
+                entityInfo.insert("track-count", getJsonInt(entityObj, "track-count"));
+                break;
+            case EntityType::ReleaseGroup:
+                entityInfo.insert("primary-type", getJsonString(entityObj, "primary-type"));
+                entityInfo.insert("first-release-date", getJsonString(entityObj, "first-release-date"));
+                break;
+            case EntityType::Work:
+                entityInfo.insert("type", getJsonString(entityObj, "type"));
+                break;
+            case EntityType::Artist:
+                entityInfo.insert("type", getJsonString(entityObj, "type"));
+                entityInfo.insert("sort-name", getJsonString(entityObj, "sort-name"));
+                break;
+            default:
+                break;
+            }
+            
+            result.append(entityInfo);
+        }
+    }
+    
+    return result;
 }

@@ -11,6 +11,8 @@
 #include <QSharedPointer>
 #include <QList>
 #include <QStringList>
+#include <QMap>
+#include <QDebug>
 #include "../models/resultitem.h"
 #include "../core/types.h"
 
@@ -279,6 +281,69 @@ private:
      * @return JSON对象
      */
     static QJsonObject getJsonObject(const QJsonObject &obj, const QString &key);
+
+    /**
+     * @brief 通用实体解析辅助函数
+     */
+    
+    /**
+     * @brief 解析实体的基本信息（通用字段）
+     * @param jsonObj JSON对象
+     * @param type 实体类型
+     * @return 包含基本信息的QVariantMap
+     */
+    static QVariantMap parseEntityBasics(const QJsonObject &jsonObj, EntityType type);
+    
+    /**
+     * @brief 解析艺术家信息（通用于所有艺术家相关字段）
+     * @param jsonObj JSON对象
+     * @return 艺术家信息的QVariantMap
+     */
+    static QVariantMap parseArtistInfo(const QJsonObject &jsonObj);
+    
+    /**
+     * @brief 解析日期信息（first-release-date, date等）
+     * @param jsonObj JSON对象
+     * @param dateKey 日期字段名
+     * @return 格式化的日期字符串
+     */
+    static QString parseDateField(const QJsonObject &jsonObj, const QString &dateKey = "date");
+    
+    /**
+     * @brief 解析艺术家信用信息（artist-credit）
+     * @param jsonObj JSON对象
+     * @return 艺术家信用字符串
+     */
+    static QString parseArtistCredit(const QJsonObject &jsonObj);
+    
+    /**
+     * @brief 通用的子实体列表解析
+     * @param jsonObj JSON对象
+     * @param arrayKey 数组键名（如 "recordings", "releases"）
+     * @param entityType 子实体类型
+     * @return 子实体列表
+     */
+    static QVariantList parseSubEntityList(const QJsonObject &jsonObj, const QString &arrayKey, EntityType entityType);
+      /**
+     * @brief 解析通用的子实体列表（recordings, releases, works等）
+     * @param item 目标结果项
+     * @param jsonObj JSON对象
+     */
+    void parseCommonSubEntities(QSharedPointer<ResultItem> &item, const QJsonObject &jsonObj);
+    
+    /**
+     * @brief 解析通用属性（tags, aliases, relations等）
+     * @param item 目标结果项
+     * @param jsonObj JSON对象
+     */
+    void parseCommonProperties(QSharedPointer<ResultItem> &item, const QJsonObject &jsonObj);
+    
+    /**
+     * @brief 解析艺术家信用（artist-credit）
+     * @param item 目标结果项
+     * @param jsonObj JSON对象
+     */
+    void parseArtistCreditProperty(QSharedPointer<ResultItem> &item, const QJsonObject &jsonObj);
 };
 
 #endif // MUSICBRAINZPARSER_H

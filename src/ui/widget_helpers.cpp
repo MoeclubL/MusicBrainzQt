@@ -1,16 +1,14 @@
 #include "widget_helpers.h"
-#include <QDesktopServices>
-#include <QUrl>
-#include <QClipboard>
-#include <QGuiApplication>
 #include <QWidget>
 #include <QLabel>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
-#include <QFrame>
-#include <QTime>
+#include <QDesktopServices>
+#include <QUrl>
+#include <QGuiApplication>
+#include <QClipboard>
 #include <QDate>
-#include <QCoreApplication>
+#include "../core/types.h"
 
 namespace WidgetHelpers {
 
@@ -105,7 +103,6 @@ QWidget* createInfoItem(const QString &labelText, const QString &valueText, QWid
     layout->addWidget(label);
     layout->addWidget(value, 1);
     
-    widget->setStyleSheet(getInfoItemStyleSheet());
     return widget;
 }
 
@@ -118,17 +115,7 @@ QLabel* createGroupTitle(const QString &title, QWidget *parent)
     return titleLabel;
 }
 
-void clearLayout(QVBoxLayout *layout)
-{
-    if (!layout) return;
-    
-    while (QLayoutItem *item = layout->takeAt(0)) {
-        if (QWidget *widget = item->widget()) {
-            widget->deleteLater();
-        }
-        delete item;
-    }
-}
+
 
 // =============================================================================
 // 格式化和显示

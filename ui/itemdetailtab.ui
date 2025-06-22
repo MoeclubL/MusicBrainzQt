@@ -104,128 +104,24 @@
           </property>
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
+          </property>         </widget>        </item>        <item>
+         <layout class="QVBoxLayout" name="infoContentLayout">
+          <property name="spacing">
+           <number>3</number>
           </property>
-         </widget>
-        </item>        <item>
-         <widget class="QLabel" name="infoTitle">
-          <property name="font">
-           <font>
-            <weight>75</weight>
-            <bold>true</bold>
-           </font>
+          <property name="leftMargin">
+           <number>0</number>
           </property>
-          <property name="styleSheet">
-           <string notr="true">margin-top: 10px;</string>
+          <property name="topMargin">
+           <number>0</number>
           </property>
-          <property name="text">
-           <string>Information</string>
+          <property name="rightMargin">
+           <number>0</number>
           </property>
-         </widget>
-        </item>        <item>
-         <widget class="QScrollArea" name="basicInfoScrollArea">
-          <property name="maximumSize">
-           <size>
-            <width>16777215</width>
-            <height>150</height>
-           </size>
+          <property name="bottomMargin">
+           <number>0</number>
           </property>
-          <property name="frameShape">
-           <enum>QFrame::NoFrame</enum>
-          </property>
-          <property name="widgetResizable">
-           <bool>true</bool>
-          </property>
-          <widget class="QWidget" name="infoContentWidget">
-           <property name="geometry">
-            <rect>
-             <x>0</x>
-             <y>0</y>
-             <width>396</width>
-             <height>146</height>
-            </rect>
-           </property>
-           <layout class="QVBoxLayout" name="infoContentLayout">
-            <property name="spacing">
-             <number>3</number>
-            </property>
-            <property name="leftMargin">
-             <number>0</number>
-            </property>
-            <property name="topMargin">
-             <number>0</number>
-            </property>
-            <property name="rightMargin">
-             <number>0</number>
-            </property>
-            <property name="bottomMargin">
-             <number>0</number>
-            </property>
-           </layout>
-          </widget>
-         </widget>
-        </item>
-        <item>
-         <widget class="Line" name="separator2">
-          <property name="styleSheet">
-           <string notr="true">color: #ccc;</string>
-          </property>
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-         </widget>
-        </item>        <item>
-         <widget class="QLabel" name="detailsTitle">
-          <property name="font">
-           <font>
-            <weight>75</weight>
-            <bold>true</bold>
-           </font>
-          </property>
-          <property name="styleSheet">
-           <string notr="true">margin-top: 10px;</string>
-          </property>
-          <property name="text">
-           <string>Details</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QScrollArea" name="detailsScrollArea">
-          <property name="frameShape">
-           <enum>QFrame::NoFrame</enum>
-          </property>
-          <property name="widgetResizable">
-           <bool>true</bool>
-          </property>
-          <widget class="QWidget" name="detailsContentWidget">
-           <property name="geometry">
-            <rect>
-             <x>0</x>
-             <y>0</y>
-             <width>396</width>
-             <height>426</height>
-            </rect>
-           </property>
-           <layout class="QVBoxLayout" name="detailsContentLayout">
-            <property name="spacing">
-             <number>3</number>
-            </property>
-            <property name="leftMargin">
-             <number>0</number>
-            </property>
-            <property name="topMargin">
-             <number>0</number>
-            </property>
-            <property name="rightMargin">
-             <number>0</number>
-            </property>
-            <property name="bottomMargin">
-             <number>0</number>
-            </property>
-           </layout>
-          </widget>
-         </widget>
-        </item>
+         </layout></item>
         <item>
          <spacer name="verticalSpacer">
           <property name="orientation">

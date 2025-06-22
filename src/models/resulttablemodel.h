@@ -42,6 +42,11 @@ public:
     QList<ColumnInfo> detectColumnsFromData() const;
     void updateColumnsFromData();
     
+    // 列生成辅助函数
+    QString generateFriendlyColumnName(const QString &key) const;
+    QString generateColumnDescription(const QString &key, EntityType type) const;
+    int getColumnPriority(const QString &key, EntityType type) const;
+    
 private:
     QList<QSharedPointer<ResultItem>> m_items;
     EntityType m_type;

@@ -1,6 +1,7 @@
 #include "resulttablemodel.h"
 #include "../utils/logger.h"
 #include "../core/types.h"
+#include "../api/musicbrainz_utils.h"
 #include <QLocale>
 #include <QDate>
 #include <QCoreApplication>
@@ -466,4 +467,81 @@ void ResultTableModel::sort(int column, Qt::SortOrder order) {
     
     qCDebug(logUI) << "ResultTableModel::sort - Sorted by column" << column 
                    << "(" << fieldKey << ") in" << (order == Qt::AscendingOrder ? "ascending" : "descending") << "order";
+}
+
+QString ResultTableModel::generateFriendlyColumnName(const QString &key) const {
+    static const QMap<QString, QString> friendlyNames = {
+        {"id", QCoreApplication::translate("ResultTableModel", "ID")},
+        {"name", QCoreApplication::translate("ResultTableModel", "Name")},
+        {"title", QCoreApplication::translate("ResultTableModel", "Title")},
+        {"sort_name", QCoreApplication::translate("ResultTableModel", "Sort Name")},
+        {"disambiguation", QCoreApplication::translate("ResultTableModel", "Disambiguation")},
+        {"score", QCoreApplication::translate("ResultTableModel", "Score")},
+        {"type", QCoreApplication::translate("ResultTableModel", "Type")},
+        {"country", QCoreApplication::translate("ResultTableModel", "Country")},
+        {"date", QCoreApplication::translate("ResultTableModel", "Date")},
+        {"first_release_date", QCoreApplication::translate("ResultTableModel", "First Release Date")},
+        {"life_span", QCoreApplication::translate("ResultTableModel", "Life Span")},
+        {"gender", QCoreApplication::translate("ResultTableModel", "Gender")},
+        {"length", QCoreApplication::translate("ResultTableModel", "Length")},
+        {"track_count", QCoreApplication::translate("ResultTableModel", "Tracks")},
+        {"release_count", QCoreApplication::translate("ResultTableModel", "Releases")},
+        {"recording_count", QCoreApplication::translate("ResultTableModel", "Recordings")},
+        {"work_count", QCoreApplication::translate("ResultTableModel", "Works")},
+        {"release_group_count", QCoreApplication::translate("ResultTableModel", "Release Groups")},
+        {"artist", QCoreApplication::translate("ResultTableModel", "Artist")},
+        {"status", QCoreApplication::translate("ResultTableModel", "Status")},
+        {"packaging", QCoreApplication::translate("ResultTableModel", "Packaging")},
+        {"format", QCoreApplication::translate("ResultTableModel", "Format")},
+        {"catalog_number", QCoreApplication::translate("ResultTableModel", "Catalog Number")},
+        {"barcode", QCoreApplication::translate("ResultTableModel", "Barcode")},
+        {"label", QCoreApplication::translate("ResultTableModel", "Label")},
+        {"language", QCoreApplication::translate("ResultTableModel", "Language")},
+        {"code", QCoreApplication::translate("ResultTableModel", "Code")},
+        {"tags", QCoreApplication::translate("ResultTableModel", "Tags")},
+        {"rating", QCoreApplication::translate("ResultTableModel", "Rating")},
+        {"aliases", QCoreApplication::translate("ResultTableModel", "Aliases")},
+        {"isrcs", QCoreApplication::translate("ResultTableModel", "ISRCs")}
+    };
+    
+    if (friendlyNames.contains(key)) {
+        return friendlyNames[key];
+    }
+    
+    // 默认转换：将下划线替换为空格，首字母大写
+    QString friendly = key;
+    friendly.replace('_', ' ');
+    friendly.replace('-', ' ');
+    if (!friendly.isEmpty()) {
+        friendly[0] = friendly[0].toUpper();
+    }
+    return friendly;
+}
+
+QString ResultTableModel::generateColumnDescription(const QString &key, EntityType type) const {
+    QString entityName = MusicBrainzUtils::entityTypeToString(type);
+    return QCoreApplication::translate("ResultTableModel", "%1 %2").arg(entityName, generateFriendlyColumnName(key));
+}
+
+int ResultTableModel::getColumnPriority(const QString &key, EntityType type) const {
+    // 定义不同实体类型的列优先级
+    static const QMap<EntityType, QStringList> priorities = {
+        {EntityType::Artist, {"name", "sort_name", "type", "country", "life_span", "gender", "disambiguation", "score"}},
+        {EntityType::Release, {"title", "artist", "date", "country", "status", "track_count", "disambiguation", "score"}},
+        {EntityType::Recording, {"title", "artist", "length", "disambiguation", "release_count", "score"}},
+        {EntityType::ReleaseGroup, {"title", "artist", "type", "first_release_date", "release_count", "disambiguation", "score"}},
+        {EntityType::Work, {"title", "type", "language", "disambiguation", "recording_count", "score"}},
+        {EntityType::Label, {"name", "sort_name", "type", "country", "code", "life_span", "disambiguation", "score"}}
+    };
+    
+    if (priorities.contains(type)) {
+        const QStringList &priorityList = priorities[type];
+        int index = priorityList.indexOf(key);
+        if (index >= 0) {
+            return index;
+        }
+    }
+    
+    // 未在优先级列表中的字段放在后面
+    return 1000;
 }

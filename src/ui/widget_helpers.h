@@ -70,11 +70,7 @@ QWidget* createInfoItem(const QString &labelText, const QString &valueText, QWid
  */
 QLabel* createGroupTitle(const QString &title, QWidget *parent = nullptr);
 
-/**
- * @brief 清空布局中的所有组�?
- * @param layout 要清空的布局
- */
-void clearLayout(QVBoxLayout *layout);
+
 
 // =============================================================================
 // 格式化和显示

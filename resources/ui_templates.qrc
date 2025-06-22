@@ -1,0 +1,8 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource>
+    <file>ui/info_item_template.ui</file>
+    <file>ui/overview_tab_template.ui</file>
+    <file>ui/aliases_tab_template.ui</file>
+    <file>ui/alias_item_template.ui</file>
+</qresource>
+</RCC>
