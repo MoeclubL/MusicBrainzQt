@@ -1,7 +1,7 @@
 #include "resulttablemodel.h"
 #include "../utils/logger.h"
 #include "../core/types.h"
-#include "../api/musicbrainz_utils.h"
+#include "../api/api_utils.h"
 #include <QLocale>
 #include <QDate>
 #include <QCoreApplication>
@@ -519,7 +519,7 @@ QString ResultTableModel::generateFriendlyColumnName(const QString &key) const {
 }
 
 QString ResultTableModel::generateColumnDescription(const QString &key, EntityType type) const {
-    QString entityName = MusicBrainzUtils::entityTypeToString(type);
+    QString entityName = EntityUtils::entityTypeToString(type);
     return QCoreApplication::translate("ResultTableModel", "%1 %2").arg(entityName, generateFriendlyColumnName(key));
 }
 

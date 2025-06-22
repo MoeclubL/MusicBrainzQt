@@ -1,17 +1,14 @@
 #include "network_manager.h"
 #include "../utils/logger.h"
 #include <QNetworkRequest>
+#include <QNetworkProxy>
 #include <QDebug>
 
 NetworkManager::NetworkManager(QObject *parent)
     : QObject(parent)
     , m_networkManager(new QNetworkAccessManager(this))
-    , m_rateLimitTimer(new QTimer(this))
-    , m_rateLimitDelay(500) // 默认速率限制延迟为500毫秒
 {
-    m_rateLimitTimer->setSingleShot(true);
-    connect(m_rateLimitTimer, &QTimer::timeout,
-            this, &NetworkManager::onRateLimitTimerTimeout);
+    // 移除速率限制 - 不再创建定时器
 }
 
 NetworkManager::~NetworkManager()
@@ -21,41 +18,63 @@ NetworkManager::~NetworkManager()
 
 QNetworkReply* NetworkManager::sendRequest(const QString &url, const QString &userAgent)
 {
-    // 检查速率限制
-    if (isRateLimited()) {
-        // 添加到待处理队列
-        m_pendingRequests.enqueue(qMakePair(url, userAgent));
-        LOG_SERVICE_DEBUG("Request queued due to rate limiting: %s", url.toUtf8().constData());
-        return nullptr;
-    }
-
     QNetworkRequest request = createRequest(url, userAgent);
     QNetworkReply *reply = m_networkManager->get(request);
     
     connect(reply, &QNetworkReply::finished,
             this, &NetworkManager::onReplyFinished);
-
-    // 启动速率限制定时器
-    enforceRateLimit();
     
     LOG_SERVICE_DEBUG("NetworkManager: Request sent - %s", url.toUtf8().constData());
     return reply;
 }
 
-void NetworkManager::setRateLimitDelay(int milliseconds)
+bool NetworkManager::sendAuthenticatedRequest(const QString &url, const QString &userAgent,
+                                            const QString &username, const QString &password,
+                                            const QString &method, const QByteArray &data)
 {
-    m_rateLimitDelay = qMax(500, milliseconds); // 最小500ms
-    LOG_SERVICE_DEBUG("Rate limit delay set to: %d ms", m_rateLimitDelay);
+    QNetworkRequest request = createAuthenticatedRequest(url, userAgent, username, password);
+    QNetworkReply *reply = nullptr;
+    
+    if (method == "GET") {
+        reply = m_networkManager->get(request);
+    } else if (method == "POST") {
+        reply = m_networkManager->post(request, data);
+    } else if (method == "PUT") {
+        reply = m_networkManager->put(request, data);
+    } else if (method == "DELETE") {
+        reply = m_networkManager->deleteResource(request);
+    } else {
+        LOG_SERVICE_ERROR("Unsupported HTTP method: %s", method.toUtf8().constData());
+        return false;
+    }
+    
+    if (reply) {
+        connect(reply, &QNetworkReply::finished,
+                this, &NetworkManager::onReplyFinished);
+        LOG_SERVICE_DEBUG("NetworkManager: Authenticated %s request sent - %s", 
+                          method.toUtf8().constData(), url.toUtf8().constData());
+        return true;
+    }
+    
+    return false;
 }
 
-int NetworkManager::getRateLimitDelay() const
+void NetworkManager::setProxy(const QString &host, int port, 
+                             const QString &username, const QString &password)
 {
-    return m_rateLimitDelay;
-}
-
-bool NetworkManager::isRateLimited() const
-{
-    return m_rateLimitTimer->isActive();
+    if (host.isEmpty()) {
+        m_networkManager->setProxy(QNetworkProxy::NoProxy);
+        return;
+    }
+    
+    QNetworkProxy proxy(QNetworkProxy::HttpProxy, host, port);
+    if (!username.isEmpty()) {
+        proxy.setUser(username);
+        proxy.setPassword(password);
+    }
+    
+    m_networkManager->setProxy(proxy);
+    LOG_SERVICE_DEBUG("Proxy configured: %s:%d", host.toUtf8().constData(), port);
 }
 
 void NetworkManager::onReplyFinished()
@@ -78,24 +97,23 @@ void NetworkManager::onReplyFinished()
     }
 }
 
-void NetworkManager::onRateLimitTimerTimeout()
-{
-    // 处理待发送的请求
-    if (!m_pendingRequests.isEmpty()) {
-        auto request = m_pendingRequests.dequeue();
-        sendRequest(request.first, request.second);
-    }
-}
-
-void NetworkManager::enforceRateLimit()
-{
-    m_rateLimitTimer->start(m_rateLimitDelay);
-}
-
 QNetworkRequest NetworkManager::createRequest(const QString &url, const QString &userAgent) const
 {
     QNetworkRequest request(url);
     request.setHeader(QNetworkRequest::UserAgentHeader, userAgent);
     request.setRawHeader("Accept", "application/json");
+    return request;
+}
+
+QNetworkRequest NetworkManager::createAuthenticatedRequest(const QString &url, const QString &userAgent,
+                                                          const QString &username, const QString &password) const
+{
+    QNetworkRequest request = createRequest(url, userAgent);
+    
+    // 添加HTTP基础认证
+    QString credentials = username + ":" + password;
+    QByteArray encodedCredentials = credentials.toUtf8().toBase64();
+    request.setRawHeader("Authorization", "Basic " + encodedCredentials);
+    
     return request;
 }

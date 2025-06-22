@@ -62,8 +62,21 @@ public:
      * @param jsonObj JSON对象
      * @param type 实体类型（如果已知）
      * @return 解析后的ResultItem
+     */    QSharedPointer<ResultItem> parseEntity(const QJsonObject &jsonObj, EntityType type = EntityType::Unknown);
+    
+    /**
+     * @brief 解析集合信息
+     * @param data JSON响应数据
+     * @return 集合信息列表
      */
-    QSharedPointer<ResultItem> parseEntity(const QJsonObject &jsonObj, EntityType type = EntityType::Unknown);
+    QList<QVariantMap> parseCollectionsResponse(const QByteArray &data);
+    
+    /**
+     * @brief 解析DiscID查找响应
+     * @param data JSON响应数据
+     * @return 发行版列表
+     */
+    QList<QSharedPointer<ResultItem>> parseDiscIdResponse(const QByteArray &data);
 
     // =============================================================================
     // 工具方法

@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
+#include <QNetworkProxy>
 #include <QTimer>
 #include <QQueue>
 #include <QPair>
@@ -24,31 +25,38 @@ class NetworkManager : public QObject
 
 public:
     explicit NetworkManager(QObject *parent = nullptr);
-    ~NetworkManager();
-
-    /**
+    ~NetworkManager();    /**
      * @brief 发送GET请求
      * @param url 请求URL
      * @param userAgent User-Agent字符串
      * @return 网络请求对象
      */
     QNetworkReply* sendRequest(const QString &url, const QString &userAgent);
+    
+    /**
+     * @brief 发送认证请求
+     * @param url 请求URL
+     * @param userAgent User-Agent字符串
+     * @param username 用户名
+     * @param password 密码
+     * @param method HTTP方法（GET, POST, PUT, DELETE）
+     * @param data 请求数据
+     * @return 是否成功发送
+     */
+    bool sendAuthenticatedRequest(const QString &url, const QString &userAgent,
+                                 const QString &username, const QString &password,
+                                 const QString &method = "GET", const QByteArray &data = QByteArray());
 
     /**
-     * @brief 设置速率限制延迟
-     * @param milliseconds 延迟毫秒数
+     * @brief 设置代理服务器
+     * @param host 代理主机地址
+     * @param port 代理端口
+     * @param username 代理用户名（可选）
+     * @param password 代理密码（可选）
      */
-    void setRateLimitDelay(int milliseconds);
-
-    /**
-     * @brief 获取当前速率限制延迟
-     */
-    int getRateLimitDelay() const;
-
-    /**
-     * @brief 检查是否在速率限制期内
-     */
-    bool isRateLimited() const;
+    void setProxy(const QString &host, int port, 
+                  const QString &username = QString(), 
+                  const QString &password = QString());
 
 signals:
     /**
@@ -67,16 +75,13 @@ signals:
 
 private slots:
     void onReplyFinished();
-    void onRateLimitTimerTimeout();
 
 private:
     QNetworkAccessManager *m_networkManager;
-    QTimer *m_rateLimitTimer;
-    int m_rateLimitDelay;
-    QQueue<QPair<QString, QString>> m_pendingRequests; // URL, User-Agent
-
-    void enforceRateLimit();
+    
     QNetworkRequest createRequest(const QString &url, const QString &userAgent) const;
+    QNetworkRequest createAuthenticatedRequest(const QString &url, const QString &userAgent,
+                                              const QString &username, const QString &password) const;
 };
 
 #endif // NETWORK_MANAGER_H

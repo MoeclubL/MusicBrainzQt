@@ -4,7 +4,9 @@
 #include <QObject>
 #include <QSharedPointer>
 #include <QVariantMap>
+#include <QQueue>
 #include "../core/types.h"
+#include "api_utils.h"
 
 class ResultItem;
 class NetworkManager;
@@ -89,16 +91,100 @@ public:
      * MusicBrainz要求所有客户端提供适当的User-Agent标识。
      * 格式：应用名/版本 (联系信息)
      */
-    void setUserAgent(const QString &userAgent);
+    void setUserAgent(const QString &userAgent);    /**
+     * @brief 设置认证信息
+     * @param username MusicBrainz用户名
+     * @param password MusicBrainz密码
+     * 
+     * 用于需要认证的操作，如管理用户集合等。
+     */
+    void setAuthentication(const QString &username, const QString &password);
     
     /**
-     * @brief 设置速率限制延迟
-     * @param milliseconds 请求间延迟毫秒数
-     * 
-     * MusicBrainz要求客户端遵守1请求/秒的速率限制。
-     * 默认值为1000毫秒，不建议设置更小的值。
+     * @brief 设置代理服务器
+     * @param host 代理主机地址
+     * @param port 代理端口
+     * @param username 代理用户名（可选）
+     * @param password 代理密码（可选）
      */
-    void setRateLimitDelay(int milliseconds);
+    void setProxy(const QString &host, int port, 
+                  const QString &username = QString(), 
+                  const QString &password = QString());
+      /**
+     * @brief 查找DiscID对应的发行版
+     * @param discId CD的DiscID
+     */
+    void lookupDiscId(const QString &discId);
+    
+    /**
+     * @brief 通用查询方法
+     * @param entity 实体类型字符串
+     * @param id 实体ID（可选）
+     * @param resource 资源路径（可选）
+     * @param includes 包含的关系信息列表
+     * @param params 额外查询参数
+     */
+    void genericQuery(const QString &entity, const QString &id = QString(),
+                     const QString &resource = QString(), const QStringList &includes = {},
+                     const QVariantMap &params = {});
+    
+    /**
+     * @brief 浏览相关实体
+     * @param entity 要浏览的实体类型
+     * @param relatedEntity 关联实体类型
+     * @param relatedId 关联实体ID
+     * @param limit 结果限制（默认25）
+     * @param offset 结果偏移（默认0）
+     */
+    void browse(const QString &entity, const QString &relatedEntity,
+               const QString &relatedId, int limit = 25, int offset = 0);
+    
+    /**
+     * @brief 获取用户集合列表
+     * 需要认证
+     */
+    void getUserCollections();
+    
+    /**
+     * @brief 获取集合内容
+     * @param collectionId 集合ID
+     */
+    void getCollectionContents(const QString &collectionId);
+    
+    /**
+     * @brief 添加到集合
+     * @param collectionId 集合ID
+     * @param releaseIds 要添加的发行版ID列表
+     * 需要认证
+     */
+    void addToCollection(const QString &collectionId, const QStringList &releaseIds);
+    
+    /**
+     * @brief 从集合移除
+     * @param collectionId 集合ID
+     * @param releaseIds 要移除的发行版ID列表
+     * 需要认证
+     */
+    void removeFromCollection(const QString &collectionId, const QStringList &releaseIds);
+    
+    // =============================================================================
+    // 状态查询方法
+    // =============================================================================
+    
+    /**
+     * @brief 获取最后一次请求的HTTP状态码
+     */
+    int getLastHttpCode() const;
+    
+    /**
+     * @brief 获取最后一次的错误消息
+     */
+    QString getLastErrorMessage() const;
+    
+    /**
+     * @brief 获取API版本
+     */
+    QString getVersion() const;
 
 signals:
     // =============================================================================
@@ -121,33 +207,106 @@ signals:
      * @param type 实体类型
      */
     void detailsReady(const QVariantMap &details, EntityType type);
-    
-    /**
+      /**
      * @brief 错误发生信号
      * @param error 错误描述信息
      */
     void errorOccurred(const QString &error);
+    
+    // =============================================================================
+    // 扩展信号定义
+    // =============================================================================
+    
+    /**
+     * @brief DiscID查找结果就绪信号
+     * @param releases 匹配的发行版列表
+     * @param discId 原始DiscID
+     */
+    void discIdLookupReady(const QList<QSharedPointer<ResultItem>> &releases, const QString &discId);
+    
+    /**
+     * @brief 通用查询结果就绪信号
+     * @param result 查询结果数据
+     * @param entity 查询的实体类型
+     * @param id 查询的实体ID
+     */
+    void genericQueryReady(const QVariantMap &result, const QString &entity, const QString &id);
+    
+    /**
+     * @brief 浏览结果就绪信号
+     * @param results 浏览结果列表
+     * @param entity 浏览的实体类型
+     * @param totalCount 总结果数
+     * @param offset 当前偏移量
+     */
+    void browseResultsReady(const QList<QSharedPointer<ResultItem>> &results, 
+                           const QString &entity, int totalCount, int offset);
+    
+    /**
+     * @brief 用户集合列表就绪信号
+     * @param collections 集合信息列表
+     */
+    void userCollectionsReady(const QList<QVariantMap> &collections);
+    
+    /**
+     * @brief 集合内容就绪信号
+     * @param contents 集合内容列表
+     * @param collectionId 集合ID
+     */
+    void collectionContentsReady(const QList<QSharedPointer<ResultItem>> &contents, 
+                                const QString &collectionId);
+    
+    /**
+     * @brief 集合修改完成信号
+     * @param success 操作是否成功
+     * @param collectionId 集合ID
+     * @param operation 操作类型（"add"或"remove"）
+     */
+    void collectionModified(bool success, const QString &collectionId, const QString &operation);
 
 private slots:
     void onRequestFinished(QNetworkReply *reply, const QString &url);
     void onRequestError(const QString &error, const QString &url);
 
-private:    // 构建API URL
-    QString buildSearchUrl(const QString &query, EntityType type, int limit, int offset) const;
-    QString buildDetailsUrl(const QString &mbid, EntityType type) const;
+private:
+    // 统一请求处理
+    void sendRequest(const QString& url, RequestType type, const QVariantMap& context = {});
+    void processResponse(QNetworkReply* reply, const PendingRequest& request);
     
-    // 请求处理
-    void processReply(QNetworkReply *reply, const QString &url);
+    // 请求处理分发器
+    void handleSearchResponse(const QByteArray& data, const QVariantMap& context);
+    void handleDetailsResponse(const QByteArray& data, const QVariantMap& context);
+    void handleDiscIdResponse(const QByteArray& data, const QVariantMap& context);
+    void handleGenericResponse(const QByteArray& data, const QVariantMap& context);
+    void handleBrowseResponse(const QByteArray& data, const QVariantMap& context);
+    void handleCollectionResponse(const QByteArray& data, const QVariantMap& context);
+    
+    // 认证请求处理
+    bool sendAuthenticatedRequest(const QString &url, const QString &method = "GET", 
+                                 const QByteArray &data = QByteArray(),
+                                 const QVariantMap& context = {});
 
     NetworkManager *m_networkManager;
     class MusicBrainzParser *m_parser;
     QString m_userAgent;
     
-    // 当前请求追踪
-    QStringList m_pendingSearchUrls;
-    QStringList m_pendingDetailsUrls;
-    EntityType m_currentSearchType;
-    EntityType m_currentDetailsType;
+    // 认证信息
+    QString m_username;
+    QString m_password;
+    
+    // 代理设置
+    QString m_proxyHost;
+    int m_proxyPort;
+    QString m_proxyUsername;
+    QString m_proxyPassword;
+    
+    // 状态跟踪
+    int m_lastHttpCode;
+    QString m_lastErrorMessage;
+    QString m_version;
+    
+    // 统一请求队列 - 替换原有的多个队列
+    QQueue<PendingRequest> m_pendingRequests;
 };
 
 #endif // MUSICBRAINZAPI_H

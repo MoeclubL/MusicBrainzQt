@@ -1,5 +1,5 @@
 #include "musicbrainzparser.h"
-#include "musicbrainz_utils.h"
+#include "api_utils.h"
 #include "../utils/logger.h"
 #include <QDebug>
 #include <QRegularExpression>
@@ -41,7 +41,7 @@ QList<QSharedPointer<ResultItem>> MusicBrainzParser::parseSearchResponse(const Q
         entityTypes << "artists" << "releases" << "recordings" << "release-groups" << "works" << "labels" << "areas";
           for (const QString &entityType : entityTypes) {
             if (keys.contains(entityType)) {
-                actualType = MusicBrainzUtils::stringToEntityType(entityType.chopped(1)); // 去掉末尾�?s'
+                actualType = EntityUtils::stringToEntityType(entityType.chopped(1)); // 去掉末尾的's'
                 break;
             }
         }
@@ -52,10 +52,10 @@ QList<QSharedPointer<ResultItem>> MusicBrainzParser::parseSearchResponse(const Q
         return results;
     }
     
-    QString entityPluralName = MusicBrainzUtils::getEntityPluralName(actualType);
+    QString entityPluralName = EntityUtils::getEntityPluralName(actualType);
     QJsonArray items = root.value(entityPluralName).toArray();
       qCDebug(logApi) << "MusicBrainzParser::parseSearchResponse - Parsing" << items.size() 
-                    << "items of type" << MusicBrainzUtils::entityTypeToString(actualType);
+                    << "items of type" << EntityUtils::entityTypeToString(actualType);
     
     for (const QJsonValue &value : items) {
         if (value.isObject()) {
@@ -90,7 +90,7 @@ QSharedPointer<ResultItem> MusicBrainzParser::parseDetailsResponse(const QByteAr
     // 自动检测实体类�?
     EntityType actualType = detectEntityType(root);
     if (expectedType != EntityType::Unknown && actualType != expectedType) {        qCWarning(logApi) << "MusicBrainzParser::parseDetailsResponse - Type mismatch: expected" 
-                          << MusicBrainzUtils::entityTypeToString(expectedType) << "got" << MusicBrainzUtils::entityTypeToString(actualType);
+                          << EntityUtils::entityTypeToString(expectedType) << "got" << EntityUtils::entityTypeToString(actualType);
     }
     
     return parseEntity(root, actualType);
@@ -128,7 +128,7 @@ QSharedPointer<ResultItem> MusicBrainzParser::parseEntity(const QJsonObject &jso
     
     // 解析类型特定属�?
     parseTypeSpecificProperties(resultItem, jsonObj, type);    qCDebug(logApi) << "MusicBrainzParser::parseEntity - Parsed entity:" << name 
-                    << "(" << MusicBrainzUtils::entityTypeToString(type) << ") with" 
+                    << "(" << EntityUtils::entityTypeToString(type) << ") with" 
                     << resultItem->getDetailData().count() << "detail properties";
     
     return resultItem;

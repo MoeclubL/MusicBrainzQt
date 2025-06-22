@@ -10,7 +10,7 @@ SOURCES += \
     src/mainwindow.cpp \
     src/api/musicbrainzapi.cpp \
     src/api/musicbrainzparser.cpp \
-    src/api/musicbrainz_utils.cpp \
+    src/api/api_utils.cpp \
     src/api/network_manager.cpp \
     src/models/resultitem.cpp \
     src/models/resulttablemodel.cpp \
@@ -28,7 +28,7 @@ HEADERS += \
     src/mainwindow.h \
     src/api/musicbrainzapi.h \
     src/api/musicbrainzparser.h \
-    src/api/musicbrainz_utils.h \
+    src/api/api_utils.h \
     src/api/network_manager.h \
     src/models/resultitem.h \
     src/models/resulttablemodel.h \
