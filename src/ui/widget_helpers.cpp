@@ -8,7 +8,10 @@
 #include <QGuiApplication>
 #include <QClipboard>
 #include <QDate>
+#include <QCoreApplication>
+#include <QString>
 #include "../core/types.h"
+#include "../api/api_utils.h"
 
 namespace WidgetHelpers {
 
@@ -22,46 +25,13 @@ QString buildMusicBrainzUrl(const QString &entityId, EntityType type)
         return QString();
     }
     
-    QString typeStr;
-    switch (type) {
-        case EntityType::Artist:
-            typeStr = "artist";
-            break;
-        case EntityType::Release:
-            typeStr = "release";
-            break;
-        case EntityType::ReleaseGroup:
-            typeStr = "release-group";
-            break;
-        case EntityType::Recording:
-            typeStr = "recording";
-            break;
-        case EntityType::Work:
-            typeStr = "work";
-            break;
-        case EntityType::Label:
-            typeStr = "label";
-            break;
-        case EntityType::Area:
-            typeStr = "area";
-            break;
-        case EntityType::Place:
-            typeStr = "place";
-            break;
-        case EntityType::Event:
-            typeStr = "event";
-            break;
-        case EntityType::Instrument:
-            typeStr = "instrument";
-            break;
-        case EntityType::Series:
-            typeStr = "series";
-            break;
-        default:
-            return QString();
+    // 使用 API 层的统一工具类获取实体类型字符串
+    QString typeStr = EntityUtils::entityTypeToString(type);
+    if (typeStr.isEmpty() || typeStr == "unknown") {
+        return QString();
     }
     
-    return QString("https://musicbrainz.org/%1/%2").arg(typeStr, entityId);
+    return QString("https://musicbrainz.org/") + typeStr + "/" + entityId;
 }
 
 bool openUrlInBrowser(const QString &url)
@@ -89,16 +59,15 @@ QWidget* createInfoItem(const QString &labelText, const QString &valueText, QWid
     QWidget *widget = new QWidget(parent);
     QHBoxLayout *layout = new QHBoxLayout(widget);
     layout->setContentsMargins(5, 2, 5, 2);
-    
-    QLabel *label = new QLabel(labelText + ":", widget);
-    label->setStyleSheet("font-weight: bold; color: #333;");
+      QLabel *label = new QLabel(labelText + ":", widget);
+    label->setProperty("class", "bold-text");
     label->setMinimumWidth(120);
     label->setAlignment(Qt::AlignTop | Qt::AlignLeft);
     
     QLabel *value = new QLabel(valueText, widget);
     value->setWordWrap(true);
     value->setAlignment(Qt::AlignTop | Qt::AlignLeft);
-    value->setStyleSheet("color: #555;");
+    value->setProperty("class", "secondary-text");
     
     layout->addWidget(label);
     layout->addWidget(value, 1);
@@ -109,7 +78,8 @@ QWidget* createInfoItem(const QString &labelText, const QString &valueText, QWid
 QLabel* createGroupTitle(const QString &title, QWidget *parent)
 {
     QLabel *titleLabel = new QLabel(title, parent);
-    titleLabel->setStyleSheet(getTitleLabelStyleSheet());
+    titleLabel->setObjectName("sectionTitle");
+    titleLabel->setProperty("class", "section-title");
     titleLabel->setAlignment(Qt::AlignLeft);
     titleLabel->setMargin(5);
     return titleLabel;
@@ -131,7 +101,7 @@ QString formatDuration(int milliseconds)
     int minutes = seconds / 60;
     seconds = seconds % 60;
     
-    return QString("%1:%2").arg(minutes).arg(seconds, 2, 10, QChar('0'));
+    return QString::number(minutes) + ":" + QString::number(seconds).rightJustified(2, '0');
 }
 
 QString formatDate(const QString &dateString)
@@ -152,91 +122,56 @@ QString formatDate(const QString &dateString)
 
 QString getEntityDisplayName(EntityType type)
 {
-    switch (type) {
-        case EntityType::Artist:
-            return QCoreApplication::translate("UiUtils", "Artist");
-        case EntityType::Release:
-            return QCoreApplication::translate("UiUtils", "Release");
-        case EntityType::ReleaseGroup:
-            return QCoreApplication::translate("UiUtils", "Release Group");
-        case EntityType::Recording:
-            return QCoreApplication::translate("UiUtils", "Recording");
-        case EntityType::Work:
-            return QCoreApplication::translate("UiUtils", "Work");
-        case EntityType::Label:
-            return QCoreApplication::translate("UiUtils", "Label");
-        case EntityType::Area:
-            return QCoreApplication::translate("UiUtils", "Area");
-        case EntityType::Place:
-            return QCoreApplication::translate("UiUtils", "Place");
-        case EntityType::Event:
-            return QCoreApplication::translate("UiUtils", "Event");
-        case EntityType::Instrument:
-            return QCoreApplication::translate("UiUtils", "Instrument");
-        case EntityType::Series:
-            return QCoreApplication::translate("UiUtils", "Series");
-        default:
-            return QCoreApplication::translate("UiUtils", "Unknown");
+    // 使用统一的实体类型映射，避免重复的switch语句
+    const struct {
+        EntityType type;
+        const char* displayName;
+    } displayNames[] = {
+        {EntityType::Artist, QT_TRANSLATE_NOOP("UiUtils", "Artist")},
+        {EntityType::Release, QT_TRANSLATE_NOOP("UiUtils", "Release")},
+        {EntityType::ReleaseGroup, QT_TRANSLATE_NOOP("UiUtils", "Release Group")},
+        {EntityType::Recording, QT_TRANSLATE_NOOP("UiUtils", "Recording")},
+        {EntityType::Work, QT_TRANSLATE_NOOP("UiUtils", "Work")},
+        {EntityType::Label, QT_TRANSLATE_NOOP("UiUtils", "Label")},
+        {EntityType::Area, QT_TRANSLATE_NOOP("UiUtils", "Area")},
+        {EntityType::Place, QT_TRANSLATE_NOOP("UiUtils", "Place")},
+        {EntityType::Event, QT_TRANSLATE_NOOP("UiUtils", "Event")},
+        {EntityType::Instrument, QT_TRANSLATE_NOOP("UiUtils", "Instrument")},
+        {EntityType::Series, QT_TRANSLATE_NOOP("UiUtils", "Series")},
+    };
+    
+    for (const auto& mapping : displayNames) {
+        if (mapping.type == type) {
+            return QCoreApplication::translate("UiUtils", mapping.displayName);
+        }
     }
+    
+    return QCoreApplication::translate("UiUtils", "Unknown");
 }
 
 QString getEntityIconPath(EntityType type)
 {
-    switch (type) {
-        case EntityType::Artist:
-            return ":/icons/artist.svg";
-        case EntityType::Release:
-            return ":/icons/album.svg";
-        case EntityType::ReleaseGroup:
-            return ":/icons/album.svg";
-        case EntityType::Recording:
-            return ":/icons/recording.svg";
-        case EntityType::Work:
-            return ":/icons/work.svg";
-        case EntityType::Label:
-            return ":/icons/label.svg";
-        case EntityType::Area:
-            return ":/icons/area.svg";
-        default:
-            return ":/icons/browser.svg";
+    // 使用统一的实体类型到图标映射
+    const struct {
+        EntityType type;
+        const char* iconPath;
+    } iconMappings[] = {
+        {EntityType::Artist, ":/icons/artist.svg"},
+        {EntityType::Release, ":/icons/album.svg"},
+        {EntityType::ReleaseGroup, ":/icons/album.svg"},
+        {EntityType::Recording, ":/icons/recording.svg"},
+        {EntityType::Work, ":/icons/work.svg"},
+        {EntityType::Label, ":/icons/label.svg"},
+        {EntityType::Area, ":/icons/area.svg"},
+    };
+    
+    for (const auto& mapping : iconMappings) {
+        if (mapping.type == type) {
+            return QString(mapping.iconPath);
+        }
     }
-}
-
-// =============================================================================
-// 样式和主题
-// =============================================================================
-
-QString getInfoItemStyleSheet()
-{
-    return "QWidget { "
-           "background-color: transparent; "
-           "border-bottom: 1px solid #e0e0e0; "
-           "padding: 2px 0; "
-           "}";
-}
-
-QString getGroupContainerStyleSheet()
-{
-    return "QWidget { "
-           "background-color: #f8f9fa; "
-           "border: 1px solid #dee2e6; "
-           "border-radius: 5px; "
-           "padding: 10px; "
-           "margin: 5px; "
-           "}";
-}
-
-QString getTitleLabelStyleSheet()
-{
-    return "QLabel { "
-           "font-size: 14px; "
-           "font-weight: bold; "
-           "color: #2c3e50; "
-           "background-color: #ecf0f1; "
-           "padding: 8px 12px; "
-           "border-radius: 4px; "
-           "border-left: 4px solid #3498db; "
-           "}";
+    
+    return ":/icons/browser.svg"; // 默认图标
 }
 
 }

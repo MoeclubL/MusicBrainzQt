@@ -32,7 +32,7 @@ MusicBrainzApi::MusicBrainzApi(QObject *parent)
 
 MusicBrainzApi::~MusicBrainzApi()
 {
-    // NetworkManager会自动清理未完成的请�?
+    // NetworkManager会自动清理未完成的请求
 }
 
 void MusicBrainzApi::search(const QString &query, EntityType type, int limit, int offset)

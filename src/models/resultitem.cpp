@@ -172,7 +172,7 @@ QMap<QString, QVariant> ResultItem::getDetails() const
 
 bool ResultItem::hasChildren() const
 {
-    // 默认情况下，艺术家和发行有子�?
+    // 默认情况下，艺术家和发行有子实体
     return (m_type == EntityType::Artist || m_type == EntityType::Release);
 }
 

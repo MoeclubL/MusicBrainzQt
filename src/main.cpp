@@ -22,6 +22,10 @@
  */
 
 #include <QApplication>
+#include <QFile>
+#include <QTranslator>
+#include <QLocale>
+#include <QDir>
 #include "mainwindow.h"
 #include "utils/logger.h"
 #include "utils/config_manager.h"
@@ -48,6 +52,64 @@ int main(int argc, char *argv[]) {
     // =============================================================================
     
     QApplication app(argc, argv);
+    
+    // =============================================================================
+    // 国际化设置
+    // =============================================================================
+    
+    // 创建翻译器
+    QTranslator translator;
+    
+    // 获取系统语言
+    QString locale = QLocale::system().name();
+    
+    // 尝试加载对应的翻译文件
+    QString translationFile = QString("musicbrainzqt_%1").arg(locale);
+    
+    // 在应用程序目录和翻译子目录中查找翻译文件
+    QStringList translationPaths;
+    translationPaths << QDir::currentPath() + "/translations"
+                     << QCoreApplication::applicationDirPath() + "/translations"
+                     << ":/translations";
+    
+    bool translationLoaded = false;
+    for (const QString &path : translationPaths) {
+        if (translator.load(translationFile, path)) {
+            app.installTranslator(&translator);
+            translationLoaded = true;
+            break;
+        }
+    }
+    
+    // 如果系统语言的翻译文件未找到，尝试加载中文翻译作为备选
+    if (!translationLoaded && !locale.startsWith("en")) {
+        for (const QString &path : translationPaths) {
+            if (translator.load("musicbrainzqt_zh_CN", path)) {
+                app.installTranslator(&translator);
+                translationLoaded = true;
+                break;
+            }
+        }
+    }
+    
+    // 记录翻译状态
+    if (translationLoaded) {
+        qDebug() << "Translation loaded for locale:" << locale;
+    } else {
+        qDebug() << "No translation found for locale:" << locale << ", using default English";
+    }
+    
+    // =============================================================================
+    // 样式表加载
+    // =============================================================================
+    
+    // 加载应用程序样式表
+    QFile styleFile(":/styles/main.qss");
+    if (styleFile.open(QFile::ReadOnly)) {
+        QString styleSheet = QString::fromLatin1(styleFile.readAll());
+        app.setStyleSheet(styleSheet);
+        styleFile.close();
+    }
     
     // =============================================================================
     // 应用程序元信息设置

@@ -33,9 +33,9 @@ QList<QSharedPointer<ResultItem>> MusicBrainzParser::parseSearchResponse(const Q
         return results;
     }
     
-    // 如果没有指定类型，尝试自动检�?
+    // 如果没有指定类型，尝试自动检测
     EntityType actualType = expectedType;
-    if (actualType == EntityType::Unknown) {        // 通过检查root对象的键来推断类�?
+    if (actualType == EntityType::Unknown) {        // 通过检查root对象的键来推断类型
         QStringList keys = root.keys();
         QStringList entityTypes;
         entityTypes << "artists" << "releases" << "recordings" << "release-groups" << "works" << "labels" << "areas";
@@ -87,7 +87,7 @@ QSharedPointer<ResultItem> MusicBrainzParser::parseDetailsResponse(const QByteAr
         return nullptr;
     }
     
-    // 自动检测实体类�?
+    // 自动检测实体类型
     EntityType actualType = detectEntityType(root);
     if (expectedType != EntityType::Unknown && actualType != expectedType) {        qCWarning(logApi) << "MusicBrainzParser::parseDetailsResponse - Type mismatch: expected" 
                           << EntityUtils::entityTypeToString(expectedType) << "got" << EntityUtils::entityTypeToString(actualType);
@@ -126,7 +126,7 @@ QSharedPointer<ResultItem> MusicBrainzParser::parseEntity(const QJsonObject &jso
     // 解析基本信息
     parseBasicEntityInfo(resultItem, jsonObj);
     
-    // 解析类型特定属�?
+    // 解析类型特定属性
     parseTypeSpecificProperties(resultItem, jsonObj, type);    qCDebug(logApi) << "MusicBrainzParser::parseEntity - Parsed entity:" << name 
                     << "(" << EntityUtils::entityTypeToString(type) << ") with" 
                     << resultItem->getDetailData().count() << "detail properties";
@@ -277,7 +277,7 @@ void MusicBrainzParser::parseBasicEntityInfo(QSharedPointer<ResultItem> &item, c
         const QString &key = it.key();
         const QJsonValue &value = it.value();
         
-        // 跳过已经处理的基本字�?
+        // 跳过已经处理的基本字段
         if (key == "id" || key == "name" || key == "title" || key == "disambiguation" || key == "score") {
             continue;
         }
@@ -333,7 +333,7 @@ void MusicBrainzParser::parseArtistProperties(QSharedPointer<ResultItem> &item, 
         item->setDetailProperty("area_info", area);
     }
     
-    // 解析开始地�?
+    // 解析开始地区
     if (jsonObj.contains("begin-area")) {
         QJsonObject beginAreaObj = jsonObj.value("begin-area").toObject();
         QVariantMap beginArea = parseArea(beginAreaObj);
@@ -360,7 +360,7 @@ void MusicBrainzParser::parseArtistProperties(QSharedPointer<ResultItem> &item, 
         QVariantList aliases = parseAliases(aliasesArray);
         item->setDetailProperty("aliases", aliases); // 使用统一键名
     }
-      // 使用通用解析函数处理各种子实体列�?
+      // 使用通用解析函数处理各种子实体列表
     parseCommonSubEntities(item, jsonObj);
     
     // 解析关系
@@ -377,7 +377,7 @@ void MusicBrainzParser::parseArtistProperties(QSharedPointer<ResultItem> &item, 
 
 void MusicBrainzParser::parseReleaseProperties(QSharedPointer<ResultItem> &item, const QJsonObject &jsonObj)
 {
-    // 解析艺术家信�?
+    // 解析艺术家信息
     parseArtistCreditProperty(item, jsonObj);
     
     // 解析发行事件
@@ -414,41 +414,41 @@ void MusicBrainzParser::parseReleaseProperties(QSharedPointer<ResultItem> &item,
 
 void MusicBrainzParser::parseRecordingProperties(QSharedPointer<ResultItem> &item, const QJsonObject &jsonObj)
 {
-    // 解析艺术家信�?
+    // 解析艺术家信息
     parseArtistCreditProperty(item, jsonObj);
     
-    // 使用通用函数解析子实体和通用属�?
+    // 使用通用函数解析子实体和通用属性
     parseCommonSubEntities(item, jsonObj);
     parseCommonProperties(item, jsonObj);
 }
 
 void MusicBrainzParser::parseReleaseGroupProperties(QSharedPointer<ResultItem> &item, const QJsonObject &jsonObj)
 {
-    // 解析艺术家信�?
+    // 解析艺术家信息
     parseArtistCreditProperty(item, jsonObj);
     
-    // 使用通用函数解析子实体和通用属�?
+    // 使用通用函数解析子实体和通用属性
     parseCommonSubEntities(item, jsonObj);
     parseCommonProperties(item, jsonObj);
 }
 
 void MusicBrainzParser::parseWorkProperties(QSharedPointer<ResultItem> &item, const QJsonObject &jsonObj)
 {
-    // 使用通用函数解析子实体和通用属�?
+    // 使用通用函数解析子实体和通用属性
     parseCommonSubEntities(item, jsonObj);
     parseCommonProperties(item, jsonObj);
 }
 
 void MusicBrainzParser::parseLabelProperties(QSharedPointer<ResultItem> &item, const QJsonObject &jsonObj)
 {
-    // 使用通用函数解析子实体和通用属�?
+    // 使用通用函数解析子实体和通用属性
     parseCommonSubEntities(item, jsonObj);
     parseCommonProperties(item, jsonObj);
 }
 
 void MusicBrainzParser::parseAreaProperties(QSharedPointer<ResultItem> &item, const QJsonObject &jsonObj)
 {
-    // 使用通用函数解析通用属�?
+    // 使用通用函数解析通用属性
     parseCommonProperties(item, jsonObj);
 }
 
@@ -552,7 +552,7 @@ QVariantList MusicBrainzParser::parseRelationships(const QJsonArray &relations)
                 relation.insert("url", target);
             }
             
-            // 解析属�?
+            // 解析属性
             if (relationObj.contains("attributes")) {
                 QJsonArray attributesArray = relationObj.value("attributes").toArray();
                 QVariantList attributes;
@@ -803,7 +803,7 @@ QJsonObject MusicBrainzParser::getJsonObject(const QJsonObject &obj, const QStri
 }
 
 void MusicBrainzParser::parseCommonSubEntities(QSharedPointer<ResultItem> &item, const QJsonObject &jsonObj) {
-    // 定义需要解析的子实体映�?
+    // 定义需要解析的子实体映射
     static const QMap<QString, EntityType> subEntityMappings = {
         {"recordings", EntityType::Recording},
         {"releases", EntityType::Release},
@@ -811,7 +811,7 @@ void MusicBrainzParser::parseCommonSubEntities(QSharedPointer<ResultItem> &item,
         {"works", EntityType::Work}
     };
     
-    // 遍历并解析所有存在的子实体列�?
+    // 遍历并解析所有存在的子实体列表
     for (auto it = subEntityMappings.begin(); it != subEntityMappings.end(); ++it) {
         const QString &arrayKey = it.key();
         const EntityType &entityType = it.value();

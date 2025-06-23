@@ -38,8 +38,9 @@ MusicBrainzQt follows a layered architecture pattern with clear separation of co
 2. **Utility Separation**: 
    - `WidgetHelpers` for UI-specific operations (formatting, clipboard, URLs)
    - `MusicBrainzUtils` for API-specific operations (entity conversion, URL building)
-3. **Single Responsibility**: Each class has a focused, well-defined purpose
-4. **Dependency Direction**: Higher layers depend on lower layers, not vice versa
+3. **Centralized Styling**: All visual styling managed through QSS files
+4. **Single Responsibility**: Each class has a focused, well-defined purpose
+5. **Dependency Direction**: Higher layers depend on lower layers, not vice versa
 
 ### Core Components
 
@@ -218,9 +219,83 @@ connect(comboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
 
 #### UI Development
 - Always use .ui files for layouts
+- Use QSS stylesheets for all styling (no inline C++ styles)
+- Apply styles using `setProperty("class", "style-name")`
 - Separate UI logic from business logic
 - Use Qt's model-view architecture
 - Implement proper signal-slot communication
+
+#### Styling Guidelines
+- **Never use setStyleSheet()** - Use QSS classes instead
+- Define styles in `resources/styles/main.qss`
+- Use semantic class names (e.g., `primary-button`, `error-text`)
+- Group related styles together in the QSS file
+- Use CSS-like selectors for widget-specific styling
+
+## 🎨 Style Management
+
+### QSS Stylesheet System
+
+MusicBrainzQt uses a centralized QSS (Qt Style Sheets) system for all visual styling:
+
+#### Style Architecture
+```
+resources/styles/
+├── main.qss           # Main application stylesheet
+└── styles.qrc         # Qt resource file for styles
+```
+
+#### Using Styles in Code
+
+**✅ Correct - Use QSS classes:**
+```cpp
+// Apply a style class to a widget
+QPushButton *button = new QPushButton("Click me");
+button->setProperty("class", "primary-button");
+
+QLabel *errorLabel = new QLabel("Error message");
+errorLabel->setProperty("class", "error-text");
+
+// For complex styling, combine classes
+QWidget *card = new QWidget();
+card->setProperty("class", "card-container hover-item");
+```
+
+**❌ Incorrect - Never use setStyleSheet():**
+```cpp
+// DON'T DO THIS
+button->setStyleSheet("background-color: #007bff; color: white;");
+label->setStyleSheet("color: red; font-weight: bold;");
+```
+
+#### Common Style Classes
+
+- **Text Styles**: `secondary-text`, `muted-text`, `id-text`, `bold-text`, `error-text`
+- **Buttons**: `primary-button`, `secondary-button`
+- **Containers**: `card-container`, `info-item`
+- **Tables**: `table-label`, `table-value`, `transparent-table`
+- **Tags**: `tag-popular`, `tag-common`, `tag-uncommon`, `genre-item`
+- **Relationships**: `relationship-item`, `relationship-link`, `relationship-name`
+- **Reviews**: `review-section`, `review-item`, `rating-section`
+
+#### Adding New Styles
+
+1. Define the style in `resources/styles/main.qss`:
+```css
+.my-custom-style {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 8px;
+}
+```
+
+2. Apply it in your code:
+```cpp
+widget->setProperty("class", "my-custom-style");
+```
+
+3. The QSS file is automatically loaded at application startup via `main.cpp`
 
 ## 🧪 Testing
 

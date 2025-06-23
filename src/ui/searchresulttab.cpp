@@ -1,3 +1,18 @@
+/**
+ * @file searchresulttab.cpp
+ * @brief MusicBrainz搜索结果显示标签页的实现
+ * 
+ * 本文件实现了SearchResultTab类，负责显示MusicBrainz搜索结果。
+ * 主要功能包括：
+ * - 搜索结果列表显示
+ * - 分页控制
+ * - 项目预览和详情显示
+ * - 右键菜单和双击操作处理
+ * 
+ * @author MusicBrainzQt Team
+ * @date 2024
+ */
+
 #include "searchresulttab.h"
 #include "ui_searchresulttab.h"
 #include "entitylistwidget.h"
@@ -14,8 +29,7 @@ SearchResultTab::SearchResultTab(const QString &query, EntityType type, QWidget 
 {
     ui->setupUi(this);
     setupUI();
-    
-    // 连接详细信息管理器信号
+      // 连接详细信息管理器信号
     connect(m_detailManager, &EntityDetailManager::entityDetailsLoaded,
             this, &SearchResultTab::onEntityDetailsLoaded);
     connect(m_detailManager, &EntityDetailManager::detailsLoadingFailed,
@@ -30,6 +44,12 @@ SearchResultTab::~SearchResultTab()
     delete ui;
 }
 
+/**
+ * @brief 析构函数
+ * 
+ * 清理资源，删除UI组件。
+ */
+
 void SearchResultTab::setupUI()
 {
     // 创建EntityListWidget并插入到标题和分页控件之间
@@ -40,11 +60,11 @@ void SearchResultTab::setupUI()
     
     // 设置标题
     ui->resultsLabel->setText(tr("Search Results for: %1").arg(m_query));
-    
-    // 配置EntityListWidget
+      // 配置EntityListWidget
     m_entityListWidget->setPaginationVisible(false); // 使用UI文件中的分页控件
     m_entityListWidget->setToolBarVisible(false); // 搜索结果不需要工具栏
-      // 连接信号
+    
+    // 连接信号
     connect(m_entityListWidget, &EntityListWidget::itemDoubleClicked,
             this, &SearchResultTab::itemDoubleClicked);
     connect(m_entityListWidget, &EntityListWidget::itemSelectionChanged,
@@ -74,6 +94,11 @@ void SearchResultTab::setResults(const QList<QSharedPointer<ResultItem>> &result
     // 不再自动批量加载详细信息，只有在用户双击项目时才加载
 }
 
+/**
+ * @brief 清空搜索结果
+ * 
+ * 清除列表中的所有项目并重置分页控件。
+ */
 void SearchResultTab::clearResults()
 {
     m_entityListWidget->clear();
@@ -106,12 +131,18 @@ void SearchResultTab::updatePaginationControls(const SearchResults &stats)
                              .arg(totalPages));
 }
 
+/**
+ * @brief 更新分页控件状态
+ * @param stats 搜索统计信息
+ * 
+ * 根据搜索结果统计信息更新分页按钮的启用状态和页面信息标签。
+ * 计算当前页码、总页数，并显示结果范围信息。
+ */
 void SearchResultTab::onEntityDetailsLoaded(const QString &entityId, const QVariantMap &details)
 {
     Q_UNUSED(entityId)
     Q_UNUSED(details)
-    
-    // 通知详细信息已更新
+      // 通知详细信息已更新
     // 这个信号会被MainWindow接收，用于刷新相应的ItemDetailTab
     emit itemDetailsUpdated(nullptr); // 需要根据实际情况修改
 }
@@ -137,6 +168,11 @@ void SearchResultTab::onItemSelectionChanged()
     }
 }
 
+/**
+ * @brief 清空右侧详情面板
+ * 
+ * 移除右侧布局中的所有组件，为显示新的预览内容做准备。
+ */
 void SearchResultTab::clearRightPanel()
 {
     // 清空右侧布局中的所有组件
@@ -160,43 +196,40 @@ void SearchResultTab::createItemPreview(const QSharedPointer<ResultItem> &item)
     
     // 创建预览内容组件
     QWidget *previewWidget = new QWidget();
-    QVBoxLayout *layout = new QVBoxLayout(previewWidget);
-    layout->setContentsMargins(10, 10, 10, 10);
+    QVBoxLayout *layout = new QVBoxLayout(previewWidget);    layout->setContentsMargins(10, 10, 10, 10);
     layout->setSpacing(10);
     
     // 标题
     QLabel *titleLabel = new QLabel(tr("Item Preview"));
-    titleLabel->setStyleSheet("font-weight: bold; font-size: 14px; color: #333; margin-bottom: 10px;");
+    titleLabel->setProperty("class", "section-title");
     layout->addWidget(titleLabel);
     
     // 实体名称
-    QLabel *nameLabel = new QLabel(QString("<h3>%1</h3>").arg(item->getName()));
-    nameLabel->setWordWrap(true);
+    QLabel *nameLabel = new QLabel(QString("<h3>%1</h3>").arg(item->getName()));    nameLabel->setWordWrap(true);
     layout->addWidget(nameLabel);
     
     // 实体类型
     QLabel *typeLabel = new QLabel(QString("<b>Type:</b> %1").arg(item->getTypeString()));
-    typeLabel->setStyleSheet("color: #666; margin-bottom: 5px;");
+    typeLabel->setProperty("class", "secondary-text");
     layout->addWidget(typeLabel);
     
     // MBID
     QLabel *idLabel = new QLabel(QString("<b>MBID:</b> %1").arg(item->getId()));
-    idLabel->setStyleSheet("color: #666; margin-bottom: 5px; font-family: monospace; font-size: 10px;");
+    idLabel->setProperty("class", "id-text");
     idLabel->setWordWrap(true);
     layout->addWidget(idLabel);
     
     // 评分信息
     if (item->getScore() > 0) {
         QLabel *scoreLabel = new QLabel(QString("<b>Match Score:</b> %1%").arg(item->getScore()));
-        scoreLabel->setStyleSheet("color: #666; margin-bottom: 5px;");
-        layout->addWidget(scoreLabel);
-    }
+        scoreLabel->setProperty("class", "secondary-text");
+        layout->addWidget(scoreLabel);    }
     
     // 消歧义信息
     QString disambiguation = item->getDisambiguation();
     if (!disambiguation.isEmpty()) {
         QLabel *disambigLabel = new QLabel(QString("<b>Disambiguation:</b> %1").arg(disambiguation));
-        disambigLabel->setStyleSheet("color: #666; margin-bottom: 5px;");
+        disambigLabel->setProperty("class", "secondary-text");
         disambigLabel->setWordWrap(true);
         layout->addWidget(disambigLabel);
     }
@@ -205,7 +238,7 @@ void SearchResultTab::createItemPreview(const QSharedPointer<ResultItem> &item)
     QFrame *separator = new QFrame();
     separator->setFrameShape(QFrame::HLine);
     separator->setFrameShadow(QFrame::Sunken);
-    separator->setStyleSheet("color: #ccc;");
+    separator->setProperty("class", "muted-text");
     layout->addWidget(separator);
     
     // 详细信息预览（从已有数据中显示）
@@ -219,13 +252,13 @@ void SearchResultTab::createItemPreview(const QSharedPointer<ResultItem> &item)
     QHBoxLayout *buttonLayout = new QHBoxLayout(buttonWidget);
     
     QPushButton *detailsButton = new QPushButton(tr("View Details"));
-    detailsButton->setStyleSheet("QPushButton { background-color: #007bff; color: white; padding: 5px 10px; border: none; border-radius: 3px; } QPushButton:hover { background-color: #0056b3; }");
+    detailsButton->setProperty("class", "primary-button");
     connect(detailsButton, &QPushButton::clicked, [this, item]() {
         emit itemDoubleClicked(item);
     });
     
     QPushButton *browserButton = new QPushButton(tr("Open in Browser"));
-    browserButton->setStyleSheet("QPushButton { background-color: #28a745; color: white; padding: 5px 10px; border: none; border-radius: 3px; } QPushButton:hover { background-color: #1e7e34; }");
+    browserButton->setProperty("class", "secondary-button");
     connect(browserButton, &QPushButton::clicked, [this, item]() {
         emit openInBrowser(item->getId(), item->getType());
     });
@@ -233,8 +266,7 @@ void SearchResultTab::createItemPreview(const QSharedPointer<ResultItem> &item)
     buttonLayout->addWidget(detailsButton);
     buttonLayout->addWidget(browserButton);
     buttonLayout->addStretch();
-    
-    layout->addWidget(buttonWidget);
+      layout->addWidget(buttonWidget);
     layout->addStretch();
     
     // 设置预览组件到滚动区域
@@ -247,8 +279,7 @@ void SearchResultTab::createItemPreview(const QSharedPointer<ResultItem> &item)
 void SearchResultTab::addDetailPreview(QVBoxLayout *layout, const QVariantMap &detailData, EntityType type)
 {
     QLabel *detailTitle = new QLabel(tr("Additional Information"));
-    detailTitle->setStyleSheet("font-weight: bold; color: #333; margin-top: 10px; margin-bottom: 5px;");
-    layout->addWidget(detailTitle);
+    detailTitle->setProperty("class", "bold-text");    layout->addWidget(detailTitle);
     
     // 根据实体类型显示不同的详细信息
     switch (type) {
@@ -275,13 +306,21 @@ void SearchResultTab::addDetailPreview(QVBoxLayout *layout, const QVariantMap &d
     }
 }
 
+/**
+ * @brief 添加详细信息预览
+ * @param layout 要添加组件的布局
+ * @param detailData 详细数据映射
+ * @param type 实体类型
+ * 
+ * 根据实体类型显示相应的详细信息预览。
+ */
 void SearchResultTab::addArtistDetailPreview(QVBoxLayout *layout, const QVariantMap &detailData)
 {
     if (detailData.contains("type")) {
         QString artistType = detailData["type"].toString();
         if (!artistType.isEmpty()) {
             QLabel *typeLabel = new QLabel(QString("<b>Artist Type:</b> %1").arg(artistType));
-            typeLabel->setStyleSheet("color: #666; font-size: 11px;");
+            typeLabel->setProperty("class", "secondary-text");
             layout->addWidget(typeLabel);
         }
     }
@@ -291,7 +330,7 @@ void SearchResultTab::addArtistDetailPreview(QVBoxLayout *layout, const QVariant
         QString areaName = area["name"].toString();
         if (!areaName.isEmpty()) {
             QLabel *areaLabel = new QLabel(QString("<b>Area:</b> %1").arg(areaName));
-            areaLabel->setStyleSheet("color: #666; font-size: 11px;");
+            areaLabel->setProperty("class", "secondary-text");
             layout->addWidget(areaLabel);
         }
     }
@@ -301,7 +340,7 @@ void SearchResultTab::addArtistDetailPreview(QVBoxLayout *layout, const QVariant
         QString beginAreaName = beginArea["name"].toString();
         if (!beginAreaName.isEmpty()) {
             QLabel *beginAreaLabel = new QLabel(QString("<b>Begin Area:</b> %1").arg(beginAreaName));
-            beginAreaLabel->setStyleSheet("color: #666; font-size: 11px;");
+            beginAreaLabel->setProperty("class", "secondary-text");
             layout->addWidget(beginAreaLabel);
         }
     }
@@ -313,7 +352,7 @@ void SearchResultTab::addReleaseDetailPreview(QVBoxLayout *layout, const QVarian
         QString date = detailData["date"].toString();
         if (!date.isEmpty()) {
             QLabel *dateLabel = new QLabel(QString("<b>Release Date:</b> %1").arg(date));
-            dateLabel->setStyleSheet("color: #666; font-size: 11px;");
+            dateLabel->setProperty("class", "secondary-text");
             layout->addWidget(dateLabel);
         }
     }
@@ -322,7 +361,7 @@ void SearchResultTab::addReleaseDetailPreview(QVBoxLayout *layout, const QVarian
         QString country = detailData["country"].toString();
         if (!country.isEmpty()) {
             QLabel *countryLabel = new QLabel(QString("<b>Country:</b> %1").arg(country));
-            countryLabel->setStyleSheet("color: #666; font-size: 11px;");
+            countryLabel->setProperty("class", "secondary-text");
             layout->addWidget(countryLabel);
         }
     }
@@ -331,12 +370,19 @@ void SearchResultTab::addReleaseDetailPreview(QVBoxLayout *layout, const QVarian
         QString status = detailData["status"].toString();
         if (!status.isEmpty()) {
             QLabel *statusLabel = new QLabel(QString("<b>Status:</b> %1").arg(status));
-            statusLabel->setStyleSheet("color: #666; font-size: 11px;");
+            statusLabel->setProperty("class", "secondary-text");
             layout->addWidget(statusLabel);
         }
     }
 }
 
+/**
+ * @brief 添加Release实体的详细信息预览
+ * @param layout 要添加组件的布局
+ * @param detailData 详细数据映射
+ * 
+ * 显示Release特有的信息，如发行日期、国家、状态等。
+ */
 void SearchResultTab::addRecordingDetailPreview(QVBoxLayout *layout, const QVariantMap &detailData)
 {
     if (detailData.contains("length")) {
@@ -346,19 +392,26 @@ void SearchResultTab::addRecordingDetailPreview(QVBoxLayout *layout, const QVari
             int seconds = (length / 1000) % 60;
             QString lengthStr = QString("%1:%2").arg(minutes).arg(seconds, 2, 10, QChar('0'));
             QLabel *lengthLabel = new QLabel(QString("<b>Length:</b> %1").arg(lengthStr));
-            lengthLabel->setStyleSheet("color: #666; font-size: 11px;");
+            lengthLabel->setProperty("class", "secondary-text");
             layout->addWidget(lengthLabel);
         }
     }
 }
 
+/**
+ * @brief 添加Recording实体的详细信息预览
+ * @param layout 要添加组件的布局
+ * @param detailData 详细数据映射
+ * 
+ * 显示Recording特有的信息，如录音长度等。
+ */
 void SearchResultTab::addReleaseGroupDetailPreview(QVBoxLayout *layout, const QVariantMap &detailData)
 {
     if (detailData.contains("primary-type")) {
         QString primaryType = detailData["primary-type"].toString();
         if (!primaryType.isEmpty()) {
             QLabel *typeLabel = new QLabel(QString("<b>Primary Type:</b> %1").arg(primaryType));
-            typeLabel->setStyleSheet("color: #666; font-size: 11px;");
+            typeLabel->setProperty("class", "secondary-text");
             layout->addWidget(typeLabel);
         }
     }
@@ -367,19 +420,26 @@ void SearchResultTab::addReleaseGroupDetailPreview(QVBoxLayout *layout, const QV
         QString firstReleaseDate = detailData["first-release-date"].toString();
         if (!firstReleaseDate.isEmpty()) {
             QLabel *dateLabel = new QLabel(QString("<b>First Release:</b> %1").arg(firstReleaseDate));
-            dateLabel->setStyleSheet("color: #666; font-size: 11px;");
+            dateLabel->setProperty("class", "secondary-text");
             layout->addWidget(dateLabel);
         }
     }
 }
 
+/**
+ * @brief 添加ReleaseGroup实体的详细信息预览
+ * @param layout 要添加组件的布局
+ * @param detailData 详细数据映射
+ * 
+ * 显示ReleaseGroup特有的信息，如主要类型、首次发行日期等。
+ */
 void SearchResultTab::addWorkDetailPreview(QVBoxLayout *layout, const QVariantMap &detailData)
 {
     if (detailData.contains("type")) {
         QString workType = detailData["type"].toString();
         if (!workType.isEmpty()) {
             QLabel *typeLabel = new QLabel(QString("<b>Work Type:</b> %1").arg(workType));
-            typeLabel->setStyleSheet("color: #666; font-size: 11px;");
+            typeLabel->setProperty("class", "secondary-text");
             layout->addWidget(typeLabel);
         }
     }
@@ -391,7 +451,7 @@ void SearchResultTab::addLabelDetailPreview(QVBoxLayout *layout, const QVariantM
         QString labelType = detailData["type"].toString();
         if (!labelType.isEmpty()) {
             QLabel *typeLabel = new QLabel(QString("<b>Label Type:</b> %1").arg(labelType));
-            typeLabel->setStyleSheet("color: #666; font-size: 11px;");
+            typeLabel->setProperty("class", "secondary-text");
             layout->addWidget(typeLabel);
         }
     }
@@ -400,8 +460,16 @@ void SearchResultTab::addLabelDetailPreview(QVBoxLayout *layout, const QVariantM
         int labelCode = detailData["label-code"].toInt();
         if (labelCode > 0) {
             QLabel *codeLabel = new QLabel(QString("<b>Label Code:</b> LC-%1").arg(labelCode, 5, 10, QChar('0')));
-            codeLabel->setStyleSheet("color: #666; font-size: 11px;");
+            codeLabel->setProperty("class", "secondary-text");
             layout->addWidget(codeLabel);
         }
     }
 }
+
+/**
+ * @brief 添加Label实体的详细信息预览
+ * @param layout 要添加组件的布局
+ * @param detailData 详细数据映射
+ * 
+ * 显示Label特有的信息，如标签类型、标签代码等。
+ */

@@ -1,8 +1,6 @@
 # MusicBrainzQt
 
-[中文版本](README.zh-cn.md)
-
-A modern, cross-platform desktop application for browsing and searching the MusicBrainz music database. Built with Qt 6, MusicBrainzQt provides a native desktop experience for exploring music metadata.
+A cross-platform desktop application for browsing and searching the MusicBrainz music database. Built with Qt 6, MusicBrainzQt provides a native desktop experience for exploring music metadata.
 
 ## 🎵 What is MusicBrainzQt?
 
@@ -30,6 +28,8 @@ MusicBrainzQt is a desktop client that connects to the [MusicBrainz](https://mus
 - **Relationship Explorer**: Discover connections between music entities  
 - **Tag Browser**: View community tags and metadata
 - **Modern UI**: Clean, responsive interface following platform conventions
+- **Multi-language Support**: English and Chinese (Simplified) interface
+- **Cross-platform**: Native experience on Windows, macOS, and Linux
 - **Fast Performance**: Efficient caching and optimized API usage
 
 ### System Requirements
@@ -57,24 +57,53 @@ MusicBrainzQt is a desktop client that connects to the [MusicBrainz](https://mus
 git clone https://github.com/MoeclubL/MusicBrainzQt.git
 cd MusicBrainzQt
 
-# Open in Qt Creator
-# File -> Open File or Project -> select musicbrainz-qt.pro
+# Using CMake (Recommended)
+mkdir build && cd build
+cmake -DCMAKE_BUILD_TYPE=Release ..
+cmake --build . --parallel
+
+# Using Qt Creator
+# File -> Open File or Project -> select CMakeLists.txt
 # Build -> Build Project (Ctrl+B)
 ```
 
-For detailed build instructions, see [BUILD_GUIDE.md](BUILD_GUIDE.md).
+For detailed build instructions, see [BUILD_DEPLOYMENT_GUIDE.md](docs/BUILD_DEPLOYMENT_GUIDE.md).
 
-### Recent API Optimization 🚀
+### Recent Optimizations 🚀
 
-MusicBrainzQt has undergone a major API architecture refactoring with significant improvements:
+MusicBrainzQt has undergone major improvements in both API architecture and UI styling:
 
+#### API Architecture Refactoring
 - **🏗️ Unified Architecture**: Modular tool classes replace scattered code
 - **📉 Code Reduction**: 20.6% reduction in core API code with 90% less duplication
 - **⚡ Performance**: Optimized URL building, response parsing, and memory usage
 - **🔧 Maintainability**: New API types require only 1-2 file changes vs 5-7 previously
 - **✨ Extended Features**: Added 7 new API methods (DiscID lookup, collections, browsing)
 
-For technical details, see [docs/API_OPTIMIZATION_ANALYSIS.md](docs/API_OPTIMIZATION_ANALYSIS.md).
+#### Style Management Modernization
+- **🎨 Unified QSS Styling**: Migrated from C++ inline styles to centralized QSS stylesheet
+- **📁 Simplified Structure**: Removed empty directories and unused components
+- **🔄 Consistent Theming**: All UI components now use consistent style classes
+- **🛠️ Improved Maintainability**: Single stylesheet file for all application styling
+- **⚡ Better Performance**: Reduced style computation overhead
+
+#### Internationalization Support
+- **🌐 Multi-language Interface**: Full support for English and Chinese (Simplified)
+- **🔄 Automatic Language Detection**: Detects system language and loads appropriate translations
+- **📝 Complete Translation Coverage**: All UI elements and messages are translatable
+- **🛠️ Developer-friendly**: Easy to add new languages with Qt Linguist tools
+
+#### Enhanced Build System
+- **📦 Modern CMake**: Updated to use CMake best practices for Qt6
+- **🧪 Integrated Testing**: Comprehensive unit test framework with CTest integration
+- **🔧 Development Tools**: Improved debugging and profiling capabilities
+- **📚 Documentation**: Extensive build and deployment guides
+
+For technical details, see:
+- [docs/PROJECT_ANALYSIS_REPORT.md](docs/PROJECT_ANALYSIS_REPORT.md)
+- [docs/BUILD_DEPLOYMENT_GUIDE.md](docs/BUILD_DEPLOYMENT_GUIDE.md)
+- [docs/API_OPTIMIZATION_ANALYSIS.md](docs/API_OPTIMIZATION_ANALYSIS.md)
+- [docs/REFACTORING_REPORT.md](docs/REFACTORING_REPORT.md)
 
 #### Project Structure
 
@@ -83,12 +112,16 @@ MusicBrainzQt/
 ├── src/                    # Source code
 │   ├── api/               # MusicBrainz API integration (optimized)  
 │   ├── models/            # Data models
-│   ├── ui/                # UI components
+│   ├── ui/                # UI components (QSS-styled)
 │   ├── services/          # Business logic services
 │   ├── core/              # Core types and utilities
 │   └── utils/             # Helper utilities
 ├── ui/                    # Qt Designer UI files
 ├── resources/             # Application resources
+│   ├── images.qrc        # Image resources
+│   └── styles/           # QSS stylesheets
+│       ├── main.qss      # Main application stylesheet
+│       └── styles.qrc    # Style resources
 ├── tests/                 # Unit tests
 └── docs/                  # Documentation
 ```
@@ -99,6 +132,7 @@ MusicBrainzQt follows modern Qt best practices:
 
 - **Layered Architecture**: Clear separation between API, business logic, and UI
 - **Component-Based UI**: Reusable widgets with .ui file separation
+- **Centralized Styling**: QSS-based theme system for consistent appearance
 - **Signal-Slot Communication**: Qt's event system for loose coupling
 - **Smart Pointers**: Modern C++ memory management
 - **Async Operations**: Non-blocking API requests with proper error handling
@@ -120,8 +154,6 @@ We welcome contributions from the community! Whether you're fixing bugs, adding 
 4. **Push** to the branch (`git push origin feature/amazing-feature`)
 5. **Open** a Pull Request
 
-Please read our [Contributing Guide](CONTRIBUTING.md) for detailed guidelines.
-
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
@@ -132,16 +164,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Qt Project** - For the excellent cross-platform framework
 - **Contributors** - Everyone who has contributed to making this project better
 
-## 📞 Support
-
-- **Issues**: [GitHub Issues](https://github.com/MoeclubL/MusicBrainzQt/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/MoeclubL/MusicBrainzQt/discussions)
-- **Email**: [moecaa@telecom.moe](mailto:moecaa@telecom.moe)
-
 ---
 
-[中文版本](README.zh-cn.md)
-
 **Note**: This application is not officially affiliated with MusicBrainz. It's a community-driven project that uses the MusicBrainz API in accordance with their guidelines.
-
-**AI Code Notice**: Portions of this project were developed with assistance from AI tools to accelerate development and improve code quality. All AI-generated code has been reviewed, tested, and integrated following the project's coding standards.

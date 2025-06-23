@@ -1,0 +1,491 @@
+/* MusicBrainzQt Main Stylesheet */
+
+/* 全局样式 */
+QMainWindow {
+    background-color: #f8f9fa;
+}
+
+/* 通用文本样式 */
+.secondary-text {
+    color: #666;
+    font-size: 11px;
+}
+
+.muted-text {
+    color: #ccc;
+    font-style: italic;
+}
+
+.id-text {
+    color: #666;
+    font-family: monospace;
+    font-size: 10px;
+}
+
+.bold-text {
+    font-weight: bold;
+    color: #333;
+}
+
+.error-text {
+    color: #dc3545;
+    font-size: 14px;
+    padding: 20px;
+}
+
+/* 标题样式 */
+.section-title {
+    font-size: 14px;
+    font-weight: bold;
+    color: #2c3e50;
+    background-color: #ecf0f1;
+    padding: 8px 12px;
+    border-radius: 4px;
+    border-left: 4px solid #3498db;
+    margin: 5px 0;
+}
+
+/* 卡片容器 */
+.card-container {
+    background-color: #ffffff;
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+    padding: 15px;
+    margin: 5px;
+}
+
+/* 信息项 */
+.info-item {
+    background-color: transparent;
+    border-bottom: 1px solid #e0e0e0;
+    padding: 2px 0;
+}
+
+/* 按钮样式 */
+QPushButton.primary-button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+QPushButton.primary-button:hover {
+    background-color: #0056b3;
+}
+
+QPushButton.secondary-button {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+}
+
+QPushButton.secondary-button:hover {
+    background-color: #545b62;
+}
+
+/* 标签样式 */
+.tag-default {
+    background-color: #e9ecef;
+    color: #495057;
+    padding: 2px 8px;
+    border-radius: 12px;
+    margin: 2px;
+    font-size: 11px;
+}
+
+.tag-genre {
+    background-color: #d4edda;
+    color: #155724;
+    padding: 2px 8px;
+    border-radius: 12px;
+    margin: 2px;
+    font-size: 11px;
+}
+
+/* 优化的标签项样式 */
+.tag-popular {
+    background-color: #007bff !important;
+    color: #ffffff !important;
+    border-radius: 15px !important;
+    font-size: 12px !important;
+    margin: 2px !important;
+    padding: 4px 8px !important;
+}
+
+.tag-common {
+    background-color: #6c757d !important;
+    color: #ffffff !important;
+    border-radius: 15px !important;
+    font-size: 12px !important;
+    margin: 2px !important;
+    padding: 4px 8px !important;
+}
+
+.tag-uncommon {
+    background-color: #e9ecef !important;
+    color: #495057 !important;
+    border-radius: 15px !important;
+    font-size: 12px !important;
+    margin: 2px !important;
+    padding: 4px 8px !important;
+}
+
+/* 列表项悬停效果 */
+.hover-item:hover {
+    background-color: #f8f9fa;
+    border-left: 3px solid #007bff;
+}
+
+/* 表格样式 */
+QTableView {
+    alternate-background-color: #f8f9fa;
+    selection-background-color: #007bff;
+    gridline-color: #dee2e6;
+}
+
+QTableView::item {
+    padding: 5px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+QTableView::item:selected {
+    background-color: #007bff;
+    color: white;
+}
+
+/* Tab样式 */
+QTabWidget::pane {
+    border: 1px solid #dee2e6;
+    background-color: white;
+}
+
+QTabBar::tab {
+    background-color: #e9ecef;
+    padding: 8px 12px;
+    margin-right: 2px;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+}
+
+QTabBar::tab:selected {
+    background-color: white;
+    border-bottom: 2px solid #007bff;
+}
+
+QTabBar::tab:hover {
+    background-color: #f8f9fa;
+}
+
+/* 搜索框样式 */
+QLineEdit {
+    padding: 8px;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+QLineEdit:focus {
+    border-color: #007bff;
+    outline: none;
+}
+
+/* 组合框样式 */
+QComboBox {
+    padding: 6px;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    min-width: 6em;
+}
+
+QComboBox:hover {
+    border-color: #007bff;
+}
+
+/* 滚动条样式 */
+QScrollBar:vertical {
+    background-color: #f8f9fa;
+    width: 12px;
+    border-radius: 6px;
+}
+
+QScrollBar::handle:vertical {
+    background-color: #dee2e6;
+    border-radius: 6px;
+    min-height: 20px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background-color: #adb5bd;
+}
+
+/* 状态栏样式 */
+QStatusBar {
+    background-color: #e9ecef;
+    border-top: 1px solid #dee2e6;
+    padding: 4px;
+}
+
+/* 工具栏样式 */
+QToolBar {
+    background-color: #ffffff;
+    border-bottom: 1px solid #dee2e6;
+    spacing: 3px;
+}
+
+QToolButton {
+    padding: 6px;
+    border: none;
+    border-radius: 3px;
+}
+
+QToolButton:hover {
+    background-color: #f8f9fa;
+}
+
+QToolButton:pressed {
+    background-color: #e9ecef;
+}
+
+/* 详细信息页面专用样式 */
+.review-section {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+    padding: 15px;
+    margin: 5px;
+}
+
+.review-item {
+    background-color: #ffffff;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    padding: 12px;
+    margin: 5px 0;
+}
+
+.review-header {
+    color: #495057;
+    font-size: 14px;
+}
+
+.review-content {
+    color: #495057;
+    font-size: 13px;
+    line-height: 1.4;
+    margin-top: 5px;
+}
+
+.review-rating {
+    color: #ffc107;
+    font-size: 14px;
+}
+
+.review-date {
+    color: #6c757d;
+    font-size: 12px;
+    margin-left: 10px;
+}
+
+.rating-section {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+    padding: 15px;
+    margin: 5px;
+}
+
+.rating-title {
+    font-size: 18px;
+    font-weight: bold;
+    color: #343a40;
+    margin-bottom: 10px;
+}
+
+.rating-value {
+    font-size: 16px;
+    font-weight: bold;
+    color: #ffc107;
+}
+
+.rating-votes {
+    color: #6c757d;
+    font-size: 14px;
+}
+
+/* 关系项样式 */
+.relationship-item {
+    background-color: #ffffff;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    margin: 2px 0;
+}
+
+.relationship-item:hover {
+    background-color: #f8f9fa;
+}
+
+.relationship-link {
+    color: #0066cc;
+    text-decoration: underline;
+}
+
+.relationship-name {
+    font-weight: bold;
+}
+
+.relationship-attribute {
+    color: #6c757d;
+    font-style: italic;
+    margin-left: 10px;
+}
+
+.relationship-date {
+    color: #6c757d;
+    font-size: 12px;
+}
+
+/* 别名项样式 */
+.alias-name {
+    font-size: 14px;
+    margin-bottom: 5px;
+}
+
+.alias-type {
+    color: #666;
+    font-size: 12px;
+}
+
+.alias-locale {
+    color: #666;
+    font-size: 12px;
+}
+
+.alias-primary {
+    color: #28a745;
+    font-weight: bold;
+    font-size: 12px;
+}
+
+/* 标签和风格专用样式 */
+.tag-item {
+    border-radius: 15px;
+    font-size: 12px;
+    margin: 2px;
+    padding: 4px 8px;
+}
+
+.tag-popular {
+    background-color: #007bff;
+    color: #ffffff;
+}
+
+.tag-common {
+    background-color: #6c757d;
+    color: #ffffff;
+}
+
+.tag-uncommon {
+    background-color: #e9ecef;
+    color: #495057;
+}
+
+.genre-item {
+    background-color: #28a745;
+    color: #ffffff;
+    border-radius: 12px;
+    font-weight: bold;
+    margin: 2px;
+    padding: 6px 10px;
+}
+
+.genre-count {
+    border: none;
+    background: transparent;
+    font-size: 10px;
+    opacity: 0.8;
+}
+
+.tag-label {
+    border: none;
+    background: transparent;
+}
+
+.tag-count {
+    border: none;
+    background: transparent;
+    font-size: 10px;
+    opacity: 0.8;
+}
+
+.tag-description {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 10px;
+}
+
+/* 表格行样式 */
+.table-label {
+    background: transparent;
+    border: none;
+    font-weight: normal;
+    color: #495057;
+    text-align: right;
+}
+
+.table-value {
+    background: transparent;
+    border: none;
+    color: #212529;
+}
+
+/* 空数据显示 */
+.no-data-label {
+    padding: 40px;
+    text-align: center;
+    color: #6c757d;
+    font-style: italic;
+    font-size: 14px;
+}
+
+/* 艺术家信用链接 */
+.artist-credit-link {
+    color: #0066cc;
+    text-decoration: underline;
+}
+
+/* 表格样式 */
+.transparent-table {
+    background: transparent;
+    border: none;
+}
+
+.transparent-table-with-margin {
+    background: transparent;
+    border: none;
+    margin-bottom: 15px;
+}
+
+/* 链接和标签样式 */
+.link-margin {
+    margin-bottom: 3px;
+}
+
+.tags-summary {
+    color: #6c757d;
+    margin-bottom: 15px;
+}
+
+/* 展开按钮 */
+.expand-button {
+    color: #007bff;
+    background: transparent;
+    border: none;
+    text-decoration: underline;
+    font-size: 12px;
+    padding: 0;
+    margin: 5px 0;
+}
