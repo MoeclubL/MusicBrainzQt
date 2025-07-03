@@ -178,7 +178,6 @@ void ItemDetailTab::createSubTab(const QString &title, const QString &key, Entit
     m_subTabWidgets[key] = listWidget;
     m_subTabKeys << key;
 }
-}
 
 void ItemDetailTab::createOverviewTab()
 {
@@ -425,7 +424,6 @@ void ItemDetailTab::createTagsTab()
     
     ui->subTabWidget->addTab(scrollArea, tr("Tags & Genres"));
 }
-}
 
 QWidget* ItemDetailTab::createGenresSection(const QVariantList &genres)
 {
@@ -639,7 +637,6 @@ void ItemDetailTab::createRelationshipsTab()
     
     // 添加到标签页
     ui->subTabWidget->addTab(scrollArea, tr("Relationships"));
-}
 }
 
 QWidget* ItemDetailTab::createRelationshipItem(const QVariantMap &relation)

@@ -29,12 +29,11 @@ SearchResultTab::SearchResultTab(const QString &query, EntityType type, QWidget 
 {
     ui->setupUi(this);
     setupUI();
-      // 连接详细信息管理器信号
+    // 连接详细信息管理器信号
     connect(m_detailManager, &EntityDetailManager::entityDetailsLoaded,
             this, &SearchResultTab::onEntityDetailsLoaded);
     connect(m_detailManager, &EntityDetailManager::detailsLoadingFailed,
             this, &SearchResultTab::onDetailLoadingFailed);
-}
 }
 
 SearchResultTab::~SearchResultTab()

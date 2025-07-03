@@ -20,7 +20,6 @@ void ResultTableModel::setItems(const QList<QSharedPointer<ResultItem>> &items, 
     
     endResetModel();
 }
-}
 
 void ResultTableModel::clear() {
     beginResetModel();
@@ -213,7 +212,6 @@ void ResultTableModel::setVisibleColumns(const QStringList &columnKeys) {
         m_visibleColumns = getDefaultColumns(m_type);
     }
     endResetModel();
-}
 }
 
 void ResultTableModel::resetToDefaultColumns() {
@@ -459,7 +457,6 @@ void ResultTableModel::sort(int column, Qt::SortOrder order) {
     }
     
     emit layoutChanged();
-}
 }
 
 QString ResultTableModel::generateFriendlyColumnName(const QString &key) const {
