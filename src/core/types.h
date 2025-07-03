@@ -29,29 +29,26 @@
  * 定义了MusicBrainz数据库中所有支持的实体类型。
  * 用于搜索、结果展示和API调用的类型识别。
  * 
- * **主要实体类型：**
- * - Artist: 艺术家/音乐人
- * - Release: 发行版本（专辑、单曲等）
- * - ReleaseGroup: 发行组（同一作品的不同版本集合）
+ * @details 每个实体类型对应MusicBrainz API中的一个端点：
+ * - Artist: 艺术家/表演者
+ * - Release: 发行版/专辑
  * - Recording: 录音/曲目
- * - Work: 作品（歌曲、乐曲的抽象概念）
- * - Label: 唱片公司/厂牌
- * 
- * **地理和场所类型：**
- * - Area: 地区（国家、城市等）
- * - Place: 场所（录音棚、演出场地等）
- * 
- * **辅助类型：**
- * - Annotation: 注释
- * - CDStub: CD占位符
- * - Editor: 编辑者
- * - Tag: 标签
- * - Instrument: 乐器
+ * - Work: 作品/创作
+ * - Label: 厂牌/唱片公司
+ * - Area: 地区/地点
+ * - ReleaseGroup: 发行组/专辑组
+ * - Event: 事件/演出
+ * - Place: 场所/地点
  * - Series: 系列
- * - Event: 事件
- * - Documentation: 文档
- * 
- * @see https://musicbrainz.org/doc/MusicBrainz_Database
+ * - Instrument: 乐器
+ * - Genre: 流派/风格
+ * - Annotation: 注释
+ * - CDStub: CD存根
+ * - FreeDB: FreeDB条目
+ * - Collection: 用户集合
+ * - Rating: 评分
+ * - Tag: 标签
+ * - Unknown: 未知/未定义类型
  */
 enum class EntityType {
     Artist,         ///< 艺术家实体

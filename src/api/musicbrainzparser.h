@@ -12,7 +12,6 @@
 #include <QList>
 #include <QStringList>
 #include <QMap>
-#include <QDebug>
 #include "../models/resultitem.h"
 #include "../core/types.h"
 

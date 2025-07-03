@@ -37,10 +37,6 @@ void ConfigManager::save() {
     m_uiConfig.save(*m_settings);
     m_settings->endGroup();
     
-    m_settings->beginGroup("Log");
-    m_logConfig.save(*m_settings);
-    m_settings->endGroup();
-    
     m_settings->sync();
 }
 
@@ -56,24 +52,18 @@ void ConfigManager::load() {
     m_settings->beginGroup("UI");
     m_uiConfig.load(*m_settings);
     m_settings->endGroup();
-    
-    m_settings->beginGroup("Log");
-    m_logConfig.load(*m_settings);
-    m_settings->endGroup();
 }
 
 void ConfigManager::reset() {
     m_networkConfig = NetworkConfig();
     m_apiConfig = ApiConfig();
     m_uiConfig = UiConfig();
-    m_logConfig = LogConfig();
     
     save();
     
     emit networkConfigChanged();
     emit apiConfigChanged();
     emit uiConfigChanged();
-    emit logConfigChanged();
 }
 
 // NetworkConfig 实现
@@ -117,21 +107,4 @@ void ConfigManager::UiConfig::load(const QSettings &settings) {
     maxTabs = settings.value("maxTabs", 20).toInt();
     rememberColumnSettings = settings.value("rememberColumnSettings", true).toBool();
     lastEntityType = settings.value("lastEntityType", "Artist").toString();
-}
-
-// LogConfig 实现
-void ConfigManager::LogConfig::save(QSettings &settings) const {
-    settings.setValue("enableFileLogging", enableFileLogging);
-    settings.setValue("logLevel", logLevel);
-    settings.setValue("logFilePath", logFilePath);
-    settings.setValue("maxLogFiles", maxLogFiles);
-    settings.setValue("maxLogSizeMB", maxLogSizeMB);
-}
-
-void ConfigManager::LogConfig::load(const QSettings &settings) {
-    enableFileLogging = settings.value("enableFileLogging", false).toBool();
-    logLevel = settings.value("logLevel", "Info").toString();
-    logFilePath = settings.value("logFilePath", QString()).toString();
-    maxLogFiles = settings.value("maxLogFiles", 5).toInt();
-    maxLogSizeMB = settings.value("maxLogSizeMB", 10).toInt();
 }

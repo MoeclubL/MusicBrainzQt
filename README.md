@@ -111,11 +111,19 @@ For technical details, see:
 MusicBrainzQt/
 ├── src/                    # Source code
 │   ├── api/               # MusicBrainz API integration (optimized)  
+│   │   ├── musicbrainzapi.cpp/h           # Core API client
+│   │   ├── musicbrainz_response_handler.cpp/h  # Response processing
+│   │   ├── musicbrainzparser.cpp/h        # JSON parsing utilities
+│   │   ├── network_manager.cpp/h          # Network layer
+│   │   └── api_utils.cpp/h               # API helper utilities
 │   ├── models/            # Data models
 │   ├── ui/                # UI components (QSS-styled)
 │   ├── services/          # Business logic services
 │   ├── core/              # Core types and utilities
-│   └── utils/             # Helper utilities
+│   │   ├── types.h                       # Core type definitions
+│   │   ├── error_types.h                 # Error handling types
+│   │   └── logging.cpp                   # Qt logging categories
+│   └── utils/             # Helper utilities (config management)
 ├── ui/                    # Qt Designer UI files
 ├── resources/             # Application resources
 │   ├── images.qrc        # Image resources

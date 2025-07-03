@@ -15,7 +15,7 @@
  * 
  * **依赖组件：**
  * - MainWindow: 主窗口界面
- * - Logger: 统一日志系统
+ * - Qt标准日志: 使用qDebug()/qWarning()/qCritical()
  * - ConfigManager: 配置管理器
  * 
  * @author MusicBrainzQt Team
@@ -27,7 +27,6 @@
 #include <QLocale>
 #include <QDir>
 #include "mainwindow.h"
-#include "utils/logger.h"
 #include "utils/config_manager.h"
 
 /**
@@ -125,9 +124,8 @@ int main(int argc, char *argv[]) {
     // 核心系统初始化
     // =============================================================================
     
-    // 初始化统一日志系统
-    // 必须在其他组件使用日志功能之前调用
-    Logger::initialize();
+    // 设置Qt日志格式
+    qSetMessagePattern("[%{time yyyyMMdd h:mm:ss.zzz}] [%{category}] [%{type}] %{message}");
     
     // 加载应用程序配置
     // 包括用户偏好设置、API配置、窗口状态等

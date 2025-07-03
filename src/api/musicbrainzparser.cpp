@@ -1,6 +1,6 @@
 #include "musicbrainzparser.h"
 #include "api_utils.h"
-#include "../utils/logger.h"
+#include "../core/error_types.h"
 #include <QDebug>
 #include <QRegularExpression>
 #include <QDate>
@@ -19,7 +19,7 @@ QList<QSharedPointer<ResultItem>> MusicBrainzParser::parseSearchResponse(const Q
     QList<QSharedPointer<ResultItem>> results;
     
     if (!validateJsonData(data)) {
-        qCWarning(logApi) << "MusicBrainzParser::parseSearchResponse - Invalid JSON data";
+        qWarning() << "MusicBrainzParser::parseSearchResponse - Invalid JSON data";
         return results;
     }
     
@@ -29,7 +29,7 @@ QList<QSharedPointer<ResultItem>> MusicBrainzParser::parseSearchResponse(const Q
     // 检查API错误
     QString error = checkForErrors(root);
     if (!error.isEmpty()) {
-        qCWarning(logApi) << "MusicBrainzParser::parseSearchResponse - API Error:" << error;
+        qWarning() << "MusicBrainzParser::parseSearchResponse - API Error:" << error;
         return results;
     }
     
@@ -48,14 +48,14 @@ QList<QSharedPointer<ResultItem>> MusicBrainzParser::parseSearchResponse(const Q
     }
     
     if (actualType == EntityType::Unknown) {
-        qCWarning(logApi) << "MusicBrainzParser::parseSearchResponse - Could not determine entity type";
+        qWarning() << "MusicBrainzParser::parseSearchResponse - Could not determine entity type";
         return results;
     }
     
     QString entityPluralName = EntityUtils::getEntityPluralName(actualType);
     QJsonArray items = root.value(entityPluralName).toArray();
-      qCDebug(logApi) << "MusicBrainzParser::parseSearchResponse - Parsing" << items.size() 
-                    << "items of type" << EntityUtils::entityTypeToString(actualType);
+      qDebug() << "MusicBrainzParser::parseSearchResponse - Parsing" << items.size() 
+               << "items of type" << EntityUtils::entityTypeToString(actualType);
     
     for (const QJsonValue &value : items) {
         if (value.isObject()) {
@@ -73,7 +73,7 @@ QList<QSharedPointer<ResultItem>> MusicBrainzParser::parseSearchResponse(const Q
 QSharedPointer<ResultItem> MusicBrainzParser::parseDetailsResponse(const QByteArray &data, EntityType expectedType)
 {
     if (!validateJsonData(data)) {
-        qCWarning(logApi) << "MusicBrainzParser::parseDetailsResponse - Invalid JSON data";
+        qWarning() << "MusicBrainzParser::parseDetailsResponse - Invalid JSON data";
         return nullptr;
     }
     
@@ -83,14 +83,15 @@ QSharedPointer<ResultItem> MusicBrainzParser::parseDetailsResponse(const QByteAr
     // 检查API错误
     QString error = checkForErrors(root);
     if (!error.isEmpty()) {
-        qCWarning(logApi) << "MusicBrainzParser::parseDetailsResponse - API Error:" << error;
+        qWarning() << "MusicBrainzParser::parseDetailsResponse - API Error:" << error;
         return nullptr;
     }
     
     // 自动检测实体类型
     EntityType actualType = detectEntityType(root);
-    if (expectedType != EntityType::Unknown && actualType != expectedType) {        qCWarning(logApi) << "MusicBrainzParser::parseDetailsResponse - Type mismatch: expected" 
-                          << EntityUtils::entityTypeToString(expectedType) << "got" << EntityUtils::entityTypeToString(actualType);
+    if (expectedType != EntityType::Unknown && actualType != expectedType) {        
+        qWarning() << "MusicBrainzParser::parseDetailsResponse - Type mismatch: expected" 
+                   << EntityUtils::entityTypeToString(expectedType) << "got" << EntityUtils::entityTypeToString(actualType);
     }
     
     return parseEntity(root, actualType);
@@ -117,7 +118,7 @@ QSharedPointer<ResultItem> MusicBrainzParser::parseEntity(const QJsonObject &jso
     }
     
     if (id.isEmpty() || name.isEmpty()) {
-        qCWarning(logApi) << "MusicBrainzParser::parseEntity - Missing required fields (id or name/title)";
+        qWarning() << "MusicBrainzParser::parseEntity - Missing required fields (id or name/title)";
         return nullptr;
     }
     
@@ -127,9 +128,10 @@ QSharedPointer<ResultItem> MusicBrainzParser::parseEntity(const QJsonObject &jso
     parseBasicEntityInfo(resultItem, jsonObj);
     
     // 解析类型特定属性
-    parseTypeSpecificProperties(resultItem, jsonObj, type);    qCDebug(logApi) << "MusicBrainzParser::parseEntity - Parsed entity:" << name 
-                    << "(" << EntityUtils::entityTypeToString(type) << ") with" 
-                    << resultItem->getDetailData().count() << "detail properties";
+    parseTypeSpecificProperties(resultItem, jsonObj, type);    
+    qDebug() << "MusicBrainzParser::parseEntity - Parsed entity:" << name 
+             << "(" << EntityUtils::entityTypeToString(type) << ") with" 
+             << resultItem->getDetailData().count() << "detail properties";
     
     return resultItem;
 }
@@ -233,7 +235,7 @@ bool MusicBrainzParser::validateJsonData(const QByteArray &data)
     QJsonDocument doc = QJsonDocument::fromJson(data, &error);
     
     if (error.error != QJsonParseError::NoError) {
-        qCWarning(logApi) << "MusicBrainzParser::validateJsonData - JSON parse error:" << error.errorString();
+        qWarning() << "MusicBrainzParser::validateJsonData - JSON parse error:" << error.errorString();
         return false;
     }
     
@@ -366,12 +368,12 @@ void MusicBrainzParser::parseArtistProperties(QSharedPointer<ResultItem> &item, 
     // 解析关系
     if (jsonObj.contains("relations")) {
         QJsonArray relationsArray = jsonObj.value("relations").toArray();
-        qCDebug(logApi) << "Artist relations found:" << relationsArray.size() << "for" << item->getName();
+        qDebug() << "Artist relations found:" << relationsArray.size() << "for" << item->getName();
         QVariantList relationships = parseRelationships(relationsArray);
         item->setDetailProperty("relationships", relationships);
-        qCDebug(logApi) << "Artist relationships stored:" << relationships.count();
+        qDebug() << "Artist relationships stored:" << relationships.count();
     } else {
-        qCDebug(logApi) << "No relations found for artist:" << item->getName();
+        qDebug() << "No relations found for artist:" << item->getName();
     }
 }
 

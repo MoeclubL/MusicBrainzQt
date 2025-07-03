@@ -3,7 +3,7 @@
 #include "entitylistwidget.h"
 #include "widget_helpers.h"
 #include "../models/resultitem.h"
-#include "../utils/logger.h"
+#include "../core/error_types.h"
 #include <QDesktopServices>
 #include <QUrl>
 #include <QHBoxLayout>
@@ -17,7 +17,6 @@
 #include <QDebug>
 #include <QPushButton>
 #include <QMap>
-#include <QLoggingCategory>
 #include <algorithm>
 
 ItemDetailTab::ItemDetailTab(const QSharedPointer<ResultItem> &item, QWidget *parent)
@@ -29,7 +28,7 @@ ItemDetailTab::ItemDetailTab(const QSharedPointer<ResultItem> &item, QWidget *pa
     
     // 检查项目是否有效
     if (!m_item) {
-        qDebug() << "ItemDetailTab: Cannot create tab with null item!";
+        qWarning() << "ItemDetailTab: Cannot create tab with null item!";
         // 隐藏所有UI组件并显示错误信息
         if (ui->mainSplitter) {
             ui->mainSplitter->setVisible(false);
@@ -82,7 +81,7 @@ void ItemDetailTab::setupUI()
 void ItemDetailTab::setupSubTabs()
 {
     if (!m_item) {
-        qDebug() << "ItemDetailTab::setupSubTabs: m_item is null, skipping sub tabs setup";
+        qWarning() << "ItemDetailTab::setupSubTabs: m_item is null, skipping sub tabs setup";
         return;
     }
     
@@ -156,7 +155,7 @@ void ItemDetailTab::setupSubTabs()
             break;
               default:
             // 为未知类型创建一个通用的相关项目标签页
-            qCDebug(logUI) << "Unknown entity type for sub tabs:" << static_cast<int>(itemType);
+            qWarning() << "Unknown entity type for sub tabs:" << static_cast<int>(itemType);
             break;
     }
 }
@@ -178,14 +177,13 @@ void ItemDetailTab::createSubTab(const QString &title, const QString &key, Entit
     // 存储映射关系
     m_subTabWidgets[key] = listWidget;
     m_subTabKeys << key;
-    
-    qCDebug(logUI) << "Created sub tab:" << title << "with key:" << key;
+}
 }
 
 void ItemDetailTab::createOverviewTab()
 {
     if (!m_item) {
-        qCWarning(logUI) << "ItemDetailTab::createOverviewTab: m_item is null, skipping overview tab creation";
+        qWarning() << "ItemDetailTab::createOverviewTab: m_item is null, skipping overview tab creation";
         return;
     }
     
@@ -280,14 +278,12 @@ void ItemDetailTab::createOverviewTab()
     scrollArea->setWidgetResizable(true);
     
     ui->subTabWidget->addTab(scrollArea, tr("Overview"));
-    
-    qCDebug(logUI) << "Created Overview tab with enhanced data for" << static_cast<int>(itemType);
 }
 
 void ItemDetailTab::createAliasesTab()
 {
     if (!m_item) {
-        qCWarning(logUI) << "ItemDetailTab::createAliasesTab: m_item is null, skipping aliases tab creation";
+        qWarning() << "ItemDetailTab::createAliasesTab: m_item is null, skipping aliases tab creation";
         return;
     }
     
@@ -373,20 +369,13 @@ void ItemDetailTab::createAliasesTab()
     aliasesWidget->setLayout(layout);
     scrollArea->setWidget(aliasesWidget);
     scrollArea->setWidgetResizable(true);
-      ui->subTabWidget->addTab(scrollArea, tr("Aliases"));
-    
-    if (aliasesIt != detailData.end()) {
-        QVariantList aliases = aliasesIt.value().toList();
-        qCDebug(logUI) << "Created Aliases tab with" << aliases.size() << "aliases";
-    } else {
-        qCDebug(logUI) << "Created Aliases tab with 0 aliases";
-    }
+    ui->subTabWidget->addTab(scrollArea, tr("Aliases"));
 }
 
 void ItemDetailTab::createTagsTab()
 {
     if (!m_item) {
-        qCWarning(logUI) << "ItemDetailTab::createTagsTab: m_item is null, skipping tags tab creation";
+        qWarning() << "ItemDetailTab::createTagsTab: m_item is null, skipping tags tab creation";
         return;
     }
     
@@ -435,8 +424,7 @@ void ItemDetailTab::createTagsTab()
     scrollArea->setWidgetResizable(true);
     
     ui->subTabWidget->addTab(scrollArea, tr("Tags & Genres"));
-    
-    qCDebug(logUI) << "Created Tags & Genres tab with" << tags.size() << "tags and" << genres.size() << "genres";
+}
 }
 
 QWidget* ItemDetailTab::createGenresSection(const QVariantList &genres)
@@ -582,7 +570,7 @@ QWidget* ItemDetailTab::createTagsSection(const QVariantList &tags)
 void ItemDetailTab::createRelationshipsTab()
 {
     if (!m_item) {
-        qCWarning(logUI) << "ItemDetailTab::createRelationshipsTab: m_item is null, skipping relationships tab creation";
+        qWarning() << "ItemDetailTab::createRelationshipsTab: m_item is null, skipping relationships tab creation";
         return;
     }
     
@@ -651,8 +639,7 @@ void ItemDetailTab::createRelationshipsTab()
     
     // 添加到标签页
     ui->subTabWidget->addTab(scrollArea, tr("Relationships"));
-    
-    qCDebug(logUI) << "Created Relationships tab with" << relations.size() << "relationships";
+}
 }
 
 QWidget* ItemDetailTab::createRelationshipItem(const QVariantMap &relation)
@@ -786,25 +773,25 @@ void ItemDetailTab::populateItemInfo()
     ui->nameLabel->setText(m_item->getName());
     ui->typeLabel->setText(m_item->getTypeString());
     
-    qCDebug(logUI) << "ItemDetailTab::populateItemInfo - Item:" << m_item->getName() << "Type:" << m_item->getTypeString();    // 无需清除布局项目，因为populateEntityInformation会处理各个容�?
+    qDebug() << "ItemDetailTab::populateItemInfo - Item:" << m_item->getName() << "Type:" << m_item->getTypeString();    // 无需清除布局项目，因为populateEntityInformation会处理各个容�?
 
     // 填充信息区域 - 根据图片样式排列
     populateEntityInformation();
     
-    qCDebug(logUI) << "Populated item info for:" << m_item->getName() 
+    qDebug() << "Populated item info for:" << m_item->getName() 
                    << "with entity information";
 }
 
 void ItemDetailTab::populateSubTabs()
 {
     if (!m_item) return;
-    qCDebug(logUI) << "ItemDetailTab::populateSubTabs - Starting for item:" << m_item->getName();    qCDebug(logUI) << "Available detail keys:" << m_item->getDetailData().keys();
+    qDebug() << "ItemDetailTab::populateSubTabs - Starting for item:" << m_item->getName();    qDebug() << "Available detail keys:" << m_item->getDetailData().keys();
     
     // 遍历所有子标签页并填充数据
     for (auto it = m_subTabWidgets.begin(); it != m_subTabWidgets.end(); ++it) {
         const QString &key = it.key();
         EntityListWidget *widget = it.value();
-        qCDebug(logUI) << "Processing sub tab key:" << key;
+        qDebug() << "Processing sub tab key:" << key;
           // 自动查找数据（优先没有后缀，然后检查_list后缀�?
         QVariant subData = m_item->getDetailProperty(key);
         if (!subData.isValid()) {
@@ -817,7 +804,7 @@ void ItemDetailTab::populateSubTabs()
             subData = m_item->getDetailProperty(key + "-list");
         }
         
-        qCDebug(logUI) << "Sub data for key" << key << ":" << subData.typeName() << "canConvert:" << subData.canConvert<QVariantList>();
+        qDebug() << "Sub data for key" << key << ":" << subData.typeName() << "canConvert:" << subData.canConvert<QVariantList>();
         
         QList<QSharedPointer<ResultItem>> resultItems;
           if (key == "artist-credits" || key == "artist-credit") {
@@ -899,7 +886,7 @@ void ItemDetailTab::populateSubTabs()
                 }
             }
         } else {
-            qCDebug(logUI) << "No valid data for sub tab:" << key;
+            qDebug() << "No valid data for sub tab:" << key;
         }
         
         widget->setItems(resultItems);
@@ -914,7 +901,7 @@ void ItemDetailTab::refreshItemInfo()
 
 void ItemDetailTab::onSubTabChanged(int index)
 {
-    qCDebug(logUI) << "Sub tab changed to index:" << index;
+    qDebug() << "Sub tab changed to index:" << index;
 }
 
 void ItemDetailTab::onSubItemDoubleClicked(QSharedPointer<ResultItem> item)
@@ -928,14 +915,14 @@ void ItemDetailTab::onOpenInBrowser(const QString &itemId, EntityType type)
 {
     // Forward signal to MainWindow for handling
     emit openInBrowser(itemId, type);
-    qCDebug(logUI) << "Forwarded openInBrowser signal for:" << itemId;
+    qDebug() << "Forwarded openInBrowser signal for:" << itemId;
 }
 
 void ItemDetailTab::onCopyId(const QString &itemId)
 {
     // Forward signal to MainWindow for handling
     emit copyId(itemId);
-    qCDebug(logUI) << "Forwarded copyId signal for:" << itemId;
+    qDebug() << "Forwarded copyId signal for:" << itemId;
 }
 
 
@@ -1155,12 +1142,12 @@ QWidget* ItemDetailTab::createGenresWidget(const QVariantList &genres)
 void ItemDetailTab::populateEntityInformation()
 {
     if (!m_item) {
-        qCWarning(logUI) << "ItemDetailTab::populateEntityInformation: m_item is null, skipping entity information population";
+        qWarning() << "ItemDetailTab::populateEntityInformation: m_item is null, skipping entity information population";
         return;
     }
       // 检查UI组件是否有效
     if (!ui || !ui->entityInfoTitle || !ui->entityInfoContainer) {
-        qCCritical(logUI) << "ItemDetailTab::populateEntityInformation: UI components are not available";
+        qCritical() << "ItemDetailTab::populateEntityInformation: UI components are not available";
         return;
     }
     

@@ -10,6 +10,8 @@
 
 class ResultItem;
 class NetworkManager;
+class MusicBrainzParser;
+class MusicBrainzResponseHandler;
 class QNetworkReply;
 
 /**
@@ -273,14 +275,6 @@ private:
     void sendRequest(const QString& url, RequestType type, const QVariantMap& context = {});
     void processResponse(QNetworkReply* reply, const PendingRequest& request);
     
-    // 请求处理分发器
-    void handleSearchResponse(const QByteArray& data, const QVariantMap& context);
-    void handleDetailsResponse(const QByteArray& data, const QVariantMap& context);
-    void handleDiscIdResponse(const QByteArray& data, const QVariantMap& context);
-    void handleGenericResponse(const QByteArray& data, const QVariantMap& context);
-    void handleBrowseResponse(const QByteArray& data, const QVariantMap& context);
-    void handleCollectionResponse(const QByteArray& data, const QVariantMap& context);
-    
     // 认证请求处理
     bool sendAuthenticatedRequest(const QString &url, const QString &method = "GET", 
                                  const QByteArray &data = QByteArray(),
@@ -288,6 +282,7 @@ private:
 
     NetworkManager *m_networkManager;
     class MusicBrainzParser *m_parser;
+    class MusicBrainzResponseHandler *m_responseHandler;
     QString m_userAgent;
     
     // 认证信息

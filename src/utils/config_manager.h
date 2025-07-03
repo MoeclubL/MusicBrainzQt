@@ -26,7 +26,6 @@
  * - NetworkConfig: 网络请求相关配置
  * - ApiConfig: MusicBrainz API相关配置
  * - UiConfig: 用户界面和交互配置
- * - LogConfig: 日志系统配置
  * 
  * **使用示例：**
  * ```cpp
@@ -142,31 +141,6 @@ public:
          */
         void load(const QSettings &settings);
     };    
-    /**
-     * @struct LogConfig
-     * @brief 日志系统相关配置
-     * 
-     * 包含日志级别、文件输出、日志轮转等配置。
-     */
-    struct LogConfig {
-        bool enableFileLogging = false;     ///< 是否启用文件日志
-        QString logLevel = "Info";          ///< 日志级别
-        QString logFilePath;                ///< 日志文件路径（空则使用默认）
-        int maxLogFiles = 5;                ///< 最大日志文件数量
-        int maxLogSizeMB = 10;              ///< 单个日志文件最大大小（MB）
-        
-        /**
-         * @brief 保存日志配置到QSettings
-         * @param settings QSettings实例
-         */
-        void save(QSettings &settings) const;
-        
-        /**
-         * @brief 从QSettings加载日志配置
-         * @param settings QSettings实例
-         */
-        void load(const QSettings &settings);
-    };
     
     // =============================================================================
     // 配置访问接口
@@ -190,12 +164,6 @@ public:
      */
     const UiConfig& ui() const { return m_uiConfig; }
     
-    /**
-     * @brief 获取日志配置（只读）
-     * @return 日志配置的常量引用
-     */
-    const LogConfig& log() const { return m_logConfig; }
-    
     // =============================================================================
     // 配置修改接口
     // =============================================================================
@@ -217,12 +185,6 @@ public:
      * @return UI配置的引用
      */
     UiConfig& ui() { return m_uiConfig; }
-    
-    /**
-     * @brief 获取日志配置（可修改）
-     * @return 日志配置的引用
-     */
-    LogConfig& log() { return m_logConfig; }
     
     // =============================================================================
     // 配置管理方法
@@ -310,13 +272,6 @@ signals:
      * 当UI相关配置发生变更时发出。
      */
     void uiConfigChanged();
-    
-    /**
-     * @brief 日志配置变更信号
-     * 
-     * 当日志相关配置发生变更时发出。
-     */
-    void logConfigChanged();
 
 private:
     /**
@@ -342,7 +297,6 @@ private:
     NetworkConfig m_networkConfig;              ///< 网络配置实例
     ApiConfig m_apiConfig;                      ///< API配置实例
     UiConfig m_uiConfig;                        ///< UI配置实例
-    LogConfig m_logConfig;                      ///< 日志配置实例
 };
 
 #endif // CONFIG_MANAGER_H

@@ -73,7 +73,12 @@ MusicBrainzQt follows a layered architecture pattern with clear separation of co
 
 #### Utilities (`src/utils/`)
 - **ConfigManager**: Application configuration management
-- **Logger**: Logging utilities
+## Core Components
+
+### Logging System
+- **QLoggingCategory**: Centralized Qt logging system with categories
+- **Core Categories**: musicbrainzApi, mbzService, mbzUi, mbzNetwork, mbzParser
+- **Configuration**: Runtime log level control through QT_LOGGING_RULES
 
 #### Services (`src/services/`)
 - **SearchService**: Coordinates search operations
@@ -84,7 +89,10 @@ MusicBrainzQt follows a layered architecture pattern with clear separation of co
 - **error_types.h**: Error handling structures
 
 #### Utilities (`src/utils/`)
-- **Logger**: Centralized logging system
+### Error Handling
+- **Error Types**: Centralized error definitions in `core/error_types.h`
+- **Result Pattern**: Type-safe error handling with Result<T, ErrorInfo>
+- **Qt Integration**: Seamless integration with Qt logging categories
 - **ConfigManager**: Application configuration management
 
 ## 🛠️ Development Setup
@@ -339,20 +347,34 @@ ctest
 
 ### Logging System
 
-Use the centralized logging system:
+Use the standard Qt logging functions:
 
 ```cpp
-#include "utils/logger.h"
+#include <QDebug>
 
 // Different log levels
-qCDebug(logUI) << "UI debug message";
-qCInfo(logAPI) << "API information";
-qCWarning(logCore) << "Core warning";
-qCCritical(logError) << "Critical error";
+qDebug() << "Debug information";
+qInfo() << "General information";
+qWarning() << "Warning message";
+qCritical() << "Critical error";
+```
+
+### Error Handling
+
+Use the simplified error types:
+
+```cpp
+#include "core/error_types.h"
+
+// Basic error handling
+if (someCondition) {
+    qWarning() << "Something went wrong";
+    return;
+}
 ```
 
 ### Debug Categories
-- `logUI`: User interface events
+- ``: User interface events
 - `logAPI`: MusicBrainz API interactions  
 - `logCore`: Core application logic
 - `logModel`: Data model operations

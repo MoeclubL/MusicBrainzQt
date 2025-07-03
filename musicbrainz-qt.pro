@@ -9,6 +9,7 @@ SOURCES += \
     src/main.cpp \
     src/mainwindow.cpp \
     src/api/musicbrainzapi.cpp \
+    src/api/musicbrainz_response_handler.cpp \
     src/api/musicbrainzparser.cpp \
     src/api/api_utils.cpp \
     src/api/network_manager.cpp \
@@ -21,12 +22,12 @@ SOURCES += \
     src/ui/widget_helpers.cpp \
     src/services/searchservice.cpp \
     src/services/entitydetailmanager.cpp \
-    src/utils/logger.cpp \
     src/utils/config_manager.cpp
 
 HEADERS += \
     src/mainwindow.h \
     src/api/musicbrainzapi.h \
+    src/api/musicbrainz_response_handler.h \
     src/api/musicbrainzparser.h \
     src/api/api_utils.h \
     src/api/network_manager.h \
@@ -41,7 +42,6 @@ HEADERS += \
     src/services/entitydetailmanager.h \
     src/core/types.h \
     src/core/error_types.h \
-    src/utils/logger.h \
     src/utils/config_manager.h
 
 FORMS += \

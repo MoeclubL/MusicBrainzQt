@@ -1,6 +1,6 @@
 #include "entitydetailmanager.h"
 #include "../api/musicbrainzapi.h"
-#include "../utils/logger.h"
+#include "../core/error_types.h"
 #include <QDebug>
 
 EntityDetailManager::EntityDetailManager(QObject *parent)
@@ -18,26 +18,26 @@ EntityDetailManager::EntityDetailManager(QObject *parent)
     connect(m_api, &MusicBrainzApi::errorOccurred,
             this, &EntityDetailManager::onApiErrorOccurred);
             
-    LOG_SERVICE_INFO("EntityDetailManager initialized with batch delay: %d ms", m_batchDelay);
+    qDebug() << "EntityDetailManager initialized with batch delay:" << m_batchDelay << "ms";
 }
 
 void EntityDetailManager::loadEntityDetails(QSharedPointer<ResultItem> item) {
     if (!item) {
-        LOG_SERVICE_WARNING("Attempted to load details for null item");
+        qWarning() << "Attempted to load details for null item";
         return;
     }
     
     const QString entityId = item->getId();
       // 缓存已禁用 - 始终从服务器获取最新数据
     // if (hasDetailedInfo(entityId)) {
-    //     LOG_SERVICE_DEBUG("Entity details already cached: %s", entityId.toUtf8().constData());
+    //     // 实体详情已缓存，直接返回
     //     emit entityDetailsLoaded(entityId, getCachedDetails(entityId));
     //     return;
     // }
     
     // 检查是否正在加载
     if (m_loadingItems.contains(entityId)) {
-        LOG_SERVICE_DEBUG("Entity details already loading: %s", entityId.toUtf8().constData());
+        qDebug() << "Entity details already loading:" << entityId;
         return;
     }
       // 添加到批量队列
@@ -47,7 +47,7 @@ void EntityDetailManager::loadEntityDetails(QSharedPointer<ResultItem> item) {
     
     if (!isEntityInQueue(entityId)) {
         m_batchQueue.append(request);
-        LOG_SERVICE_DEBUG("Added entity to batch queue: %s", entityId.toUtf8().constData());
+        qDebug() << "Added entity to batch queue:" << entityId;
     }
     
     // 启动或重启批量处理定时器
@@ -55,7 +55,7 @@ void EntityDetailManager::loadEntityDetails(QSharedPointer<ResultItem> item) {
 }
 
 void EntityDetailManager::loadEntitiesDetails(const QList<QSharedPointer<ResultItem>> &items) {
-    LOG_SERVICE_INFO("Requested batch loading for %d entities", items.size());
+    qDebug() << "Requested batch loading for" << items.size() << "entities";
     
     for (const auto &item : items) {
         loadEntityDetails(item);
@@ -76,7 +76,7 @@ bool EntityDetailManager::hasDetailedInfo(const QString &entityId) const {
 
 void EntityDetailManager::clearCache() {
     // 缓存已禁用，但保留清理操作以确保内存清理
-    LOG_SERVICE_INFO("Clearing entity details cache (cache disabled)");
+    qDebug() << "Clearing entity details cache (cache disabled)";
     m_detailsCache.clear(); // 仍然清理以防有遗留数据
     m_loadingItems.clear();
     m_batchQueue.clear();
@@ -90,7 +90,7 @@ void EntityDetailManager::clearCache() {
 
 void EntityDetailManager::setBatchDelay(int milliseconds) {
     m_batchDelay = qMax(100, milliseconds); // 最小100ms
-    LOG_SERVICE_DEBUG("Batch delay set to: %d ms", m_batchDelay);
+    qDebug() << "Batch delay set to:" << m_batchDelay << "ms";
 }
 
 void EntityDetailManager::processBatchQueue() {
@@ -98,7 +98,7 @@ void EntityDetailManager::processBatchQueue() {
         return;
     }
     
-    LOG_SERVICE_DEBUG("Processing batch queue with %d items", m_batchQueue.size());
+    qDebug() << "Processing batch queue with" << m_batchQueue.size() << "items";
     
     // 启动批量加载
     startBatchLoading();
@@ -126,13 +126,13 @@ void EntityDetailManager::startBatchLoading() {
     m_stats.totalRequested = m_currentBatch.size();
     
     if (m_currentBatch.isEmpty()) {
-        LOG_SERVICE_DEBUG("No entities need loading in current batch");
+        qDebug() << "No entities need loading in current batch";
         emit batchLoadingCompleted(QStringList());
         m_batchQueue.clear();
         return;
     }
     
-    LOG_SERVICE_INFO("Starting batch loading for %d entities", m_currentBatch.size());
+    qDebug() << "Starting batch loading for" << m_currentBatch.size() << "entities";
     
     // 开始加载第一个实体
     processNextInBatch();
@@ -141,8 +141,8 @@ void EntityDetailManager::startBatchLoading() {
 void EntityDetailManager::processNextInBatch() {
     if (m_batchLoadedCount >= m_currentBatch.size()) {
         // 批量加载完成
-        LOG_SERVICE_INFO("Batch loading completed: %d/%d entities loaded", 
-                        m_stats.totalLoaded, m_stats.totalRequested);
+        qDebug() << "Batch loading completed:" << m_stats.totalLoaded 
+                 << "/" << m_stats.totalRequested << "entities loaded";
         
         emit batchLoadingCompleted(m_currentBatch);
         emit batchLoadingProgress(m_stats.totalLoaded, m_stats.totalRequested);
@@ -166,16 +166,15 @@ void EntityDetailManager::processNextInBatch() {
     }
     
     if (!request) {
-        LOG_SERVICE_WARNING("Could not find request for entity: %s", entityId.toUtf8().constData());
+        qWarning() << "Could not find request for entity:" << entityId;
         m_batchLoadedCount++;
         processNextInBatch();
         return;
     }
     
     // 发送API请求
-    LOG_SERVICE_DEBUG("Loading details for entity: %s (type: %d)", 
-                     entityId.toUtf8().constData(), 
-                     static_cast<int>(request->item->getType()));
+    qDebug() << "Loading details for entity:" << entityId 
+             << "(type:" << static_cast<int>(request->item->getType()) << ")";
     
     m_api->getDetails(entityId, request->item->getType());
 }
@@ -187,19 +186,16 @@ void EntityDetailManager::onApiDetailsReady(const QVariantMap &details, EntityTy
     QString entityId = details.value("id").toString();
     
     if (entityId.isEmpty()) {
-        LOG_SERVICE_WARNING("Received details without entity ID");
+        qWarning() << "Received details without entity ID";
         return;
     }
     
-    LOG_SERVICE_DEBUG("Received details for entity: %s, keys: %s", 
-                      entityId.toUtf8().constData(),
-                      details.keys().join(", ").toUtf8().constData());
+    qDebug() << "Received details for entity:" << entityId 
+             << "keys:" << details.keys().join(", ");
     
     // 打印详细信息内容以便调试
     for (auto it = details.constBegin(); it != details.constEnd(); ++it) {
-        LOG_SERVICE_DEBUG("Detail key: %s = %s", 
-                          it.key().toUtf8().constData(),
-                          it.value().toString().toUtf8().constData());
+        qDebug() << "Detail key:" << it.key() << "=" << it.value().toString();
     }
       // 缓存已禁用，不再保存到缓存
     // addToCache(entityId, details);
@@ -230,7 +226,7 @@ void EntityDetailManager::onApiDetailsReady(const QVariantMap &details, EntityTy
 }
 
 void EntityDetailManager::onApiErrorOccurred(const QString &error) {
-    LOG_SERVICE_ERROR("API error occurred: %s", error.toUtf8().constData());
+    qCritical() << "API error occurred:" << error;
     
     // 更新统计
     m_stats.totalFailed++;
@@ -264,7 +260,7 @@ void EntityDetailManager::addToCache(const QString &entityId, const QVariantMap 
     Q_UNUSED(entityId)
     Q_UNUSED(details)
     // m_detailsCache[entityId] = details;
-    // LOG_SERVICE_DEBUG("Cache disabled - not saving entity details: %s", entityId.toUtf8().constData());
+    // 缓存已禁用，不保存实体详情
 }
 
 void EntityDetailManager::enrichEntityInfo(QSharedPointer<ResultItem> item, const QVariantMap &details) {
@@ -507,7 +503,6 @@ void EntityDetailManager::enrichEntityInfo(QSharedPointer<ResultItem> item, cons
         }
     }
     
-    LOG_SERVICE_DEBUG("Enriched entity info for: %s, total detail fields: %d", 
-                      item->getId().toUtf8().constData(),
-                      item->getDetailData().size());
+    qDebug() << "Enriched entity info for:" << item->getId() 
+             << "total detail fields:" << item->getDetailData().size();
 }

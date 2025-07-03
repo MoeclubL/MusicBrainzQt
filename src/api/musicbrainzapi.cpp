@@ -1,9 +1,10 @@
 #include "musicbrainzapi.h"
 #include "musicbrainzparser.h"
+#include "musicbrainz_response_handler.h"
 #include "network_manager.h"
 #include "api_utils.h"
 #include "../models/resultitem.h"
-#include "../utils/logger.h"
+#include "../core/error_types.h"
 #include <QNetworkReply>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -16,18 +17,39 @@ MusicBrainzApi::MusicBrainzApi(QObject *parent)
     : QObject(parent)
     , m_networkManager(new NetworkManager(this))
     , m_parser(new MusicBrainzParser(this))
+    , m_responseHandler(new MusicBrainzResponseHandler(m_parser, this))
     , m_userAgent("MusicBrainzQt/1.0 (https://github.com/MoeclubL/MusicBrainzQt)")
     , m_proxyPort(0)
     , m_lastHttpCode(0)
     , m_version("1.0.0")
-{
+{    
     // 连接网络管理器信号
     connect(m_networkManager, &NetworkManager::requestFinished,
             this, &MusicBrainzApi::onRequestFinished);
     connect(m_networkManager, &NetworkManager::requestError,
             this, &MusicBrainzApi::onRequestError);
+    
+    // 连接响应处理器信号
+    connect(m_responseHandler, &MusicBrainzResponseHandler::searchResultsReady,
+            this, &MusicBrainzApi::searchResultsReady);
+    connect(m_responseHandler, &MusicBrainzResponseHandler::detailsReady,
+            this, &MusicBrainzApi::detailsReady);
+    connect(m_responseHandler, &MusicBrainzResponseHandler::discIdLookupReady,
+            this, &MusicBrainzApi::discIdLookupReady);
+    connect(m_responseHandler, &MusicBrainzResponseHandler::genericQueryReady,
+            this, &MusicBrainzApi::genericQueryReady);
+    connect(m_responseHandler, &MusicBrainzResponseHandler::browseResultsReady,
+            this, &MusicBrainzApi::browseResultsReady);
+    connect(m_responseHandler, &MusicBrainzResponseHandler::userCollectionsReady,
+            this, &MusicBrainzApi::userCollectionsReady);
+    connect(m_responseHandler, &MusicBrainzResponseHandler::collectionContentsReady,
+            this, &MusicBrainzApi::collectionContentsReady);
+    connect(m_responseHandler, &MusicBrainzResponseHandler::collectionModified,
+            this, &MusicBrainzApi::collectionModified);
+    connect(m_responseHandler, &MusicBrainzResponseHandler::errorOccurred,
+            this, &MusicBrainzApi::errorOccurred);
             
-    LOG_SERVICE_INFO("MusicBrainzApi initialized with optimized architecture");
+    qDebug() << "MusicBrainzApi initialized with optimized architecture";
 }
 
 MusicBrainzApi::~MusicBrainzApi()
@@ -67,7 +89,7 @@ void MusicBrainzApi::getDetails(const QString &mbid, EntityType type)
 {
     // 使用Validator验证MBID
     if (!Validator::isValidMbid(mbid)) {
-        LOG_SERVICE_ERROR("MusicBrainzApi::getDetails - Invalid MBID: %s", mbid.toUtf8().constData());
+        qCritical() << "MusicBrainzApi::getDetails - Invalid MBID:" << mbid;
         emit errorOccurred("Invalid MBID format");
         return;
     }
@@ -84,8 +106,7 @@ void MusicBrainzApi::getDetails(const QString &mbid, EntityType type)
     context["mbid"] = mbid;
     context["entityType"] = static_cast<int>(type);
     
-    LOG_SERVICE_INFO("MusicBrainzApi::getDetails - MBID: %s, Type: %d", 
-                     mbid.toUtf8().constData(), static_cast<int>(type));
+    qDebug() << "MusicBrainzApi::getDetails - MBID:" << mbid << "Type:" << static_cast<int>(type);
     
     sendRequest(url, RequestType::Details, context);
 }
@@ -93,14 +114,14 @@ void MusicBrainzApi::getDetails(const QString &mbid, EntityType type)
 void MusicBrainzApi::setUserAgent(const QString &userAgent)
 {
     m_userAgent = userAgent;
-    LOG_SERVICE_DEBUG("User-Agent set to: %s", userAgent.toUtf8().constData());
+    qDebug() << "User-Agent set to:" << userAgent;
 }
 
 void MusicBrainzApi::setAuthentication(const QString &username, const QString &password)
 {
     m_username = username;
     m_password = password;
-    LOG_SERVICE_DEBUG("Authentication set for user: %s", username.toUtf8().constData());
+    qDebug() << "Authentication set for user:" << username;
 }
 
 void MusicBrainzApi::setProxy(const QString &host, int port, 
@@ -113,7 +134,7 @@ void MusicBrainzApi::setProxy(const QString &host, int port,
     
     // 配置NetworkManager的代理设置
     m_networkManager->setProxy(host, port, username, password);
-    LOG_SERVICE_DEBUG("Proxy set to: %s:%d", host.toUtf8().constData(), port);
+    qDebug() << "Proxy set to:" << host << ":" << port;
 }
 
 // =============================================================================
@@ -132,7 +153,7 @@ void MusicBrainzApi::lookupDiscId(const QString &discId)
     QVariantMap context;
     context["discId"] = discId;
     
-    LOG_SERVICE_INFO("MusicBrainzApi::lookupDiscId - DiscID: %s", discId.toUtf8().constData());
+    qDebug() << "MusicBrainzApi::lookupDiscId - DiscID:" << discId;
     
     sendRequest(url, RequestType::DiscId, context);
 }
@@ -153,8 +174,7 @@ void MusicBrainzApi::genericQuery(const QString &entity, const QString &id,
     context["id"] = id;
     context["resource"] = resource;
     
-    LOG_SERVICE_INFO("MusicBrainzApi::genericQuery - Entity: %s, ID: %s", 
-                     entity.toUtf8().constData(), id.toUtf8().constData());
+    qDebug() << "MusicBrainzApi::genericQuery - Entity:" << entity << "ID:" << id;
     
     sendRequest(url, RequestType::Generic, context);
 }
@@ -178,8 +198,7 @@ void MusicBrainzApi::browse(const QString &entity, const QString &relatedEntity,
     context["limit"] = pagination.first;
     context["offset"] = pagination.second;
     
-    LOG_SERVICE_INFO("MusicBrainzApi::browse - Entity: %s, Related: %s", 
-                     entity.toUtf8().constData(), relatedEntity.toUtf8().constData());
+    qDebug() << "MusicBrainzApi::browse - Entity:" << entity << "Related:" << relatedEntity;
     
     sendRequest(url, RequestType::Browse, context);
 }
@@ -284,7 +303,7 @@ QString MusicBrainzApi::getVersion() const
 
 void MusicBrainzApi::sendRequest(const QString& url, RequestType type, const QVariantMap& context)
 {
-    LOG_SERVICE_DEBUG("MusicBrainzApi: Sending request - %s", url.toUtf8().constData());
+    qDebug() << "MusicBrainzApi: Sending request -" << url;
     
     // 将请求加入队列
     PendingRequest request(url, type, context);
@@ -302,7 +321,7 @@ bool MusicBrainzApi::sendAuthenticatedRequest(const QString &url, const QString 
         return false;
     }
     
-    LOG_SERVICE_DEBUG("MusicBrainzApi: Sending authenticated request - %s", url.toUtf8().constData());
+    qDebug() << "MusicBrainzApi: Sending authenticated request -" << url;
     
     // 将请求加入队列
     PendingRequest request(url, RequestType::Collection, context);
@@ -324,14 +343,13 @@ void MusicBrainzApi::onRequestFinished(QNetworkReply *reply, const QString &url)
         }
     }
     
-    LOG_SERVICE_WARNING("Received response for unknown URL: %s", url.toUtf8().constData());
+    qWarning() << "Received response for unknown URL:" << url;
     reply->deleteLater();
 }
 
 void MusicBrainzApi::onRequestError(const QString &error, const QString &url)
 {
-    LOG_SERVICE_ERROR("MusicBrainzApi network error: %s for URL: %s", 
-                      error.toUtf8().constData(), url.toUtf8().constData());
+    qCritical() << "MusicBrainzApi network error:" << error << "for URL:" << url;
     
     // 从队列中移除失败的请求
     for (int i = 0; i < m_pendingRequests.size(); ++i) {
@@ -352,175 +370,36 @@ void MusicBrainzApi::processResponse(QNetworkReply* reply, const PendingRequest&
     // 检查HTTP错误
     if (reply->error() != QNetworkReply::NoError) {
         m_lastErrorMessage = reply->errorString();
-        LOG_SERVICE_ERROR("HTTP Error %d: %s", m_lastHttpCode, m_lastErrorMessage.toUtf8().constData());
+        qCritical() << "HTTP Error" << m_lastHttpCode << ":" << m_lastErrorMessage;
         emit errorOccurred(m_lastErrorMessage);
         reply->deleteLater();
         return;
     }
     
-    // 根据请求类型分发处理
+    // 根据请求类型分发给响应处理器
     switch (request.type) {
         case RequestType::Search:
-            handleSearchResponse(data, request.context);
+            m_responseHandler->handleSearchResponse(data, request.context);
             break;
         case RequestType::Details:
-            handleDetailsResponse(data, request.context);
+            m_responseHandler->handleDetailsResponse(data, request.context);
             break;
         case RequestType::DiscId:
-            handleDiscIdResponse(data, request.context);
+            m_responseHandler->handleDiscIdResponse(data, request.context);
             break;
         case RequestType::Generic:
-            handleGenericResponse(data, request.context);
+            m_responseHandler->handleGenericResponse(data, request.context);
             break;
         case RequestType::Browse:
-            handleBrowseResponse(data, request.context);
+            m_responseHandler->handleBrowseResponse(data, request.context);
             break;
         case RequestType::Collection:
-            handleCollectionResponse(data, request.context);
+            // 对于集合操作，需要传递HTTP状态码
+            QVariantMap contextWithStatus = request.context;
+            contextWithStatus["httpStatusCode"] = m_lastHttpCode;
+            m_responseHandler->handleCollectionResponse(data, contextWithStatus);
             break;
     }
     
     reply->deleteLater();
 }
-
-// =============================================================================
-// 响应处理分发器
-// =============================================================================
-
-void MusicBrainzApi::handleSearchResponse(const QByteArray& data, const QVariantMap& context)
-{
-    EntityType entityType = static_cast<EntityType>(context.value("entityType").toInt());
-    
-    QString error;
-    QJsonObject obj = ResponseParser::parseJsonResponse(data, &error);
-    if (!error.isEmpty()) {
-        emit errorOccurred("Failed to parse search response: " + error);
-        return;
-    }
-    
-    QList<QSharedPointer<ResultItem>> results = m_parser->parseSearchResponse(data, entityType);
-    auto pagination = ResponseParser::extractPagination(obj);
-    
-    LOG_SERVICE_DEBUG("Search completed - %d results, total: %d, offset: %d", 
-                      results.size(), pagination.first, pagination.second);
-    
-    emit searchResultsReady(results, pagination.first, pagination.second);
-}
-
-void MusicBrainzApi::handleDetailsResponse(const QByteArray& data, const QVariantMap& context)
-{
-    EntityType entityType = static_cast<EntityType>(context.value("entityType").toInt());
-    
-    auto detailedItem = m_parser->parseDetailsResponse(data, entityType);
-    
-    QVariantMap details;
-    if (detailedItem) {
-        details["id"] = detailedItem->getId();
-        details["name"] = detailedItem->getName();
-        details["type"] = EntityUtils::entityTypeToString(detailedItem->getType());
-        details["disambiguation"] = detailedItem->getDisambiguation();
-        
-        const QVariantMap &detailData = detailedItem->getDetailData();
-        for (auto it = detailData.constBegin(); it != detailData.constEnd(); ++it) {
-            details[it.key()] = it.value();
-        }
-    }
-    
-    emit detailsReady(details, entityType);
-}
-
-void MusicBrainzApi::handleDiscIdResponse(const QByteArray& data, const QVariantMap& context)
-{
-    QString discId = context.value("discId").toString();
-    
-    QString error;
-    QJsonObject obj = ResponseParser::parseJsonResponse(data, &error);
-    if (!error.isEmpty()) {
-        emit errorOccurred("Failed to parse DiscID response: " + error);
-        return;
-    }
-    
-    QList<QSharedPointer<ResultItem>> releases;
-    if (obj.contains("disc") && obj["disc"].toObject().contains("release-list")) {        QJsonArray releaseArray = obj["disc"].toObject()["release-list"].toArray();
-        for (const QJsonValue &value : releaseArray) {
-            auto release = m_parser->parseEntity(value.toObject(), EntityType::Release);
-            if (release) {
-                releases.append(release);
-            }
-        }
-    }
-    
-    emit discIdLookupReady(releases, discId);
-}
-
-void MusicBrainzApi::handleGenericResponse(const QByteArray& data, const QVariantMap& context)
-{
-    QString entity = context.value("entity").toString();
-    QString id = context.value("id").toString();
-    
-    QString error;
-    QJsonObject obj = ResponseParser::parseJsonResponse(data, &error);
-    if (!error.isEmpty()) {
-        emit errorOccurred("Failed to parse generic response: " + error);
-        return;
-    }
-    
-    QVariantMap result = obj.toVariantMap();
-    emit genericQueryReady(result, entity, id);
-}
-
-void MusicBrainzApi::handleBrowseResponse(const QByteArray& data, const QVariantMap& context)
-{
-    QString entity = context.value("entity").toString();
-    
-    QString error;
-    QJsonObject obj = ResponseParser::parseJsonResponse(data, &error);
-    if (!error.isEmpty()) {
-        emit errorOccurred("Failed to parse browse response: " + error);
-        return;
-    }
-    
-    EntityType entityType = EntityUtils::stringToEntityType(entity);
-    QList<QSharedPointer<ResultItem>> results = m_parser->parseSearchResponse(data, entityType);
-    auto pagination = ResponseParser::extractPagination(obj);
-    
-    emit browseResultsReady(results, entity, pagination.first, pagination.second);
-}
-
-void MusicBrainzApi::handleCollectionResponse(const QByteArray& data, const QVariantMap& context)
-{
-    QString operation = context.value("operation").toString();
-    QString collectionId = context.value("collectionId").toString();
-    
-    QString error;
-    QJsonObject obj = ResponseParser::parseJsonResponse(data, &error);
-    if (!error.isEmpty()) {
-        emit errorOccurred("Failed to parse collection response: " + error);
-        return;
-    }
-    
-    if (operation == "list") {
-        // 用户集合列表
-        QList<QVariantMap> collections = ResponseParser::parseCollectionList(obj);
-        emit userCollectionsReady(collections);
-    }
-    else if (operation == "contents") {
-        // 集合内容
-        QList<QSharedPointer<ResultItem>> contents;
-        if (obj.contains("release-list")) {
-            QJsonArray releaseArray = obj["release-list"].toArray();            for (const QJsonValue &value : releaseArray) {
-                auto release = m_parser->parseEntity(value.toObject(), EntityType::Release);
-                if (release) {
-                    contents.append(release);
-                }
-            }
-        }
-        emit collectionContentsReady(contents, collectionId);
-    }
-    else if (operation == "add" || operation == "remove") {
-        // 集合修改操作
-        bool success = (m_lastHttpCode >= 200 && m_lastHttpCode < 300);
-        emit collectionModified(success, collectionId, operation);
-    }
-}
-

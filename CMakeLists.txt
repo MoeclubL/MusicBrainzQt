@@ -37,6 +37,7 @@ set(SOURCES
     
     # API Layer
     src/api/musicbrainzapi.cpp
+    src/api/musicbrainz_response_handler.cpp
     src/api/musicbrainzparser.cpp
     src/api/api_utils.cpp
     src/api/network_manager.cpp
@@ -57,7 +58,6 @@ set(SOURCES
     src/services/entitydetailmanager.cpp
     
     # Utils
-    src/utils/logger.cpp
     src/utils/config_manager.cpp
 )
 
@@ -67,6 +67,7 @@ set(HEADERS
     
     # API Layer
     src/api/musicbrainzapi.h
+    src/api/musicbrainz_response_handler.h
     src/api/musicbrainzparser.h
     src/api/api_utils.h
     src/api/network_manager.h
@@ -91,7 +92,6 @@ set(HEADERS
     src/core/error_types.h
     
     # Utils
-    src/utils/logger.h
     src/utils/config_manager.h
 )
 

@@ -6,10 +6,20 @@
 #include <optional>
 
 /**
- * 现代化的错误处理系统
- * 使用结构化的错误类型和 std::optional
+ * @file error_types.h
+ * @brief 简化的错误处理系统
+ * 
+ * 使用标准 Qt 机制的简化错误处理。
+ * 
+ * @author MusicBrainzQt Team
+ * @version 1.0.0
+ * @date 2025-07-03
  */
 
+/**
+ * @enum ErrorCode
+ * @brief 标准化的错误代码枚举
+ */
 enum class ErrorCode {
     None = 0,
     
@@ -39,18 +49,24 @@ enum class ErrorCode {
     Unknown = 9999
 };
 
+/**
+ * @struct ErrorInfo
+ * @brief 错误信息结构体
+ */
 struct ErrorInfo {
     ErrorCode code = ErrorCode::None;
     QString message;
     QString details;
-    int httpStatusCode = 0;  // HTTP状态码(如果适用)
+    int httpStatusCode = 0;  ///< HTTP状态码(如果适用)
     
     ErrorInfo() = default;
     ErrorInfo(ErrorCode c, const QString &msg, const QString &det = QString())
         : code(c), message(msg), details(det) {}
     
+    /// 检查是否为有效错误
     bool isValid() const { return code != ErrorCode::None; }
     
+    /// 转换为字符串描述
     QString toString() const {
         QString result = QString("Error %1: %2").arg(static_cast<int>(code)).arg(message);
         if (!details.isEmpty()) {

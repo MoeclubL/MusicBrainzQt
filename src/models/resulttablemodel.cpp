@@ -1,5 +1,4 @@
 #include "resulttablemodel.h"
-#include "../utils/logger.h"
 #include "../core/types.h"
 #include "../api/api_utils.h"
 #include <QLocale>
@@ -20,9 +19,7 @@ void ResultTableModel::setItems(const QList<QSharedPointer<ResultItem>> &items, 
     updateColumnsFromData();
     
     endResetModel();
-    
-    qCDebug(logUI) << "ResultTableModel::setItems - Set" << items.count() 
-                   << "items of type" << static_cast<int>(type);
+}
 }
 
 void ResultTableModel::clear() {
@@ -215,10 +212,8 @@ void ResultTableModel::setVisibleColumns(const QStringList &columnKeys) {
     if (m_visibleColumns.isEmpty()) {
         m_visibleColumns = getDefaultColumns(m_type);
     }
-      endResetModel();
-    
-    qCDebug(logUI) << "ResultTableModel::setVisibleColumns - Set" << m_visibleColumns.count() 
-                   << "visible columns for type" << static_cast<int>(m_type);
+    endResetModel();
+}
 }
 
 void ResultTableModel::resetToDefaultColumns() {
@@ -464,9 +459,7 @@ void ResultTableModel::sort(int column, Qt::SortOrder order) {
     }
     
     emit layoutChanged();
-    
-    qCDebug(logUI) << "ResultTableModel::sort - Sorted by column" << column 
-                   << "(" << fieldKey << ") in" << (order == Qt::AscendingOrder ? "ascending" : "descending") << "order";
+}
 }
 
 QString ResultTableModel::generateFriendlyColumnName(const QString &key) const {

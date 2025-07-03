@@ -1,5 +1,5 @@
 #include "network_manager.h"
-#include "../utils/logger.h"
+#include "../core/error_types.h"
 #include <QNetworkRequest>
 #include <QNetworkProxy>
 #include <QDebug>
@@ -24,7 +24,7 @@ QNetworkReply* NetworkManager::sendRequest(const QString &url, const QString &us
     connect(reply, &QNetworkReply::finished,
             this, &NetworkManager::onReplyFinished);
     
-    LOG_SERVICE_DEBUG("NetworkManager: Request sent - %s", url.toUtf8().constData());
+    qDebug() << "NetworkManager: Request sent -" << url;
     return reply;
 }
 
@@ -44,15 +44,14 @@ bool NetworkManager::sendAuthenticatedRequest(const QString &url, const QString 
     } else if (method == "DELETE") {
         reply = m_networkManager->deleteResource(request);
     } else {
-        LOG_SERVICE_ERROR("Unsupported HTTP method: %s", method.toUtf8().constData());
+        qCritical() << "Unsupported HTTP method:" << method;
         return false;
     }
     
     if (reply) {
         connect(reply, &QNetworkReply::finished,
                 this, &NetworkManager::onReplyFinished);
-        LOG_SERVICE_DEBUG("NetworkManager: Authenticated %s request sent - %s", 
-                          method.toUtf8().constData(), url.toUtf8().constData());
+        qDebug() << "NetworkManager: Authenticated" << method << "request sent -" << url;
         return true;
     }
     
@@ -74,7 +73,7 @@ void NetworkManager::setProxy(const QString &host, int port,
     }
     
     m_networkManager->setProxy(proxy);
-    LOG_SERVICE_DEBUG("Proxy configured: %s:%d", host.toUtf8().constData(), port);
+    qDebug() << "Proxy configured:" << host << ":" << port;
 }
 
 void NetworkManager::onReplyFinished()
@@ -90,7 +89,7 @@ void NetworkManager::onReplyFinished()
         QString error = QString("Network request failed: %1 (HTTP %2)")
                            .arg(reply->errorString())
                            .arg(reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt());
-        LOG_SERVICE_ERROR("NetworkManager error: %s", error.toUtf8().constData());
+        qCritical() << "NetworkManager error:" << error;
         emit requestError(error, url);
     } else {
         emit requestFinished(reply, url);

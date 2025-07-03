@@ -18,7 +18,7 @@
 #include "entitylistwidget.h"
 #include "../models/resultitem.h"
 #include "../services/entitydetailmanager.h"
-#include "../utils/logger.h"
+#include "../core/error_types.h"
 
 SearchResultTab::SearchResultTab(const QString &query, EntityType type, QWidget *parent)
     : QWidget(parent)
@@ -34,9 +34,7 @@ SearchResultTab::SearchResultTab(const QString &query, EntityType type, QWidget 
             this, &SearchResultTab::onEntityDetailsLoaded);
     connect(m_detailManager, &EntityDetailManager::detailsLoadingFailed,
             this, &SearchResultTab::onDetailLoadingFailed);
-            
-    LOG_UI_INFO("SearchResultTab created for query: %s, type: %d", 
-                query.toUtf8().constData(), static_cast<int>(type));
+}
 }
 
 SearchResultTab::~SearchResultTab()
@@ -149,7 +147,7 @@ void SearchResultTab::onEntityDetailsLoaded(const QString &entityId, const QVari
 
 void SearchResultTab::onDetailLoadingFailed(const QString &entityId, const ErrorInfo &error)
 {
-    qCDebug(logUI) << "SearchResultTab: Failed to load details for entity" << entityId 
+    qDebug() << "SearchResultTab: Failed to load details for entity" << entityId 
                    << "Error:" << error.message;
 }
 
@@ -163,8 +161,7 @@ void SearchResultTab::onItemSelectionChanged()
     if (selectedItem) {
         // 创建迷你详情显示组件
         createItemPreview(selectedItem);
-        LOG_UI_INFO("SearchResultTab: Selected item %s for preview", 
-                    selectedItem->getName().toUtf8().constData());
+        qInfo() << "SearchResultTab: Selected item" << selectedItem->getName() << "for preview";
     }
 }
 

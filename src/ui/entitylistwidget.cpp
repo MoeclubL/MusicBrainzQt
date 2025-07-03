@@ -2,7 +2,7 @@
 #include "ui_entitylistwidget.h"
 #include "../models/resultitem.h"
 #include "../models/resulttablemodel.h"
-#include "../utils/logger.h"
+#include "../core/error_types.h"
 #include <QHeaderView>
 #include <QAction>
 #include <QMenu>
@@ -122,7 +122,7 @@ void EntityListWidget::setItems(const QList<QSharedPointer<ResultItem>> &items)
     }
     
     m_model->setItems(items, type);
-    qCDebug(logUI) << "EntityListWidget::setItems - Set" << items.count() 
+    qDebug() << "EntityListWidget::setItems - Set" << items.count() 
                    << "items of type" << static_cast<int>(type);
 }
 
