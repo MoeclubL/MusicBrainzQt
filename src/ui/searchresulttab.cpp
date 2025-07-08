@@ -91,17 +91,8 @@ void SearchResultTab::setResults(const QList<QSharedPointer<ResultItem>> &result
     // 不再自动批量加载详细信息，只有在用户双击项目时才加载
 }
 
-/**
- * @brief 清空搜索结果
- * 
- * 清除列表中的所有项目并重置分页控件。
- */
-void SearchResultTab::clearResults()
-{
-    m_entityListWidget->clear();
-    m_currentStats = SearchResults();
-    updatePaginationControls(m_currentStats);
-}
+
+
 
 void SearchResultTab::updatePaginationControls(const SearchResults &stats)
 {

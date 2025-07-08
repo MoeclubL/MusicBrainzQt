@@ -19,8 +19,7 @@ class ResultTableModel : public QAbstractTableModel {
 public:
     ResultTableModel(QObject *parent = nullptr);
     void setItems(const QList<QSharedPointer<ResultItem>> &items, EntityType type);
-    void clear();
-    void addItem(const QSharedPointer<ResultItem> &item);
+    
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
@@ -32,7 +31,7 @@ public:
     EntityType currentType() const;
     QSharedPointer<ResultItem> getItem(int row) const;// 自定义列功能
     QList<ColumnInfo> getAvailableColumns(EntityType type) const;
-    QStringList getAvailableColumnNames(EntityType type) const;  // 字符串版本
+    
     QStringList getVisibleColumns() const;
     void setVisibleColumns(const QStringList &columnKeys);
     void resetToDefaultColumns();
@@ -45,7 +44,7 @@ public:
     // 列生成辅助函数
     QString generateFriendlyColumnName(const QString &key) const;
     QString generateColumnDescription(const QString &key, EntityType type) const;
-    int getColumnPriority(const QString &key, EntityType type) const;
+    
     
 private:
     QList<QSharedPointer<ResultItem>> m_items;

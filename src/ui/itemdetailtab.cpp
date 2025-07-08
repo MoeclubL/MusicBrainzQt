@@ -3,7 +3,6 @@
 #include "entitylistwidget.h"
 #include "widget_helpers.h"
 #include "../models/resultitem.h"
-#include "../core/error_types.h"
 #include <QDesktopServices>
 #include <QUrl>
 #include <QHBoxLayout>

@@ -104,13 +104,7 @@ SearchParameters SearchService::getCurrentSearchParams() const
     return m_currentParams;
 }
 
-void SearchService::clearResults()
-{
-    m_currentParams = SearchParameters();
-    m_currentResults = SearchResults();
-    m_currentPage = 0;
-    m_totalPages = 0;
-}
+
 
 void SearchService::handleApiResults(const QList<QSharedPointer<ResultItem>> &results, int totalCount, int offset)
 {

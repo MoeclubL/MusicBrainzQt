@@ -70,10 +70,7 @@ public:
      */
     void setItems(const QList<QSharedPointer<ResultItem>> &items);
     
-    /**
-     * @brief 清空列表内容
-     */
-    void clear();
+    
     
     // =============================================================================
     // 选择管理方法
@@ -150,7 +147,8 @@ signals:
     void prevPageRequested();
     void nextPageRequested();
 
-private slots:    void onTableDoubleClicked(const QModelIndex &index);
+private slots:
+    void onTableDoubleClicked(const QModelIndex &index);
     void onTableSelectionChanged();
     void onContextMenuRequested(const QPoint &pos);
     void onHeaderContextMenuRequested(const QPoint &pos);

@@ -21,19 +21,7 @@ void ResultTableModel::setItems(const QList<QSharedPointer<ResultItem>> &items, 
     endResetModel();
 }
 
-void ResultTableModel::clear() {
-    beginResetModel();
-    m_items.clear();
-    m_type = EntityType::Unknown;
-    m_visibleColumns.clear();
-    endResetModel();
-}
 
-void ResultTableModel::addItem(const QSharedPointer<ResultItem> &item) {
-    beginInsertRows(QModelIndex(), m_items.count(), m_items.count());
-    m_items.append(item);
-    endInsertRows();
-}
 
 int ResultTableModel::rowCount(const QModelIndex &parent) const {
     Q_UNUSED(parent)
@@ -175,14 +163,7 @@ QList<ColumnInfo> ResultTableModel::getAvailableColumns(EntityType type) const {
     return columns;
 }
 
-QStringList ResultTableModel::getAvailableColumnNames(EntityType type) const {
-    QStringList names;
-    const auto columns = getAvailableColumns(type);
-    for (const auto &column : columns) {
-        names << column.header;
-    }
-    return names;
-}
+
 
 QStringList ResultTableModel::getVisibleColumns() const {
     QStringList keys;
@@ -513,25 +494,4 @@ QString ResultTableModel::generateColumnDescription(const QString &key, EntityTy
     return QCoreApplication::translate("ResultTableModel", "%1 %2").arg(entityName, generateFriendlyColumnName(key));
 }
 
-int ResultTableModel::getColumnPriority(const QString &key, EntityType type) const {
-    // 定义不同实体类型的列优先级
-    static const QMap<EntityType, QStringList> priorities = {
-        {EntityType::Artist, {"name", "sort_name", "type", "country", "life_span", "gender", "disambiguation", "score"}},
-        {EntityType::Release, {"title", "artist", "date", "country", "status", "track_count", "disambiguation", "score"}},
-        {EntityType::Recording, {"title", "artist", "length", "disambiguation", "release_count", "score"}},
-        {EntityType::ReleaseGroup, {"title", "artist", "type", "first_release_date", "release_count", "disambiguation", "score"}},
-        {EntityType::Work, {"title", "type", "language", "disambiguation", "recording_count", "score"}},
-        {EntityType::Label, {"name", "sort_name", "type", "country", "code", "life_span", "disambiguation", "score"}}
-    };
-    
-    if (priorities.contains(type)) {
-        const QStringList &priorityList = priorities[type];
-        int index = priorityList.indexOf(key);
-        if (index >= 0) {
-            return index;
-        }
-    }
-    
-    // 未在优先级列表中的字段放在后面
-    return 1000;
-}
+

@@ -28,7 +28,7 @@ QNetworkReply* NetworkManager::sendRequest(const QString &url, const QString &us
     return reply;
 }
 
-bool NetworkManager::sendAuthenticatedRequest(const QString &url, const QString &userAgent,
+QNetworkReply* NetworkManager::sendAuthenticatedRequest(const QString &url, const QString &userAgent,
                                             const QString &username, const QString &password,
                                             const QString &method, const QByteArray &data)
 {
@@ -45,17 +45,16 @@ bool NetworkManager::sendAuthenticatedRequest(const QString &url, const QString 
         reply = m_networkManager->deleteResource(request);
     } else {
         qCritical() << "Unsupported HTTP method:" << method;
-        return false;
+        return nullptr;
     }
     
     if (reply) {
         connect(reply, &QNetworkReply::finished,
                 this, &NetworkManager::onReplyFinished);
         qDebug() << "NetworkManager: Authenticated" << method << "request sent -" << url;
-        return true;
     }
     
-    return false;
+    return reply;
 }
 
 void NetworkManager::setProxy(const QString &host, int port, 

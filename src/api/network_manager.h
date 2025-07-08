@@ -43,7 +43,7 @@ public:
      * @param data 请求数据
      * @return 是否成功发送
      */
-    bool sendAuthenticatedRequest(const QString &url, const QString &userAgent,
+    QNetworkReply* sendAuthenticatedRequest(const QString &url, const QString &userAgent,
                                  const QString &username, const QString &password,
                                  const QString &method = "GET", const QByteArray &data = QByteArray());
 

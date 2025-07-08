@@ -4,6 +4,7 @@
 #include "ui/searchresulttab.h"
 #include "ui/itemdetailtab.h"
 #include "ui/widget_helpers.h"
+#include "ui/settingsdialog.h"
 #include "services/searchservice.h"
 #include "services/entitydetailmanager.h"
 #include <QMenuBar>
@@ -38,27 +39,23 @@
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
-    , m_searchService(new SearchService(this))       // 搜索服务，处理所有搜索相关操作
-    , m_detailManager(new EntityDetailManager(this)) // 详情管理器，处理实体详细信息加载
+    , m_searchService(new SearchService(this))
+    , m_detailManager(new EntityDetailManager(this))
 {
     ui->setupUi(this);
-    
+
     // 设置窗口最小尺寸，确保界面元素可见性
     setMinimumSize(800, 600);
-    
+
     // 配置主窗口布局权重
-    // 搜索区域(0)保持固定高度，结果区域(1)自动拉伸填充剩余空间
-    ui->verticalLayout->setStretch(0, 0);  // 搜索区域不拉伸
-    ui->verticalLayout->setStretch(1, 1);  // 结果区域拉伸
+    ui->verticalLayout->setStretch(0, 0);
+    ui->verticalLayout->setStretch(1, 1);
     ui->mainSplitter->setStretchFactor(0, 1);
     ui->mainSplitter->setStretchFactor(1, 1);
 
-    // 按顺序初始化各个组件
+    // 初始化所有UI组件和服务
     initializeUI();
-    setupMenuBar();
-    setupStatusBar();
-    setupConnections();
-    
+
     setWindowTitle(tr("MusicBrainz Qt Client"));
 }
 
@@ -87,15 +84,15 @@ MainWindow::~MainWindow()
 void MainWindow::initializeUI()
 {
     // 设置窗口基本属性
-    resize(1400, 900);  // 设置合适的默认窗口大小
-    setMinimumSize(1200, 700);  // 确保最小尺寸下界面仍然可用
+    resize(1400, 900);
+    setMinimumSize(1200, 700);
     
     // 按依赖关系顺序初始化各部分UI
-    setupSearchDock();      // 设置搜索面板
-    setupMainTabWidget();   // 设置主标签页容器
-    setupMenuBar();         // 设置菜单栏
-    setupStatusBar();       // 设置状态栏
-    setupConnections();     // 建立信号槽连接
+    setupSearchDock();
+    setupMainTabWidget();
+    setupMenuBar();
+    setupStatusBar();
+    setupConnections();
 }
 
 /**
@@ -159,27 +156,11 @@ void MainWindow::setupSearchDock()
  */
 void MainWindow::setupMenuBar()
 {
+    // The connections for actionAbout and actionPreferences are now handled automatically
+    // by Qt's auto-connection mechanism, thanks to the on_actionName_triggered() slots.
+    
     // 连接退出动作到窗口关闭
-    connect(ui->actionExit, &QAction::triggered, this, &QWidget::close);
-    
-    // 连接关于动作到关于对话框
-    connect(ui->actionAbout, &QAction::triggered, [this]() {
-        QMessageBox::about(this, tr("About MusicBrainz Qt"),
-                           tr("MusicBrainz Qt Client\n\n"
-                              "A cross-platform MusicBrainz client allowing you to search, "
-                              "browse and edit MusicBrainz data."));
-    });
-    
-    // 连接偏好设置动作（功能待实现）
-    connect(ui->actionPreferences, &QAction::triggered, [this]() {
-        // TODO: 实现偏好设置对话框
-        // 未来版本将包含：
-        // - API服务器配置
-        // - 界面主题设置
-        // - 搜索选项配置
-        // - 缓存和性能设置
-        statusBar()->showMessage(tr("Preferences not implemented yet"), 2000);
-    });
+    connect(ui->actionExit, &QAction::triggered, this, &QWidget::close, Qt::UniqueConnection);
     
     // 设置标准快捷键
     ui->actionExit->setShortcut(QKeySequence::Quit);
@@ -517,4 +498,26 @@ void MainWindow::onEntityDetailsLoaded(const QString &entityId, const QVariantMa
             statusBar()->showMessage(tr("Details loaded for: %1").arg(item->getName()), 2000);
         }
     }
+}
+
+/**
+ * @brief 打开设置对话框
+ * 
+ * 显示应用程序设置对话框，允许用户配置语言、UI选项和其他首选项
+ */
+void MainWindow::on_actionPreferences_triggered()
+{
+    SettingsDialog dialog(this);
+    if (dialog.exec() == QDialog::Accepted) {
+        // 设置已保存，在需要时应用更改
+        statusBar()->showMessage(tr("Settings saved"), 2000);
+    }
+}
+
+void MainWindow::on_actionAbout_triggered()
+{
+    QMessageBox::about(this, tr("About MusicBrainz Qt"),
+                       tr("MusicBrainz Qt Client\n\n"
+                          "A cross-platform MusicBrainz client allowing you to search, "
+                          "browse and edit MusicBrainz data."));
 }

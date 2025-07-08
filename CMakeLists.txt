@@ -51,6 +51,7 @@ set(SOURCES
     src/ui/searchresulttab.cpp
     src/ui/itemdetailtab.cpp
     src/ui/entitylistwidget.cpp
+    src/ui/settingsdialog.cpp
     src/ui/widget_helpers.cpp
     
     # Services

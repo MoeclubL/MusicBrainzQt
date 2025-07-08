@@ -46,7 +46,7 @@ void AdvancedSearchWidget::setupUI()
             this, &AdvancedSearchWidget::onSearchClicked);
     connect(ui->searchButton, &QPushButton::clicked,
             this, &AdvancedSearchWidget::onSearchClicked);
-    connect(ui->clearButton, &QPushButton::clicked,            this, &AdvancedSearchWidget::onClearClicked);
+    
 }
 
 SearchParameters AdvancedSearchWidget::getSearchParameters() const
@@ -106,19 +106,7 @@ void AdvancedSearchWidget::setEntityType(EntityType type)
     createFieldsForType(type);
 }
 
-void AdvancedSearchWidget::clearForm()
-{
-    ui->queryEdit->clear();
-    ui->limitSpinBox->setValue(25);
-    
-    for (auto widget : m_fields) {
-        if (QLineEdit *edit = qobject_cast<QLineEdit*>(widget)) {
-            edit->clear();
-        } else if (QSpinBox *spin = qobject_cast<QSpinBox*>(widget)) {
-            spin->setValue(0);
-        }
-    }
-}
+
 
 void AdvancedSearchWidget::createFieldsForType(EntityType type)
 {
@@ -193,10 +181,7 @@ void AdvancedSearchWidget::onSearchClicked()
     }
 }
 
-void AdvancedSearchWidget::onClearClicked()
-{
-    clearForm();
-}
+
 
 void AdvancedSearchWidget::onTypeChanged()
 {

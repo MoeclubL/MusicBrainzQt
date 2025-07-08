@@ -272,13 +272,12 @@ private slots:
 
 private:
     // 统一请求处理
-    void sendRequest(const QString& url, RequestType type, const QVariantMap& context = {});
-    void processResponse(QNetworkReply* reply, const PendingRequest& request);
-    
-    // 认证请求处理
-    bool sendAuthenticatedRequest(const QString &url, const QString &method = "GET", 
-                                 const QByteArray &data = QByteArray(),
-                                 const QVariantMap& context = {});
+    void sendRequestInternal(const QString& url, RequestType type, const QVariantMap& context, 
+                             const QString &method = "GET", const QByteArray &data = QByteArray(), 
+                             bool authenticated = false);
+    void processResponse(QNetworkReply* reply, RequestType type, const QVariantMap& context);
+
+    QString prepareCollectionModification(const QString &collectionId, const QStringList &releaseIds);
 
     NetworkManager *m_networkManager;
     class MusicBrainzParser *m_parser;
@@ -289,19 +288,10 @@ private:
     QString m_username;
     QString m_password;
     
-    // 代理设置
-    QString m_proxyHost;
-    int m_proxyPort;
-    QString m_proxyUsername;
-    QString m_proxyPassword;
-    
     // 状态跟踪
     int m_lastHttpCode;
     QString m_lastErrorMessage;
     QString m_version;
-    
-    // 统一请求队列 - 替换原有的多个队列
-    QQueue<PendingRequest> m_pendingRequests;
 };
 
 #endif // MUSICBRAINZAPI_H

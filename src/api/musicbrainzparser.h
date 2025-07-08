@@ -63,19 +63,7 @@ public:
      * @return 解析后的ResultItem
      */    QSharedPointer<ResultItem> parseEntity(const QJsonObject &jsonObj, EntityType type = EntityType::Unknown);
     
-    /**
-     * @brief 解析集合信息
-     * @param data JSON响应数据
-     * @return 集合信息列表
-     */
-    QList<QVariantMap> parseCollectionsResponse(const QByteArray &data);
     
-    /**
-     * @brief 解析DiscID查找响应
-     * @param data JSON响应数据
-     * @return 发行版列表
-     */
-    QList<QSharedPointer<ResultItem>> parseDiscIdResponse(const QByteArray &data);
 
     // =============================================================================
     // 工具方法
@@ -177,12 +165,7 @@ private:
      */
     QVariantList parseArtistCredits(const QJsonArray &artistCredits);
     
-    /**
-     * @brief 解析关系数据
-     * @param relations JSON数组
-     * @return 解析后的关系信息列表
-     */
-    QVariantList parseRelations(const QJsonArray &relations);
+    
     
     /**
      * @brief 解析媒体信息
@@ -298,35 +281,7 @@ private:
      * @brief 通用实体解析辅助函数
      */
     
-    /**
-     * @brief 解析实体的基本信息（通用字段）
-     * @param jsonObj JSON对象
-     * @param type 实体类型
-     * @return 包含基本信息的QVariantMap
-     */
-    static QVariantMap parseEntityBasics(const QJsonObject &jsonObj, EntityType type);
     
-    /**
-     * @brief 解析艺术家信息（通用于所有艺术家相关字段）
-     * @param jsonObj JSON对象
-     * @return 艺术家信息的QVariantMap
-     */
-    static QVariantMap parseArtistInfo(const QJsonObject &jsonObj);
-    
-    /**
-     * @brief 解析日期信息（first-release-date, date等）
-     * @param jsonObj JSON对象
-     * @param dateKey 日期字段名
-     * @return 格式化的日期字符串
-     */
-    static QString parseDateField(const QJsonObject &jsonObj, const QString &dateKey = "date");
-    
-    /**
-     * @brief 解析艺术家信用信息（artist-credit）
-     * @param jsonObj JSON对象
-     * @return 艺术家信用字符串
-     */
-    static QString parseArtistCredit(const QJsonObject &jsonObj);
     
     /**
      * @brief 通用的子实体列表解析

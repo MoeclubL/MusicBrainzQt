@@ -22,7 +22,7 @@ SOURCES += \
     src/ui/widget_helpers.cpp \
     src/services/searchservice.cpp \
     src/services/entitydetailmanager.cpp \
-    src/utils/config_manager.cpp
+    src/utils/config_manager.cpp     src/ui/settingsdialog.cpp
 
 HEADERS += \
     src/mainwindow.h \
@@ -42,26 +42,14 @@ HEADERS += \
     src/services/entitydetailmanager.h \
     src/core/types.h \
     src/core/error_types.h \
-    src/utils/config_manager.h
+    src/utils/config_manager.h \
+    src/ui/settingsdialog.h
 
-FORMS += \
-    ui/mainwindow.ui \
-    ui/itemdetailtab.ui \
-    ui/entitylistwidget.ui \
-    ui/advancedsearchwidget.ui \
-    ui/searchresulttab.ui
+FORMS +=     ui/mainwindow.ui     ui/itemdetailtab.ui     ui/entitylistwidget.ui     ui/advancedsearchwidget.ui     ui/searchresulttab.ui     ui/settingsdialog.ui
 
-RESOURCES += \
+RESOURCES += 
     resources/images.qrc
 
-# Include paths
-INCLUDEPATH += src \
-               src/api \
-               src/models \
-               src/ui \
-               src/services \
-               src/core \
-               src/utils
-
-# Additional configurations
-DESTDIR = bin
+TRANSLATIONS += \
+    translations/musicbrainzqt_en.ts \
+    translations/musicbrainzqt_zh_CN.ts

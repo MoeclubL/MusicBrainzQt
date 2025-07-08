@@ -196,15 +196,7 @@ QVariant ResultItem::getDetailProperty(const QString &key) const
     return m_detailData.value(key);
 }
 
-void ResultItem::setId(const QString &id)
-{
-    m_id = id;
-}
 
-void ResultItem::setName(const QString &name)
-{
-    m_name = name;
-}
 
 void ResultItem::setDisambiguation(const QString &disambiguation)
 {

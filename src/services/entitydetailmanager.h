@@ -92,37 +92,7 @@ public:
      */
     void loadEntitiesDetails(const QList<QSharedPointer<ResultItem>> &items);
     
-    // =============================================================================
-    // 缓存接口（已禁用但保留API兼容性）
-    // =============================================================================
     
-    /**
-     * @brief 获取已缓存的详细信息
-     * @param entityId 实体ID
-     * @return 空的QVariantMap（缓存已禁用）
-     * 
-     * @deprecated 缓存功能已禁用，此方法总是返回空数据。
-     *             保留此接口仅为维持API兼容性。
-     */
-    QVariantMap getCachedDetails(const QString &entityId) const;
-    
-    /**
-     * @brief 检查实体是否已加载详细信息
-     * @param entityId 实体ID
-     * @return false（缓存已禁用）
-     * 
-     * @deprecated 缓存功能已禁用，此方法总是返回false。
-     *             保留此接口仅为维持API兼容性。
-     */
-    bool hasDetailedInfo(const QString &entityId) const;
-    
-    /**
-     * @brief 清理缓存
-     * 
-     * @deprecated 缓存功能已禁用，此方法不执行任何操作。
-     *             保留此接口仅为维持API兼容性。
-     */
-    void clearCache();
     
     // =============================================================================
     // 配置接口
@@ -222,7 +192,7 @@ private:
     MusicBrainzApi *m_api;                           ///< MusicBrainz API接口
     
     // 缓存相关（已禁用但保留结构）
-    QMap<QString, QVariantMap> m_detailsCache;          ///< 详细信息缓存（已禁用）
+    
     QSet<QString> m_loadingItems;                       ///< 正在加载的实体ID集合
     
     // 批量加载队列管理
@@ -272,21 +242,7 @@ private:
      */
     bool isEntityInQueue(const QString &entityId) const;
     
-    /**
-     * @brief 添加到缓存
-     * @param entityId 实体ID
-     * @param details 详细信息
-     * 
-     * @deprecated 缓存已禁用，此方法不执行任何操作
-     */
-    void addToCache(const QString &entityId, const QVariantMap &details);
     
-    /**
-     * @brief 处理加载错误
-     * @param entityId 失败的实体ID
-     * @param error 错误信息
-     */
-    void handleLoadingError(const QString &entityId, const ErrorInfo &error);
     
     /**
      * @brief 增强实体信息

@@ -124,19 +124,7 @@ public:
     // 属性修改接口
     // =============================================================================
     
-    /**
-     * @brief 设置实体ID
-     * @param id 新的实体ID
-     * 
-     * @warning 通常不建议在创建后修改ID，可能导致数据不一致
-     */
-    void setId(const QString &id);
     
-    /**
-     * @brief 设置实体名称
-     * @param name 新的实体名称
-     */
-    void setName(const QString &name);
     
     /**
      * @brief 设置消歧信息

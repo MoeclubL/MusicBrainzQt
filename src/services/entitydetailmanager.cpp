@@ -62,31 +62,7 @@ void EntityDetailManager::loadEntitiesDetails(const QList<QSharedPointer<ResultI
     }
 }
 
-QVariantMap EntityDetailManager::getCachedDetails(const QString &entityId) const {
-    // 缓存已禁用，返回空映射
-    Q_UNUSED(entityId)
-    return QVariantMap();
-}
 
-bool EntityDetailManager::hasDetailedInfo(const QString &entityId) const {
-    // 缓存已禁用，总是返回false以强制从服务器获取数据
-    Q_UNUSED(entityId)
-    return false;
-}
-
-void EntityDetailManager::clearCache() {
-    // 缓存已禁用，但保留清理操作以确保内存清理
-    qDebug() << "Clearing entity details cache (cache disabled)";
-    m_detailsCache.clear(); // 仍然清理以防有遗留数据
-    m_loadingItems.clear();
-    m_batchQueue.clear();
-    m_currentBatch.clear();
-    m_batchLoadedCount = 0;
-    
-    if (m_batchTimer->isActive()) {
-        m_batchTimer->stop();
-    }
-}
 
 void EntityDetailManager::setBatchDelay(int milliseconds) {
     m_batchDelay = qMax(100, milliseconds); // 最小100ms
@@ -255,13 +231,7 @@ bool EntityDetailManager::isEntityInQueue(const QString &entityId) const {
     return false;
 }
 
-void EntityDetailManager::addToCache(const QString &entityId, const QVariantMap &details) {
-    // 缓存已禁用，不再保存数据到缓存
-    Q_UNUSED(entityId)
-    Q_UNUSED(details)
-    // m_detailsCache[entityId] = details;
-    // 缓存已禁用，不保存实体详情
-}
+
 
 void EntityDetailManager::enrichEntityInfo(QSharedPointer<ResultItem> item, const QVariantMap &details) {
     if (!item) {

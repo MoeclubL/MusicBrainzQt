@@ -19,7 +19,6 @@ MusicBrainzApi::MusicBrainzApi(QObject *parent)
     , m_parser(new MusicBrainzParser(this))
     , m_responseHandler(new MusicBrainzResponseHandler(m_parser, this))
     , m_userAgent("MusicBrainzQt/1.0 (https://github.com/MoeclubL/MusicBrainzQt)")
-    , m_proxyPort(0)
     , m_lastHttpCode(0)
     , m_version("1.0.0")
 {    
@@ -82,7 +81,7 @@ void MusicBrainzApi::search(const QString &query, EntityType type, int limit, in
     context["limit"] = pagination.first;
     context["offset"] = pagination.second;
     
-    sendRequest(url, RequestType::Search, context);
+    sendRequestInternal(url, RequestType::Search, context);
 }
 
 void MusicBrainzApi::getDetails(const QString &mbid, EntityType type)
@@ -108,7 +107,7 @@ void MusicBrainzApi::getDetails(const QString &mbid, EntityType type)
     
     qDebug() << "MusicBrainzApi::getDetails - MBID:" << mbid << "Type:" << static_cast<int>(type);
     
-    sendRequest(url, RequestType::Details, context);
+    sendRequestInternal(url, RequestType::Details, context);
 }
 
 void MusicBrainzApi::setUserAgent(const QString &userAgent)
@@ -127,11 +126,6 @@ void MusicBrainzApi::setAuthentication(const QString &username, const QString &p
 void MusicBrainzApi::setProxy(const QString &host, int port, 
                              const QString &username, const QString &password)
 {
-    m_proxyHost = host;
-    m_proxyPort = port;
-    m_proxyUsername = username;
-    m_proxyPassword = password;
-    
     // 配置NetworkManager的代理设置
     m_networkManager->setProxy(host, port, username, password);
     qDebug() << "Proxy set to:" << host << ":" << port;
@@ -155,7 +149,7 @@ void MusicBrainzApi::lookupDiscId(const QString &discId)
     
     qDebug() << "MusicBrainzApi::lookupDiscId - DiscID:" << discId;
     
-    sendRequest(url, RequestType::DiscId, context);
+    sendRequestInternal(url, RequestType::DiscId, context);
 }
 
 void MusicBrainzApi::genericQuery(const QString &entity, const QString &id,
@@ -176,7 +170,7 @@ void MusicBrainzApi::genericQuery(const QString &entity, const QString &id,
     
     qDebug() << "MusicBrainzApi::genericQuery - Entity:" << entity << "ID:" << id;
     
-    sendRequest(url, RequestType::Generic, context);
+    sendRequestInternal(url, RequestType::Generic, context);
 }
 
 void MusicBrainzApi::browse(const QString &entity, const QString &relatedEntity,
@@ -188,7 +182,7 @@ void MusicBrainzApi::browse(const QString &entity, const QString &relatedEntity,
     }
     
     auto pagination = Validator::validatePagination(limit, offset);
-    QString url = UrlBuilder::buildBrowseUrl(entity, relatedEntity, relatedId, 
+    QString url = UrlBuilder::buildBrowseUrl(entity, relatedEntity, relatedId,
                                             pagination.first, pagination.second);
     
     QVariantMap context;
@@ -200,7 +194,7 @@ void MusicBrainzApi::browse(const QString &entity, const QString &relatedEntity,
     
     qDebug() << "MusicBrainzApi::browse - Entity:" << entity << "Related:" << relatedEntity;
     
-    sendRequest(url, RequestType::Browse, context);
+    sendRequestInternal(url, RequestType::Browse, context);
 }
 
 void MusicBrainzApi::getUserCollections()
@@ -215,7 +209,7 @@ void MusicBrainzApi::getUserCollections()
     QVariantMap context;
     context["operation"] = "list";
     
-    sendAuthenticatedRequest(url, "GET", QByteArray(), context);
+    sendRequestInternal(url, RequestType::Collection, context, "GET", QByteArray(), true);
 }
 
 void MusicBrainzApi::getCollectionContents(const QString &collectionId)
@@ -231,51 +225,52 @@ void MusicBrainzApi::getCollectionContents(const QString &collectionId)
     context["collectionId"] = collectionId;
     context["operation"] = "contents";
     
-    sendRequest(url, RequestType::Collection, context);
+    sendRequestInternal(url, RequestType::Collection, context);
 }
 
 void MusicBrainzApi::addToCollection(const QString &collectionId, const QStringList &releaseIds)
 {
-    if (m_username.isEmpty()) {
-        emit errorOccurred("Authentication required for collection modification");
+    QString url = prepareCollectionModification(collectionId, releaseIds);
+    if (url.isEmpty()) {
         return;
     }
-    
-    if (collectionId.isEmpty() || releaseIds.isEmpty()) {
-        emit errorOccurred("Invalid collection modification parameters");
-        return;
-    }
-    
-    QString url = UrlBuilder::buildCollectionUrl(collectionId, "releases/" + releaseIds.join(";"));
     
     QVariantMap context;
     context["collectionId"] = collectionId;
     context["operation"] = "add";
     context["releaseIds"] = releaseIds;
     
-    sendAuthenticatedRequest(url, "PUT", QByteArray(), context);
+    sendRequestInternal(url, RequestType::Collection, context, "PUT", QByteArray(), true);
 }
 
 void MusicBrainzApi::removeFromCollection(const QString &collectionId, const QStringList &releaseIds)
 {
-    if (m_username.isEmpty()) {
-        emit errorOccurred("Authentication required for collection modification");
+    QString url = prepareCollectionModification(collectionId, releaseIds);
+    if (url.isEmpty()) {
         return;
     }
-    
-    if (collectionId.isEmpty() || releaseIds.isEmpty()) {
-        emit errorOccurred("Invalid collection modification parameters");
-        return;
-    }
-    
-    QString url = UrlBuilder::buildCollectionUrl(collectionId, "releases/" + releaseIds.join(";"));
     
     QVariantMap context;
     context["collectionId"] = collectionId;
     context["operation"] = "remove";
     context["releaseIds"] = releaseIds;
     
-    sendAuthenticatedRequest(url, "DELETE", QByteArray(), context);
+    sendRequestInternal(url, RequestType::Collection, context, "DELETE", QByteArray(), true);
+}
+
+QString MusicBrainzApi::prepareCollectionModification(const QString &collectionId, const QStringList &releaseIds)
+{
+    if (m_username.isEmpty()) {
+        emit errorOccurred("Authentication required for collection modification");
+        return QString();
+    }
+    
+    if (collectionId.isEmpty() || releaseIds.isEmpty()) {
+        emit errorOccurred("Invalid collection modification parameters");
+        return QString();
+    }
+    
+    return UrlBuilder::buildCollectionUrl(collectionId, "releases/" + releaseIds.join(";"));
 }
 
 // =============================================================================
@@ -301,68 +296,40 @@ QString MusicBrainzApi::getVersion() const
 // 统一请求处理架构
 // =============================================================================
 
-void MusicBrainzApi::sendRequest(const QString& url, RequestType type, const QVariantMap& context)
+void MusicBrainzApi::sendRequestInternal(const QString& url, RequestType type, const QVariantMap& context,
+                                         const QString &method, const QByteArray &data, bool authenticated)
 {
     qDebug() << "MusicBrainzApi: Sending request -" << url;
-    
-    // 将请求加入队列
-    PendingRequest request(url, type, context);
-    m_pendingRequests.enqueue(request);
-    
-    // 发送网络请求
-    m_networkManager->sendRequest(url, m_userAgent);
-}
 
-bool MusicBrainzApi::sendAuthenticatedRequest(const QString &url, const QString &method, 
-                                             const QByteArray &data, const QVariantMap& context)
-{
-    if (m_username.isEmpty() || m_password.isEmpty()) {
-        emit errorOccurred("Authentication credentials not set");
-        return false;
+    QNetworkReply *reply;
+    if (authenticated) {
+        reply = m_networkManager->sendAuthenticatedRequest(url, m_userAgent, m_username, m_password, method, data);
+    } else {
+        reply = m_networkManager->sendRequest(url, m_userAgent);
     }
-    
-    qDebug() << "MusicBrainzApi: Sending authenticated request -" << url;
-    
-    // 将请求加入队列
-    PendingRequest request(url, RequestType::Collection, context);
-    m_pendingRequests.enqueue(request);
-    
-    // 使用NetworkManager发送认证请求
-    return m_networkManager->sendAuthenticatedRequest(url, m_userAgent, m_username, m_password, method, data);
+
+    // Store context and type in the reply itself
+    reply->setProperty("requestType", static_cast<int>(type));
+    reply->setProperty("requestContext", context);
 }
 
 void MusicBrainzApi::onRequestFinished(QNetworkReply *reply, const QString &url)
 {
-    // 查找对应的请求
-    for (int i = 0; i < m_pendingRequests.size(); ++i) {
-        if (m_pendingRequests[i].url == url) {
-            PendingRequest request = m_pendingRequests[i];
-            m_pendingRequests.removeAt(i);
-            processResponse(reply, request);
-            return;
-        }
-    }
-    
-    qWarning() << "Received response for unknown URL:" << url;
-    reply->deleteLater();
+    Q_UNUSED(url); // URL is now retrieved from reply property
+
+    RequestType type = static_cast<RequestType>(reply->property("requestType").toInt());
+    QVariantMap context = reply->property("requestContext").toMap();
+
+    processResponse(reply, type, context);
 }
 
 void MusicBrainzApi::onRequestError(const QString &error, const QString &url)
 {
     qCritical() << "MusicBrainzApi network error:" << error << "for URL:" << url;
-    
-    // 从队列中移除失败的请求
-    for (int i = 0; i < m_pendingRequests.size(); ++i) {
-        if (m_pendingRequests[i].url == url) {
-            m_pendingRequests.removeAt(i);
-            break;
-        }
-    }
-    
     emit errorOccurred(error);
 }
 
-void MusicBrainzApi::processResponse(QNetworkReply* reply, const PendingRequest& request)
+void MusicBrainzApi::processResponse(QNetworkReply* reply, RequestType type, const QVariantMap& context)
 {
     QByteArray data = reply->readAll();
     m_lastHttpCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
@@ -377,25 +344,25 @@ void MusicBrainzApi::processResponse(QNetworkReply* reply, const PendingRequest&
     }
     
     // 根据请求类型分发给响应处理器
-    switch (request.type) {
+    switch (type) {
         case RequestType::Search:
-            m_responseHandler->handleSearchResponse(data, request.context);
+            m_responseHandler->handleSearchResponse(data, context);
             break;
         case RequestType::Details:
-            m_responseHandler->handleDetailsResponse(data, request.context);
+            m_responseHandler->handleDetailsResponse(data, context);
             break;
         case RequestType::DiscId:
-            m_responseHandler->handleDiscIdResponse(data, request.context);
+            m_responseHandler->handleDiscIdResponse(data, context);
             break;
         case RequestType::Generic:
-            m_responseHandler->handleGenericResponse(data, request.context);
+            m_responseHandler->handleGenericResponse(data, context);
             break;
         case RequestType::Browse:
-            m_responseHandler->handleBrowseResponse(data, request.context);
+            m_responseHandler->handleBrowseResponse(data, context);
             break;
         case RequestType::Collection:
             // 对于集合操作，需要传递HTTP状态码
-            QVariantMap contextWithStatus = request.context;
+            QVariantMap contextWithStatus = context;
             contextWithStatus["httpStatusCode"] = m_lastHttpCode;
             m_responseHandler->handleCollectionResponse(data, contextWithStatus);
             break;

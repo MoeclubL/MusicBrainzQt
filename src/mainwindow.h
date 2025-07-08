@@ -130,6 +130,10 @@ private slots:
     
     // 详细信息加载相关槽函数
     void onEntityDetailsLoaded(const QString &entityId, const QVariantMap &details);
+    
+    // 设置相关槽函数
+    void on_actionAbout_triggered();
+    void on_actionPreferences_triggered();
 };
 
 #endif // MAINWINDOW_H

@@ -59,8 +59,12 @@ int main(int argc, char *argv[]) {
     // 创建翻译器
     QTranslator translator;
     
-    // 获取系统语言
-    QString locale = QLocale::system().name();
+    // 获取配置中的语言设置或系统语言
+    ConfigManager &config = ConfigManager::instance();
+    QString configLang = config.getValue("language", QString("system"));
+    QString locale = configLang == "system" ? QLocale::system().name() : configLang;
+    
+    qDebug() << "Using language setting:" << configLang << ", locale:" << locale;
     
     // 尝试加载对应的翻译文件
     QString translationFile = QString("musicbrainzqt_%1").arg(locale);
@@ -72,20 +76,23 @@ int main(int argc, char *argv[]) {
                      << ":/translations";
     
     bool translationLoaded = false;
-    for (const QString &path : translationPaths) {
+    for (const QString &path : std::as_const(translationPaths)) {
+        qDebug() << "Looking for translation in:" << path + "/" + translationFile;
         if (translator.load(translationFile, path)) {
             app.installTranslator(&translator);
             translationLoaded = true;
+            qDebug() << "Translation loaded successfully from:" << path;
             break;
         }
     }
-    
+
     // 如果系统语言的翻译文件未找到，尝试加载中文翻译作为备选
     if (!translationLoaded && !locale.startsWith("en")) {
-        for (const QString &path : translationPaths) {
+        for (const QString &path : std::as_const(translationPaths)) {
             if (translator.load("musicbrainzqt_zh_CN", path)) {
                 app.installTranslator(&translator);
                 translationLoaded = true;
+                qDebug() << "Fallback to Chinese translation";
                 break;
             }
         }

@@ -36,14 +36,14 @@ public:
     void setEntityType(EntityType type);
     
     // 重置表单
-    void clearForm();
+    
 
 signals:
     void searchRequested(const SearchParameters &params);
 
 private slots:
     void onSearchClicked();
-    void onClearClicked();
+    
     void onTypeChanged();
 
 private:

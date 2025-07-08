@@ -93,17 +93,7 @@ enum class RequestType {
     Collection
 };
 
-/**
- * @brief 待处理请求结构
- */
-struct PendingRequest {
-    QString url;
-    RequestType type;
-    QVariantMap context;  // 存储请求上下文信息
-    
-    PendingRequest(const QString& u, RequestType t, const QVariantMap& ctx = {})
-        : url(u), type(t), context(ctx) {}
-};
+
 
 /**
  * @brief 统一URL构建器

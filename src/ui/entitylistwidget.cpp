@@ -2,7 +2,6 @@
 #include "ui_entitylistwidget.h"
 #include "../models/resultitem.h"
 #include "../models/resulttablemodel.h"
-#include "../core/error_types.h"
 #include <QHeaderView>
 #include <QAction>
 #include <QMenu>
@@ -46,7 +45,7 @@ void EntityListWidget::setupUI()
     ui->tableView->horizontalHeader()->setDragDropMode(QAbstractItemView::InternalMove);
     ui->tableView->setAlternatingRowColors(true);
     ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
-    ui->tableView->setSortingEnabled(true);
+    ui->tableView->setSortingEnabled(true); // 使用 Qt 默认排序
     ui->tableView->setContextMenuPolicy(Qt::CustomContextMenu);
     
     // 配置表头右键菜单
@@ -126,10 +125,7 @@ void EntityListWidget::setItems(const QList<QSharedPointer<ResultItem>> &items)
                    << "items of type" << static_cast<int>(type);
 }
 
-void EntityListWidget::clear()
-{
-    m_model->clear();
-}
+
 
 QSharedPointer<ResultItem> EntityListWidget::getCurrentItem() const
 {

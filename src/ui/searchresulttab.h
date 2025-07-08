@@ -124,12 +124,7 @@ public:
      */
     EntityDetailManager* getDetailManager() const { return m_detailManager; }
     
-    /**
-     * @brief 清空所有结果
-     * 
-     * 清除当前显示的所有搜索结果，重置UI状态。
-     */
-    void clearResults();
+    
 
 signals:
     /**

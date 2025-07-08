@@ -123,13 +123,7 @@ public:
      * @return 最近一次搜索使用的参数
      */
     SearchParameters getCurrentSearchParams() const;    
-public slots:
-    /**
-     * @brief 清空搜索结果和状态
-     * 
-     * 重置所有搜索相关的状态，包括结果数据、分页信息等。
-     */
-    void clearResults();
+
 
 signals:
     /**
