@@ -76,7 +76,7 @@ int main(int argc, char *argv[]) {
                      << ":/translations";
     
     bool translationLoaded = false;
-    for (const QString &path : std::as_const(translationPaths)) {
+    for (const QString &path : translationPaths) {
         qDebug() << "Looking for translation in:" << path + "/" + translationFile;
         if (translator.load(translationFile, path)) {
             app.installTranslator(&translator);
@@ -85,10 +85,10 @@ int main(int argc, char *argv[]) {
             break;
         }
     }
-
+    
     // 如果系统语言的翻译文件未找到，尝试加载中文翻译作为备选
     if (!translationLoaded && !locale.startsWith("en")) {
-        for (const QString &path : std::as_const(translationPaths)) {
+        for (const QString &path : translationPaths) {
             if (translator.load("musicbrainzqt_zh_CN", path)) {
                 app.installTranslator(&translator);
                 translationLoaded = true;

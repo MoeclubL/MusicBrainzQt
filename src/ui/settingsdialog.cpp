@@ -34,8 +34,6 @@ void SettingsDialog::setupUI()
     langLayout->addWidget(m_languageCombo);
     mainLayout->addWidget(langGroup);
     
-    
-    
     // 功能设置组
     QGroupBox *featGroup = new QGroupBox(tr("Features"));
     QVBoxLayout *featLayout = new QVBoxLayout(featGroup);
@@ -89,8 +87,6 @@ void SettingsDialog::loadCurrentSettings()
         m_languageCombo->setCurrentIndex(langIndex);
     }
     
-    
-    
     bool enableLogging = config.getValue("enableDebugLogging", false);
     m_enableLoggingCheck->setChecked(enableLogging);
 }
@@ -113,7 +109,6 @@ void SettingsDialog::saveSettings()
     config.setValue("language", newLang);
     
     // 保存其他设置
-    
     config.setValue("enableDebugLogging", m_enableLoggingCheck->isChecked());
     
     // 应用设置
@@ -132,15 +127,12 @@ void SettingsDialog::resetToDefaults()
 {
     // 设置默认值
     m_languageCombo->setCurrentIndex(m_languageCombo->findData("system"));
-    
     m_enableLoggingCheck->setChecked(false);
 }
 
 void SettingsDialog::applySettings()
 {
     // 应用能够即时生效的设置
-    
-    
     
     // 日志设置
     bool enableLogging = m_enableLoggingCheck->isChecked();

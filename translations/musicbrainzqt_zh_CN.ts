@@ -1776,11 +1776,7 @@ A cross-platform MusicBrainz client allowing you to search, browse and edit Musi
         <source>Features</source>
         <translation type="unfinished"></translation>
     </message>
-    <message>
-        <location filename="../ui/settingsdialog.ui" line="39"/>
-        <source>Save Search History</source>
-        <translation type="unfinished"></translation>
-    </message>
+
     <message>
         <location filename="../ui/settingsdialog.ui" line="46"/>
         <location filename="../src/ui/settingsdialog.cpp" line="42"/>

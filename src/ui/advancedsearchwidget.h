@@ -34,9 +34,6 @@ public:
     
     // 设置搜索类型
     void setEntityType(EntityType type);
-    
-    // 重置表单
-    
 
 signals:
     void searchRequested(const SearchParameters &params);
