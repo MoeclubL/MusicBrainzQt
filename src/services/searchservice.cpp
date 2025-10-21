@@ -2,6 +2,7 @@
 #include "../api/musicbrainzapi.h"
 #include "../models/resultitem.h"
 #include <QDebug>
+#include <algorithm>
 
 SearchService::SearchService(QObject *parent)
     : QObject(parent)
@@ -17,29 +18,28 @@ SearchService::SearchService(QObject *parent)
             this, &SearchService::handleApiError);
 }
 
-SearchService::~SearchService()
-{
-}
-
 void SearchService::search(const SearchParameters &params)
 {
-    if (!params.isValid()) {
+    if (!isValidSearchParams(params)) {
         emit searchFailed(tr("Invalid search parameters"));
         return;
     }
-    
+
     m_currentParams = params;
+    m_currentParams.offset = 0;
     m_currentPage = 0;
-    m_itemsPerPage = params.limit; // 使用参数中的limit值
-    
-    QString queryString = buildQueryString(params);
-    emit searchStarted(queryString);
-    
-    qDebug() << "SearchService: Starting search" << queryString 
-             << "Type:" << static_cast<int>(params.type)
+    m_totalPages = 0;
+    m_currentResults = {};
+    m_itemsPerPage = std::max(1, params.limit);
+    m_cachedQueryString = buildQueryString(m_currentParams);
+
+    emit searchStarted(m_cachedQueryString);
+
+    qDebug() << "SearchService: Starting search" << m_cachedQueryString
+             << "Type:" << static_cast<int>(m_currentParams.type)
              << "Limit:" << m_itemsPerPage;
-      // 直接使用核心类型，无需转换
-    m_api->search(queryString, params.type, m_itemsPerPage, 0);
+
+    requestOffset(0);
 }
 
 void SearchService::searchNextPage()
@@ -47,15 +47,14 @@ void SearchService::searchNextPage()
     if (!canGoNextPage()) {
         return;
     }
-    
-    m_currentPage++;
-    int offset = m_currentPage * m_itemsPerPage;
-      QString queryString = buildQueryString(m_currentParams);
-    EntityType apiType = m_currentParams.type;
-    
-    qDebug() << "SearchService: Next page" << m_currentPage << "offset:" << offset;
-    
-    m_api->search(queryString, apiType, m_itemsPerPage, offset);
+
+    const int targetPage = m_currentPage + 1;
+    const int offset = targetPage * m_itemsPerPage;
+
+    qDebug() << "SearchService: Next page" << (targetPage + 1)
+             << "offset:" << offset;
+
+    requestOffset(offset);
 }
 
 void SearchService::searchPrevPage()
@@ -63,15 +62,14 @@ void SearchService::searchPrevPage()
     if (!canGoPrevPage()) {
         return;
     }
-    
-    m_currentPage--;
-    int offset = m_currentPage * m_itemsPerPage;
-      QString queryString = buildQueryString(m_currentParams);
-    EntityType apiType = m_currentParams.type;
-    
-    qDebug() << "SearchService: Previous page" << m_currentPage << "offset:" << offset;
-    
-    m_api->search(queryString, apiType, m_itemsPerPage, offset);
+
+    const int targetPage = std::max(0, m_currentPage - 1);
+    const int offset = targetPage * m_itemsPerPage;
+
+    qDebug() << "SearchService: Previous page" << (targetPage + 1)
+             << "offset:" << offset;
+
+    requestOffset(offset);
 }
 
 bool SearchService::canGoNextPage() const
@@ -86,7 +84,7 @@ bool SearchService::canGoPrevPage() const
 
 int SearchService::getCurrentPage() const
 {
-    return m_currentPage;
+    return m_totalPages == 0 ? 0 : m_currentPage + 1;
 }
 
 int SearchService::getTotalPages() const
@@ -109,12 +107,14 @@ SearchParameters SearchService::getCurrentSearchParams() const
 void SearchService::handleApiResults(const QList<QSharedPointer<ResultItem>> &results, int totalCount, int offset)
 {
     m_currentResults = SearchResults(totalCount, offset, results.size());
+    m_currentParams.offset = offset;
     updatePageInfo();
-    
+
     qDebug() << "SearchService: Received" << results.size() << "results, total:" << totalCount;
-    
+
     emit searchCompleted(results, m_currentResults);
-    emit pageChanged(m_currentPage, m_totalPages);
+    const int currentPageNumber = m_totalPages == 0 ? 0 : m_currentPage + 1;
+    emit pageChanged(currentPageNumber, m_totalPages);
 }
 
 void SearchService::handleApiError(const QString &error)
@@ -125,13 +125,24 @@ void SearchService::handleApiError(const QString &error)
 
 void SearchService::updatePageInfo()
 {
-    if (m_currentResults.totalCount > 0) {
+    if (m_currentResults.totalCount > 0 && m_itemsPerPage > 0) {
         m_totalPages = (m_currentResults.totalCount + m_itemsPerPage - 1) / m_itemsPerPage;
         m_currentPage = m_currentResults.offset / m_itemsPerPage;
     } else {
         m_totalPages = 0;
         m_currentPage = 0;
     }
+}
+
+void SearchService::requestOffset(int offset)
+{
+    if (m_cachedQueryString.isEmpty()) {
+        qWarning() << "SearchService: Attempted to request a page without an active query";
+        return;
+    }
+
+    m_currentParams.offset = offset;
+    m_api->search(m_cachedQueryString, m_currentParams.type, m_itemsPerPage, offset);
 }
 
 QString SearchService::buildQueryString(const SearchParameters &params) const

@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QSharedPointer>
+#include <QString>
 #include "../core/types.h"
 
 class ResultItem;
@@ -53,7 +54,7 @@ public:
      * @brief 析构函数
      * 清理API连接和内部资源
      */
-    ~SearchService();
+    ~SearchService() override = default;
 
     // =============================================================================
     // 主要搜索接口
@@ -102,7 +103,7 @@ public:
     
     /**
      * @brief 获取当前页码
-     * @return 当前页码（从1开始）
+     * @return 当前页码（从1开始，未加载结果时返回0）
      */
     int getCurrentPage() const;
     
@@ -153,9 +154,9 @@ signals:
     
     /**
      * @brief 页面变化信号
-     * @param currentPage 当前页码
+     * @param currentPage 当前页码（从1开始，若无结果则为0）
      * @param totalPages 总页数
-     * 
+     *
      * 分页状态发生变化时发出。
      */
     void pageChanged(int currentPage, int totalPages);
@@ -177,8 +178,14 @@ private slots:
 
 private:
     /**
+     * @brief 根据偏移量发起搜索请求
+     * @param offset 结果集偏移量
+     */
+    void requestOffset(int offset);
+
+    /**
      * @brief 更新分页信息
-     * 
+     *
      * 根据当前搜索结果更新页码、总页数等状态。
      */
     void updatePageInfo();
@@ -199,9 +206,10 @@ private:
     MusicBrainzApi *m_api;              ///< MusicBrainz API接口
     SearchParameters m_currentParams;       ///< 当前搜索参数
     SearchResults m_currentResults;         ///< 当前搜索结果统计
-    int m_currentPage;                      ///< 当前页码（从1开始）
+    int m_currentPage;                      ///< 当前页码（从0开始，仅内部使用）
     int m_totalPages;                       ///< 总页数
     int m_itemsPerPage;                     ///< 每页项目数量
+    QString m_cachedQueryString;            ///< 缓存的查询字符串
 };
 
 #endif // SEARCHSERVICE_H

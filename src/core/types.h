@@ -120,7 +120,10 @@ struct SearchParameters {
      * - 实体类型不能为Unknown
      */
     bool isValid() const {
-        return !query.isEmpty() && type != EntityType::Unknown;
+        return !query.isEmpty() &&
+               type != EntityType::Unknown &&
+               limit > 0 &&
+               offset >= 0;
     }
 };
 
