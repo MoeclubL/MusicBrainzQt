@@ -1,0 +1,160 @@
+name: Multi-Platform Build
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master, develop ]
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    name: Build Windows (${{ matrix.arch }})
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        include:
+          - arch: amd64
+            qt_arch: win64_msvc2019_64
+            msvc_arch: x64
+          - arch: i386
+            qt_arch: win32_msvc2019
+            msvc_arch: x86
+          - arch: arm64
+            qt_arch: win64_msvc2019_arm64
+            msvc_arch: amd64_arm64
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v3
+      with:
+        version: '6.6.0'
+        arch: ${{ matrix.qt_arch }}
+        modules: 'qtnetworkauth'
+        cache: true
+    
+    - name: Setup MSVC
+      uses: ilammy/msvc-dev-cmd@v1
+      with:
+        arch: ${{ matrix.msvc_arch }}
+    
+    - name: Configure CMake
+      run: |
+        cmake -B build -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="${{ env.Qt6_DIR }}"
+    
+    - name: Build
+      run: |
+        cmake --build build --config Release --parallel
+    
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: MusicBrainzQt-Windows-${{ matrix.arch }}
+        path: |
+          build/bin/*.exe
+          build/bin/translations/*.qm
+
+  build-linux:
+    name: Build Linux (amd64)
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          build-essential \
+          cmake \
+          ninja-build \
+          libgl1-mesa-dev \
+          libxkbcommon-dev \
+          libxcb-*-dev
+    
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v3
+      with:
+        version: '6.6.0'
+        modules: 'qtnetworkauth'
+        cache: true
+    
+    - name: Configure CMake
+      run: |
+        cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+    
+    - name: Build
+      run: |
+        cmake --build build --config Release --parallel
+    
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: MusicBrainzQt-Linux-amd64
+        path: |
+          build/bin/MusicBrainzQt
+          build/bin/translations/*.qm
+
+  build-linux-appimage:
+    name: Build Linux AppImage
+    runs-on: ubuntu-20.04
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          build-essential \
+          cmake \
+          ninja-build \
+          libgl1-mesa-dev \
+          libxkbcommon-dev \
+          libxcb-*-dev \
+          libfuse2 \
+          file
+    
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v3
+      with:
+        version: '6.6.0'
+        modules: 'qtnetworkauth'
+        cache: true
+    
+    - name: Configure CMake
+      run: |
+        cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr
+    
+    - name: Build
+      run: |
+        cmake --build build --config Release --parallel
+    
+    - name: Install to AppDir
+      run: |
+        DESTDIR=AppDir cmake --install build
+    
+    - name: Download linuxdeploy
+      run: |
+        wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+        wget https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage
+        chmod +x linuxdeploy*.AppImage
+    
+    - name: Create AppImage
+      run: |
+        export QMAKE=$Qt6_DIR/bin/qmake
+        export LD_LIBRARY_PATH=$Qt6_DIR/lib:$LD_LIBRARY_PATH
+        ./linuxdeploy-x86_64.AppImage --appdir AppDir --plugin qt --output appimage
+      env:
+        Qt6_DIR: ${{ env.Qt6_DIR }}
+    
+    - name: Upload AppImage
+      uses: actions/upload-artifact@v3
+      with:
+        name: MusicBrainzQt-Linux-AppImage
+        path: "*.AppImage"
