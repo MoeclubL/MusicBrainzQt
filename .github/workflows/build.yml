@@ -53,7 +53,7 @@ jobs:
         cmake --build build --config Release --parallel
     
     - name: Upload artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v5
       with:
         name: MusicBrainzQt-Windows-${{ matrix.arch }}
         path: |
@@ -95,7 +95,7 @@ jobs:
         cmake --build build --config Release --parallel
     
     - name: Upload artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v5
       with:
         name: MusicBrainzQt-Linux-amd64
         path: |
@@ -157,7 +157,7 @@ jobs:
         Qt6_DIR: ${{ env.Qt6_DIR }}
     
     - name: Upload AppImage
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v5
       with:
         name: MusicBrainzQt-Linux-AppImage
         path: "*.AppImage"
