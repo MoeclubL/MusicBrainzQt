@@ -13,6 +13,9 @@ set(TEST_SOURCES
     tst_models.cpp
 )
 
+# 收集所有测试目标名称
+set(TEST_TARGETS)
+
 # 创建测试可执行文件
 foreach(test_source ${TEST_SOURCES})
     # 获取测试名称（去掉.cpp扩展名）
@@ -26,6 +29,7 @@ foreach(test_source ${TEST_SOURCES})
         ../src/models/resulttablemodel.cpp
         ../src/api/musicbrainzapi.cpp
         ../src/api/musicbrainzparser.cpp
+        ../src/api/musicbrainz_response_handler.cpp
         ../src/api/api_utils.cpp
         ../src/api/network_manager.cpp
         ../src/core/types.h
@@ -40,13 +44,16 @@ foreach(test_source ${TEST_SOURCES})
         Qt6::Widgets
     )
     
+    # 设置测试输出目录
+    set_target_properties(${test_name} PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests"
+    )
+    
     # 添加到测试套件
     add_test(NAME ${test_name} COMMAND ${test_name})
+    
+    # 收集测试目标
+    list(APPEND TEST_TARGETS ${test_name})
 endforeach()
 
-# 设置测试输出目录
-set_target_properties(${TEST_SOURCES} PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests"
-)
-
-message(STATUS "Tests configured: ${TEST_SOURCES}")
+message(STATUS "Tests configured: ${TEST_TARGETS}")

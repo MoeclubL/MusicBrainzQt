@@ -53,4 +53,9 @@ compile_commands.json
 
 *_qmlcache.qrc
 
+# Build directories
 /build
+/AppDir
+
+# AppImage artifacts
+*.AppImage

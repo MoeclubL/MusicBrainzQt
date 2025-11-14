@@ -334,14 +334,8 @@ void MusicBrainzApi::processResponse(QNetworkReply* reply, RequestType type, con
     QByteArray data = reply->readAll();
     m_lastHttpCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
     
-    // 检查HTTP错误
-    if (reply->error() != QNetworkReply::NoError) {
-        m_lastErrorMessage = reply->errorString();
-        qCritical() << "HTTP Error" << m_lastHttpCode << ":" << m_lastErrorMessage;
-        emit errorOccurred(m_lastErrorMessage);
-        reply->deleteLater();
-        return;
-    }
+    // Note: Error checking is already done in NetworkManager before emitting requestFinished
+    // This function is only called for successful network requests
     
     // 根据请求类型分发给响应处理器
     switch (type) {
